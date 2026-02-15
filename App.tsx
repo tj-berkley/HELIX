@@ -258,6 +258,16 @@ const App: React.FC = () => {
     })));
   }, [activeBoardId]);
 
+  const handleAddBoard = useCallback((newBoard: Board) => {
+    setWorkspaces(prev => prev.map(ws => {
+      if (ws.id === 'ws-1') return { ...ws, boards: [newBoard, ...ws.boards] };
+      return ws;
+    }));
+    setActiveBoardId(newBoard.id);
+    setActiveView('Table');
+    setActivePage('board');
+  }, []);
+
   const handleAIGenerate = async (prompt: string, options?: BoardGenerationOptions) => {
     setIsGenerating(true);
     try {
@@ -286,13 +296,7 @@ const App: React.FC = () => {
             }))
           }))
         };
-        setWorkspaces(prev => prev.map(ws => {
-          if (ws.id === 'ws-1') return { ...ws, boards: [newBoard, ...ws.boards] };
-          return ws;
-        }));
-        setActiveBoardId(newBoard.id);
-        setActiveView('Table');
-        setActivePage('board');
+        handleAddBoard(newBoard);
       }
     } catch (err) {
       console.error(err);
@@ -330,7 +334,7 @@ const App: React.FC = () => {
       case 'brand-voice': return <BrandVoicePage />;
       case 'usage-dashboard': return <UsageDashboard />;
       case 'api-management': return <ApiManagement />;
-      case 'portfolio': return <ProjectPortfolio boards={allBoards} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
+      case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
       case 'connections': return <ConnectionsHub clonedVoices={clonedVoices} />;
       case 'integrations': return <IntegrationsCenter />;
       case 'workflows': return <WorkflowBuilder />;
