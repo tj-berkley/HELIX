@@ -101,7 +101,7 @@ export const generateWorkflowFromPrompt = async (prompt: string) => {
 export const generateCampaignFromPrompt = async (prompt: string) => {
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: `Create a marketing campaign strategy for: "${prompt}".`,
+    contents: `Create a marketing campaign strategy for: "${prompt}". Include a sequence of 3-4 steps with message drafts for each.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -112,7 +112,20 @@ export const generateCampaignFromPrompt = async (prompt: string) => {
             name: { type: Type.STRING },
             channel: { type: Type.STRING },
             startDate: { type: Type.STRING },
-            summary: { type: Type.STRING }
+            summary: { type: Type.STRING },
+            steps: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  type: { type: Type.STRING, enum: ['Email', 'SMS', 'DM', 'Call', 'Wait'] },
+                  title: { type: Type.STRING },
+                  subject: { type: Type.STRING },
+                  body: { type: Type.STRING },
+                  delayDays: { type: Type.NUMBER }
+                }
+              }
+            }
           }
         }
       }
@@ -127,4 +140,26 @@ export const refineUpdate = async (draft: string) => {
     contents: `Rephrase this project update to be more professional and clear, keep it concise: "${draft}"`
   });
   return response.text;
+};
+
+export const generateCampaignScript = async (type: string, intent: string, brandVoice: any) => {
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Draft a high-converting ${type} message for this intent: "${intent}".
+    Brand Voice Guidelines:
+    - Tone: ${brandVoice.tone}
+    - Audience: ${brandVoice.audience}
+    - Style: ${type === 'Email' ? 'Include a subject line.' : 'Short, punchy, direct.'}`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          subject: { type: Type.STRING },
+          body: { type: Type.STRING }
+        }
+      }
+    }
+  });
+  return JSON.parse(response.text);
 };

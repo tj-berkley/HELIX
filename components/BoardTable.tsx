@@ -21,25 +21,43 @@ const MOCK_USERS: Record<string, { name: string; avatar?: string; color: string 
 
 const CURRENT_USER_ID = 'u-1';
 
-const OwnerAvatar: React.FC<{ ownerId: string; size?: 'sm' | 'md' }> = ({ ownerId, size = 'md' }) => {
+const OwnerAvatar: React.FC<{ ownerId: string; size?: 'sm' | 'md'; onClick?: () => void }> = ({ ownerId, size = 'md', onClick }) => {
   const user = MOCK_USERS[ownerId];
-  const sizeClasses = size === 'sm' ? 'w-6 h-6 text-[8px]' : 'w-7 h-7 text-[10px]';
+  const sizeClasses = size === 'sm' ? 'w-6 h-6 text-[8px]' : 'w-8 h-8 text-[10px]';
   
   if (!ownerId || !user) {
     return (
-      <div className={`${sizeClasses} rounded-full bg-slate-100 border border-slate-200 border-dashed flex items-center justify-center text-slate-400 hover:text-blue-500 transition-all cursor-pointer group/avatar`}>
-        <svg xmlns="http://www.w3.org/2000/svg" width={size === 'sm' ? "12" : "14"} height={size === 'sm' ? "12" : "14"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+      <div 
+        onClick={onClick}
+        className={`${sizeClasses} rounded-full bg-slate-100 border border-slate-200 border-dashed flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all cursor-pointer group/avatar`}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width={size === 'sm' ? "12" : "16"} height={size === 'sm' ? "12" : "16"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <line x1="19" y1="8" x2="19" y2="14"/>
+          <line x1="16" y1="11" x2="22" y2="11"/>
+        </svg>
       </div>
     );
   }
+
   if (user.avatar) {
     return (
-      <img src={user.avatar} className={`${sizeClasses} rounded-full border border-white shadow-sm ring-1 ring-slate-200`} alt={user.name} />
+      <img 
+        src={user.avatar} 
+        onClick={onClick}
+        className={`${sizeClasses} rounded-full border-2 border-white shadow-sm ring-1 ring-slate-200 cursor-pointer hover:ring-indigo-400 transition-all`} 
+        alt={user.name} 
+      />
     );
   }
+
   const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
   return (
-    <div className={`${sizeClasses} rounded-full ${user.color} flex items-center justify-center font-bold text-white border border-white shadow-sm`}>
+    <div 
+      onClick={onClick}
+      className={`${sizeClasses} rounded-full ${user.color} flex items-center justify-center font-black text-white border-2 border-white shadow-sm cursor-pointer hover:scale-110 transition-transform`}
+    >
       {initials}
     </div>
   );
@@ -228,8 +246,11 @@ const ItemRow: React.FC<{
   item: Item;
   group: Group;
   onSelectItem: (item: Item, group: Group) => void;
-}> = ({ item, group, onSelectItem }) => {
+  onUpdateItem: (groupId: string, itemId: string, updates: Partial<Item>) => void;
+}> = ({ item, group, onSelectItem, onUpdateItem }) => {
   const [flash, setFlash] = useState(false);
+  const [showUserPicker, setShowUserPicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
   const prevTimestamp = useRef(item.lastUpdated);
 
   useEffect(() => {
@@ -240,6 +261,18 @@ const ItemRow: React.FC<{
       return () => clearTimeout(timer);
     }
   }, [item.lastUpdated]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowUserPicker(false);
+      }
+    };
+    if (showUserPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showUserPicker]);
 
   return (
     <tr 
@@ -258,10 +291,49 @@ const ItemRow: React.FC<{
             <Icons.Message />
          </div>
       </td>
-      <td className="p-4 text-center flex justify-center">
-        <div className="hover:scale-110 transition-transform">
-          <OwnerAvatar ownerId={item.ownerId} />
+      <td className="p-4 text-center relative overflow-visible">
+        <div className="flex justify-center">
+          <OwnerAvatar 
+            ownerId={item.ownerId} 
+            onClick={() => {
+              setShowUserPicker(!showUserPicker);
+            }} 
+          />
         </div>
+        {showUserPicker && (
+          <div 
+            ref={pickerRef}
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[60] p-2 animate-in zoom-in-95 duration-200"
+            onClick={e => e.stopPropagation()}
+          >
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-3 py-2 border-b border-slate-50 mb-1">Assign Owner</p>
+            <div className="space-y-1">
+              {Object.entries(MOCK_USERS).map(([id, user]) => (
+                <button 
+                  key={id}
+                  onClick={() => {
+                    onUpdateItem(group.id, item.id, { ownerId: id });
+                    setShowUserPicker(false);
+                  }}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-xl transition-all ${item.ownerId === id ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 text-slate-700'}`}
+                >
+                  <OwnerAvatar ownerId={id} size="sm" />
+                  <span className="text-xs font-bold truncate">{user.name}</span>
+                </button>
+              ))}
+              <button 
+                onClick={() => {
+                  onUpdateItem(group.id, item.id, { ownerId: '' });
+                  setShowUserPicker(false);
+                }}
+                className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-500 transition-all border-t border-slate-50 mt-1"
+              >
+                <div className="w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center text-[10px]">✕</div>
+                <span className="text-xs font-bold">Unassign</span>
+              </button>
+            </div>
+          </div>
+        )}
       </td>
       <td className="p-2 relative">
          <div className={`h-10 flex items-center justify-center rounded-xl font-black text-[9px] uppercase tracking-[0.15em] text-white shadow-sm transition-all group-hover/row:scale-105 ${STATUS_COLORS[item.status]}`}>{item.status}</div>
@@ -316,6 +388,7 @@ const BoardTable: React.FC<BoardTableProps> = ({ groups, onUpdateItem, onAddItem
                     item={item} 
                     group={group} 
                     onSelectItem={(it, gr) => setSelectedItem({ item: it, group: gr })} 
+                    onUpdateItem={onUpdateItem}
                   />
                 ))}
                 <tr>

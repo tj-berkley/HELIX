@@ -87,8 +87,8 @@ const NodeEditorModal: React.FC<{
 }> = ({ node, onClose, onUpdate }) => {
   const [activeTab, setActiveTab] = useState<'config' | 'guide'>('config');
   return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl animate-in fade-in">
-      <div className="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl animate-in fade-in" onClick={onClose}>
+      <div className="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
         <div className={`p-10 border-b border-slate-100 flex justify-between items-center ${node.color.split(' ')[0]} bg-opacity-10`}>
           <div className="flex items-center space-x-6">
             <div className="w-20 h-20 rounded-3xl bg-white shadow-xl flex items-center justify-center text-4xl">{node.icon}</div>
@@ -119,8 +119,9 @@ const NodeEditorModal: React.FC<{
              </div>
            )}
         </div>
-        <div className="p-8 border-t border-slate-100 flex justify-end">
-           <button onClick={onClose} className="px-12 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] shadow-xl">Confirm & Close</button>
+        <div className="p-8 border-t border-slate-100 flex justify-end space-x-4">
+           <button onClick={onClose} className="px-10 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[10px] hover:bg-slate-200 transition-all">Cancel</button>
+           <button onClick={onClose} className="px-12 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase text-[10px] shadow-xl hover:bg-indigo-700 transition-all">Confirm & Close</button>
         </div>
       </div>
     </div>
@@ -132,18 +133,29 @@ const WorkflowBuilder: React.FC = () => {
     const saved = localStorage.getItem('OMNI_WORKFLOWS_V5');
     return saved ? JSON.parse(saved) : [WORKFLOW_PRESETS[0]];
   });
+  const [customTemplates, setCustomTemplates] = useState<Workflow[]>(() => {
+    const saved = localStorage.getItem('OMNI_WORKFLOW_TEMPLATES_V1');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [activeId, setActiveId] = useState(workflows[0].id);
   const [view, setView] = useState<'canvas' | 'templates' | 'marketplace'>('canvas');
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showQuickConfig, setShowQuickConfig] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
   const activeWorkflow = useMemo(() => workflows.find(w => w.id === activeId) || workflows[0], [workflows, activeId]);
 
-  const save = (updated: Workflow[]) => {
+  const saveWorkflows = (updated: Workflow[]) => {
     setWorkflows(updated);
     localStorage.setItem('OMNI_WORKFLOWS_V5', JSON.stringify(updated));
+  };
+
+  const saveTemplates = (updated: Workflow[]) => {
+    setCustomTemplates(updated);
+    localStorage.setItem('OMNI_WORKFLOW_TEMPLATES_V1', JSON.stringify(updated));
   };
 
   const handleAskAI = async () => {
@@ -158,7 +170,7 @@ const WorkflowBuilder: React.FC = () => {
         status: 'Draft',
         nodes: data.nodes.map((n: any, i: number) => ({ id: `n-${i}-${Date.now()}`, ...n, apiConnected: false, mcpEnabled: false, materials: [] }))
       };
-      save([newW, ...workflows]);
+      saveWorkflows([newW, ...workflows]);
       setActiveId(id);
       setView('canvas');
       setAiPrompt('');
@@ -166,26 +178,73 @@ const WorkflowBuilder: React.FC = () => {
     finally { setIsGenerating(false); }
   };
 
+  const handleNewFlow = () => {
+    const id = `w-new-${Date.now()}`;
+    const newW: Workflow = {
+      id,
+      name: 'Untitled Pipeline',
+      status: 'Draft',
+      nodes: [
+        { 
+          id: `n-init-${Date.now()}`, 
+          type: 'trigger', 
+          label: 'Manual Trigger', 
+          icon: '🖱️', 
+          color: 'bg-slate-100 border-slate-300 text-slate-800', 
+          description: 'Initiate this workflow with a manual click or event.', 
+          apiConnected: false, 
+          mcpEnabled: false, 
+          materials: [] 
+        }
+      ]
+    };
+    saveWorkflows([newW, ...workflows]);
+    setActiveId(id);
+    setView('canvas');
+  };
+
+  const handleSaveAsTemplate = () => {
+    const template: Workflow = {
+      ...activeWorkflow,
+      id: `tpl-${Date.now()}`,
+      status: 'Draft'
+    };
+    saveTemplates([template, ...customTemplates]);
+    setShowSaveSuccess(true);
+    setTimeout(() => setShowSaveSuccess(false), 3000);
+  };
+
   const applyTemplate = (tpl: Workflow) => {
     const newW = { ...tpl, id: `w-t-${Date.now()}`, status: 'Draft' as const };
-    save([newW, ...workflows]);
+    saveWorkflows([newW, ...workflows]);
     setActiveId(newW.id);
     setView('canvas');
+  };
+
+  const deleteTemplate = (id: string) => {
+    saveTemplates(customTemplates.filter(t => t.id !== id));
   };
 
   const addMarketNode = (tpl: NodeTemplate) => {
     const node: WorkflowNode = { id: `n-${Date.now()}`, type: 'action', label: tpl.label, icon: tpl.icon, color: tpl.color, description: tpl.description, apiConnected: false, mcpEnabled: false, materials: [] };
     const updated = workflows.map(w => w.id === activeId ? { ...w, nodes: [...w.nodes, node] } : w);
-    save(updated);
+    saveWorkflows(updated);
     setView('canvas');
     setShowQuickConfig(null);
   };
 
   const updateNodeTemplate = (nodeId: string, tpl: NodeTemplate) => {
     const updated = workflows.map(w => w.id === activeId ? { ...w, nodes: w.nodes.map(n => n.id === nodeId ? { ...n, label: tpl.label, icon: tpl.icon, color: tpl.color, description: tpl.description } : n) } : w);
-    save(updated);
+    saveWorkflows(updated);
     setShowQuickConfig(null);
   };
+
+  const handleRenameWorkflow = (id: string, newName: string) => {
+    const updated = workflows.map(w => w.id === id ? { ...w, name: newName } : w);
+    saveWorkflows(updated);
+  };
+
+  const allTemplates = useMemo(() => [...customTemplates, ...WORKFLOW_PRESETS], [customTemplates]);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#f8faff] overflow-hidden">
@@ -211,7 +270,7 @@ const WorkflowBuilder: React.FC = () => {
                  {isGenerating ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : <span>✨</span>}
               </button>
            </div>
-           <button onClick={() => {}} className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-200">➕ New Flow</button>
+           <button onClick={handleNewFlow} className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all">➕ New Flow</button>
         </div>
       </div>
 
@@ -222,15 +281,51 @@ const WorkflowBuilder: React.FC = () => {
                <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest px-2">Active Pipeline</h3>
                <div className="space-y-2">
                  {workflows.map(w => (
-                   <button key={w.id} onClick={() => setActiveId(w.id)} className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${activeId === w.id ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-slate-50'}`}>
-                      <p className="font-black text-slate-900 text-sm truncate">{w.name}</p>
+                   <div key={w.id} className={`group/w relative w-full text-left p-4 rounded-2xl border-2 transition-all cursor-pointer ${activeId === w.id ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-slate-50 hover:border-slate-200'}`} onClick={() => setActiveId(w.id)}>
+                      {renamingId === w.id ? (
+                        <input 
+                          autoFocus
+                          className="font-black text-slate-900 text-sm w-full bg-transparent border-none outline-none p-0 focus:ring-0"
+                          value={w.name}
+                          onChange={(e) => handleRenameWorkflow(w.id, e.target.value)}
+                          onBlur={() => setRenamingId(null)}
+                          onKeyDown={(e) => e.key === 'Enter' && setRenamingId(null)}
+                          onClick={e => e.stopPropagation()}
+                        />
+                      ) : (
+                        <div className="flex justify-between items-center">
+                          <p className="font-black text-slate-900 text-sm truncate flex-1">{w.name}</p>
+                          <button onClick={(e) => { e.stopPropagation(); setRenamingId(w.id); }} className="opacity-0 group-hover/w:opacity-100 p-1 text-slate-400 hover:text-indigo-600 transition-all">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                          </button>
+                        </div>
+                      )}
                       <span className="text-[8px] font-bold text-slate-400 uppercase">{w.nodes.length} Blocks</span>
-                   </button>
+                   </div>
                  ))}
                </div>
             </div>
             <div className="flex-1 overflow-auto p-20 pattern-grid-light relative">
                <div className="max-w-2xl mx-auto space-y-12 pb-60">
+                 <div className="flex items-center justify-between mb-8 px-4">
+                    <div>
+                        <h4 className="text-4xl font-black text-slate-900 tracking-tighter">{activeWorkflow.name}</h4>
+                        <div className="flex items-center space-x-2 mt-2">
+                           <span className={`w-2 h-2 rounded-full ${activeWorkflow.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
+                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{activeWorkflow.status}</span>
+                        </div>
+                    </div>
+                    <div className="flex space-x-3">
+                        <button 
+                            onClick={handleSaveAsTemplate} 
+                            className="px-5 py-2 bg-white border border-slate-200 hover:border-indigo-400 hover:text-indigo-600 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center"
+                        >
+                            💾 Save as Template
+                        </button>
+                        <button onClick={() => setRenamingId(activeWorkflow.id)} className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Rename Pipeline</button>
+                    </div>
+                 </div>
+
                  {activeWorkflow.nodes.map((node, idx) => (
                    <React.Fragment key={node.id}>
                      <div className={`relative p-10 rounded-[4rem] border-2 bg-white shadow-xl group transition-all transform hover:-translate-y-2 cursor-pointer ${node.color} ${showQuickConfig === node.id ? 'z-[300]' : 'z-10'}`} onClick={() => setSelectedNode(node)}>
@@ -280,17 +375,24 @@ const WorkflowBuilder: React.FC = () => {
              <div className="max-w-6xl mx-auto space-y-12">
                 <h3 className="text-5xl font-black tracking-tighter">Workflow Blueprints</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                   {WORKFLOW_PRESETS.map(p => (
-                     <div key={p.id} className="bg-white border border-slate-200 rounded-[4rem] p-12 space-y-8 hover:shadow-2xl transition-all group">
+                   {allTemplates.map(p => (
+                     <div key={p.id} className="bg-white border border-slate-200 rounded-[4rem] p-12 space-y-8 hover:shadow-2xl transition-all group relative">
                         <div className="flex justify-between items-start">
                            <div className="flex -space-x-4">
                               {p.nodes.map((n, i) => <div key={i} className={`w-14 h-14 rounded-2xl border-4 border-white flex items-center justify-center text-3xl shadow-xl ${n.color.split(' ')[0]}`}>{n.icon}</div>)}
                            </div>
-                           <span className="px-4 py-1.5 bg-indigo-600 text-white rounded-full text-[9px] font-black uppercase tracking-widest">Premium Template</span>
+                           <div className="flex flex-col items-end space-y-2">
+                             <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${p.id.startsWith('tpl-') ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'}`}>
+                                {p.id.startsWith('tpl-') ? 'Custom Template' : 'System Preset'}
+                             </span>
+                             {p.id.startsWith('tpl-') && (
+                               <button onClick={() => deleteTemplate(p.id)} className="text-[8px] font-black text-rose-500 hover:underline uppercase tracking-widest">Delete Template</button>
+                             )}
+                           </div>
                         </div>
                         <div>
                            <h4 className="text-3xl font-black text-slate-900 tracking-tight">{p.name}</h4>
-                           <p className="text-sm text-slate-500 font-medium leading-relaxed mt-4">"{p.nodes[1].description}"</p>
+                           <p className="text-sm text-slate-500 font-medium leading-relaxed mt-4">"{p.nodes[1]?.description || p.nodes[0]?.description}"</p>
                         </div>
                         <button onClick={() => applyTemplate(p)} className="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase text-[10px] shadow-xl hover:bg-black active:scale-95">Deploy to Canvas</button>
                      </div>
@@ -329,9 +431,15 @@ const WorkflowBuilder: React.FC = () => {
 
       {selectedNode && <NodeEditorModal node={selectedNode} onClose={() => setSelectedNode(null)} onUpdate={(u) => {
         const updated = workflows.map(w => w.id === activeId ? { ...w, nodes: w.nodes.map(n => n.id === selectedNode.id ? { ...n, ...u } : n) } : w);
-        save(updated);
+        saveWorkflows(updated);
         setSelectedNode({ ...selectedNode, ...u });
       }} />}
+
+      {showSaveSuccess && (
+        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[1000] bg-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl font-black text-[10px] uppercase tracking-widest animate-in slide-in-from-top-4">
+           ✨ Pipeline saved as custom template
+        </div>
+      )}
     </div>
   );
 };

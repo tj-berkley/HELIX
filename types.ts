@@ -185,6 +185,28 @@ export interface Workflow {
   nodes: WorkflowNode[];
 }
 
+export type CampaignStepType = 'Email' | 'SMS' | 'DM' | 'Call' | 'Wait' | 'Trigger';
+
+export interface CampaignStep {
+  id: string;
+  type: CampaignStepType;
+  title: string;
+  subject?: string;
+  body: string;
+  delayDays: number;
+  status: 'Draft' | 'Active' | 'Completed';
+  config?: any;
+}
+
+export type CampaignTriggerSource = 'Form' | 'IncomingSMS' | 'IncomingCall' | 'IncomingDM' | 'WebinarJoin' | 'PaperworkSigned' | 'LinkClick' | 'LandingPageVisit' | 'Manual';
+
+export interface CampaignTrigger {
+  id: string;
+  source: CampaignTriggerSource;
+  label: string;
+  config?: any;
+}
+
 export interface Campaign {
   id: string;
   name: string;
@@ -193,6 +215,10 @@ export interface Campaign {
   reach: number; 
   conversion: number; 
   startDate: string;
+  trigger?: CampaignTrigger;
+  steps?: CampaignStep[];
+  audienceType?: 'CRM_Segment' | 'CSV_Import' | 'Manual_Entry';
+  audienceMeta?: any;
 }
 
 export interface Contact {
