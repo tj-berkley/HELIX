@@ -11,6 +11,8 @@ import IntegrationsCenter from './components/IntegrationsCenter';
 import WorkflowBuilder from './components/WorkflowBuilder';
 import CampaignManager from './components/CampaignManager';
 import ContactManager from './components/ContactManager';
+import Analytics from './components/Analytics';
+import Webinars from './components/Webinars';
 import GlobalTasks from './components/GlobalTasks';
 import SiteBuilder from './components/SiteBuilder';
 import BlogPlatform from './components/BlogPlatform';
@@ -112,18 +114,6 @@ const App: React.FC = () => {
   const [movieProjects, setMovieProjects] = useState<MovieScript[]>([]);
   const [currentMovieScript, setCurrentMovieScript] = useState<MovieScript | null>(null);
   const [releasedMovies, setReleasedMovies] = useState<ReleasedMovie[]>([]);
-
-  // ElevenLabs Discovery
-  useEffect(() => {
-    const elKey = localStorage.getItem('ELEVEN_LABS_KEY');
-    if (elKey && clonedVoices.length === 0) {
-      const elVoices: ClonedVoice[] = [
-        { id: 'el-1', label: 'Rachel (Pro)', description: 'Classic professional American female.', emoji: '🎙️', provider: 'ElevenLabs', sourceType: 'audio' },
-        { id: 'el-2', label: 'Josh (Narrator)', description: 'Deep, resonant storytelling voice.', emoji: '🎙️', provider: 'ElevenLabs', sourceType: 'audio' }
-      ];
-      setClonedVoices(elVoices);
-    }
-  }, []);
 
   const allBoards = useMemo(() => workspaces.flatMap(ws => ws.boards), [workspaces]);
 
@@ -238,7 +228,10 @@ const App: React.FC = () => {
           ...board,
           groups: board.groups.map(group => {
             if (group.id !== groupId) return group;
-            return { ...group, items: [...group.items, newItem] };
+            return {
+              ...group,
+              items: [...group.items, newItem]
+            };
           })
         };
       })
@@ -329,6 +322,8 @@ const App: React.FC = () => {
           onSelectBoard={(id) => { setActiveBoardId(id); setActivePage('board'); }}
         />
       );
+      case 'analytics': return <Analytics boards={allBoards} />;
+      case 'webinars': return <Webinars />;
       case 'owner-profile': return <OwnerProfile info={ownerInfo} onUpdate={setOwnerInfo} />;
       case 'business-identity': return <BusinessIdentity info={businessInfo} onUpdate={setBusinessInfo} />;
       case 'brand-voice': return <BrandVoicePage />;

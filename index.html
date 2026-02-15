@@ -28,6 +28,34 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #aaa;
         }
+        
+        @keyframes dash {
+          to {
+            stroke-dashoffset: 0;
+          }
+        }
+        .animate-dash {
+          stroke-dasharray: 1000;
+          stroke-dashoffset: 1000;
+          animation: dash 3s ease-out forwards;
+        }
+        
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 12s linear infinite;
+        }
+
+        .pattern-grid-light {
+          background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+          background-size: 24px 24px;
+        }
+        .pattern-grid-dark {
+          background-image: radial-gradient(#1e293b 1px, transparent 1px);
+          background-size: 32px 32px;
+        }
     </style>
 <script type="importmap">
 {

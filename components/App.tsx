@@ -1,17 +1,18 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import BoardHeader from './BoardHeader';
 import BoardTable from './BoardTable';
 import KanbanView from './KanbanView';
 import TimelineView from './TimelineView';
 import CalendarView from './CalendarView';
-// Fix: Added missing Dashboard import
-import Dashboard from './ Dashboard';
+import Dashboard from './Dashboard';
 import IntegrationsCenter from './IntegrationsCenter';
 import WorkflowBuilder from './WorkflowBuilder';
 import CampaignManager from './CampaignManager';
 import ContactManager from './ContactManager';
+import Analytics from './Analytics';
+import Webinars from './Webinars';
 import GlobalTasks from './GlobalTasks';
 import SiteBuilder from './SiteBuilder';
 import BlogPlatform from './BlogPlatform';
@@ -79,7 +80,7 @@ const App: React.FC = () => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([MOCK_WORKSPACE]);
   const [activeBoardId, setActiveBoardId] = useState(MOCK_WORKSPACE.boards[0].id);
   const [activeView, setActiveView] = useState<BoardView>('Table');
-  const [activePage, setActivePage] = useState<Page>('board');
+  const [activePage, setActivePage] = useState<Page>('dashboard');
   const [isGenerating, setIsGenerating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<{ status: Status[]; priority: Priority[] }>({
@@ -322,6 +323,8 @@ const App: React.FC = () => {
           onSelectBoard={(id) => { setActiveBoardId(id); setActivePage('board'); }}
         />
       );
+      case 'analytics': return <Analytics boards={allBoards} />;
+      case 'webinars': return <Webinars />;
       case 'owner-profile': return <OwnerProfile info={ownerInfo} onUpdate={setOwnerInfo} />;
       case 'business-identity': return <BusinessIdentity info={businessInfo} onUpdate={setBusinessInfo} />;
       case 'brand-voice': return <BrandVoicePage />;

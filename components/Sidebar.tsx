@@ -18,18 +18,20 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
 
   const mainNav = [
     { id: 'dashboard', label: 'Dashboard', icon: <Icons.Home /> },
+    { id: 'analytics', label: 'Analytics Pulse', icon: <span>📈</span> },
     { id: 'portfolio', label: 'Portfolios', icon: <span>📊</span> },
     { id: 'connections', label: 'Connections Hub', icon: <span>💬</span> },
     { id: 'tasks', label: 'My Tasks', icon: <span>✅</span> },
     { id: 'calendar', label: 'Calendar', icon: <Icons.Calendar /> },
     { id: 'workflows', label: 'Workflows', icon: <span>⚡</span> },
     { id: 'campaigns', label: 'Campaigns', icon: <span>📢</span> },
-    { id: 'contacts', label: 'Contacts', icon: <span>👥</span> },
+    { id: 'contacts', label: 'Contact Center', icon: <span>👥</span> },
     { id: 'brand-voice', label: 'Brand Voice', icon: <span>✨</span> },
     { id: 'integrations', label: 'Integrations', icon: <span>🔌</span> },
   ];
 
   const platformNav = [
+    { id: 'webinars', label: 'Webinar Center', icon: <span>📡</span> },
     { id: 'site-builder', label: 'Sites', icon: <span>🌐</span> },
     { id: 'blog', label: 'Blog & Writing', icon: <span>✍️</span> },
     { id: 'content-creator', label: 'Content Marketing', icon: <span>🎨</span> },

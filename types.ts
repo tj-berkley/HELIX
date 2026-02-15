@@ -3,6 +3,13 @@ export type Status = 'Done' | 'Working on it' | 'Stuck' | 'Not Started' | 'Criti
 export type Priority = 'Low' | 'Medium' | 'High' | 'Critical';
 export type BoardView = 'Table' | 'Timeline' | 'Calendar' | 'Kanban';
 
+export type LeadCategory = 
+  | 'Insurance' | 'Home Security' | 'Legal Help' | 'Incident Reports' 
+  | 'Doctors' | 'Home Services' | 'Loans' | 'Real Estate' 
+  | 'Flights' | 'Hotels' | 'Car Rentals' | 'Cruises' 
+  | 'Packages' | 'Auto Dealerships' | 'Realtor' | 'Lawyer' 
+  | 'Contractor' | 'Financial' | 'Crypto' | 'Auto Repair';
+
 export interface BrandVoice {
   id: string;
   name: string;
@@ -101,6 +108,8 @@ export type Page =
   | 'workflows' 
   | 'campaigns' 
   | 'contacts' 
+  | 'analytics'
+  | 'webinars'
   | 'tasks'
   | 'calendar'
   | 'site-builder'
@@ -187,7 +196,7 @@ export interface Campaign {
 }
 
 export interface Contact {
-  id: string; name: string; email: string; company: string; role: string; status: 'Lead' | 'Customer' | 'Lost' | 'Nurturing'; lastContacted: string;
+  id: string; name: string; email: string; company: string; role: string; status: 'Lead' | 'Customer' | 'Lost' | 'Nurturing'; lastContacted: string; category?: LeadCategory;
 }
 
 export interface Manuscript {
@@ -271,4 +280,15 @@ export interface ClonedVoice {
   emoji: string;
   sourceType: 'video' | 'audio';
   provider: 'Yapper' | 'ElevenLabs' | 'Internal';
+}
+
+export interface Webinar {
+  id: string;
+  title: string;
+  date: string;
+  invites: number;
+  showUps: number;
+  buyers: number;
+  status: 'Upcoming' | 'Live' | 'Completed';
+  transcript?: string;
 }
