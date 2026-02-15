@@ -20,6 +20,21 @@ const DEFAULT_CHANNELS: ChannelDef[] = [
 ];
 
 const CAMPAIGN_PRESETS = [
+  { 
+    id: 'tp_webinar_drip', 
+    name: 'Webinar Attendance Drip', 
+    channel: 'Email', 
+    status: 'Draft' as Status, 
+    reach: 0, 
+    conversion: 0, 
+    startDate: '2025-03-01', 
+    summary: 'High-touch email sequence to confirm registration and ensure sign-in portal usage.',
+    steps: [
+      { id: 's1', type: 'Email', title: 'Confirmation & Sign-in Link', body: 'Welcome to the session! Here is your private sign-in link to track your attendance and unlock the live code on the day.', delayDays: 0, status: 'Draft' },
+      { id: 's2', type: 'Email', title: '24 Hour Reminder', body: 'We go live in 24 hours. Don\'t forget to use your portal link to access the room.', delayDays: 1, status: 'Draft' },
+      { id: 's3', type: 'Email', title: 'Post-Event Replay & Terms', body: 'Thanks for attending! As mentioned, here are the custom terms we discussed for your upgrade.', delayDays: 2, status: 'Draft' },
+    ]
+  },
   { id: 't1', name: 'Product Launch Blitz', channel: 'Multi-Channel', status: 'Draft' as Status, reach: 0, conversion: 0, startDate: '2025-06-01', summary: 'High intensity launch sequence across Email, Social and SMS.' },
   { id: 't2', name: 'Voice Concierge Onboarding', channel: 'Phone/SMS', status: 'Draft' as Status, reach: 0, conversion: 0, startDate: '2025-07-01', summary: 'Onboard VIP customers via AI led phone calls and personalized SMS.' },
   { id: 't3', name: 'Newsletter Re-engagement', channel: 'Email', status: 'Draft' as Status, reach: 0, conversion: 0, startDate: '2025-05-15', summary: 'Re-ignite inactive lists with personalized value-driven drip feeds.' },
@@ -604,8 +619,8 @@ const CampaignManager: React.FC = () => {
                   <div className="flex justify-between items-start">
                      <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-4xl shadow-inner group-hover:scale-110 transition-transform">📋</div>
                      <div className="flex flex-col items-end space-y-2">
-                        <span className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg ${t.id.startsWith('tpl-') ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'}`}>
-                            {t.id.startsWith('tpl-') ? 'Custom Strategy' : 'Premium Strategy'}
+                        <span className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg ${t.id.startsWith('tpl-') || t.id.startsWith('tp_') ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'}`}>
+                            {t.id.startsWith('tpl-') || t.id.startsWith('tp_') ? 'High Value Strategy' : 'Premium Strategy'}
                         </span>
                         {t.id.startsWith('tpl-') && (
                             <button onClick={() => removeTemplate(t.id)} className="text-[8px] font-black text-rose-500 hover:underline uppercase tracking-widest">Delete Template</button>

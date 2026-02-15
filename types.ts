@@ -335,10 +335,17 @@ export interface ClonedVoice {
 export interface Webinar {
   id: string;
   title: string;
+  description?: string;
   date: string;
   invites: number;
   showUps: number;
   buyers: number;
   status: 'Upcoming' | 'Live' | 'Completed';
   transcript?: string;
+  roomLink?: string;
+  accessCode?: string;
+  token?: string;
+  scheduleDay?: number; // 0 (Sun) to 6 (Sat)
+  scheduleTime?: string; // HH:mm
+  repeatFrequency?: 'Weekly' | 'Bi-Weekly' | 'Monthly' | 'None';
 }

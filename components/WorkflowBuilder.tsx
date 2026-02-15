@@ -58,6 +58,17 @@ const ALL_MARKETPLACE_NODES: { [key: string]: NodeTemplate[] } = {
 
 const WORKFLOW_PRESETS: Workflow[] = [
   {
+    id: 'tp_webinar_conv',
+    name: 'Webinar High-Intent Closer',
+    status: 'Draft',
+    nodes: [
+      { id: 'w1', type: 'trigger', label: 'Webinar Exit Detection', icon: '📡', color: 'bg-indigo-100 border-indigo-300 text-indigo-800', description: 'Portal detects user stayed > 90% of duration.', apiConnected: true, mcpEnabled: false, materials: [] },
+      { id: 'w2', type: 'action', label: 'Neural Intel Scan', icon: '✨', color: 'bg-purple-600 border-purple-400 text-white', description: 'Gemini extracts custom values and terms from transcript relevant to user.', apiConnected: true, mcpEnabled: false, materials: [] },
+      { id: 'w3', type: 'action', label: 'Auto-Invoicing', icon: '💰', color: 'bg-emerald-50 border-emerald-300 text-emerald-800', description: 'Generate invoice based on discussed terms.', apiConnected: true, mcpEnabled: false, materials: [] },
+      { id: 'w4', type: 'action', label: 'WhatsApp Broadcast', icon: '💬', color: 'bg-green-100 border-green-300 text-green-800', description: 'Send personal follow up with payment link.', apiConnected: true, mcpEnabled: false, materials: [] },
+    ]
+  },
+  {
     id: 'tp1',
     name: 'AI Voice Concierge',
     status: 'Draft',
