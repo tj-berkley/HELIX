@@ -1,25 +1,49 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Webinar, Page } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Webinar, PageDesign, Status, Campaign } from '../types';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Icons } from '../constants';
+import { generateWebinarUpdateAlerts } from '../services/geminiService';
+
+const DEFAULT_INVITE_DESIGN: PageDesign = {
+  headline: "Unlock The Future of AI Automation",
+  subheadline: "Join our exclusive masterclass on scaling enterprise operations with neural networks.",
+  ctaText: "Reserve My Seat",
+  themeColor: "#0f172a",
+  accentColor: "#4f46e5"
+};
+
+const DEFAULT_SIGNIN_DESIGN: PageDesign = {
+  headline: "Verified Session Access",
+  subheadline: "Please verify your registration email to unlock the live room code.",
+  ctaText: "Verify & Enter",
+  themeColor: "#050505",
+  accentColor: "#10b981"
+};
 
 const MOCK_WEBINARS: Webinar[] = [
   { 
     id: 'w1', 
     title: 'The Future of AI Automation', 
+    slug: 'ai-automation-2025',
+    subdomain: 'future',
     description: 'A deep dive into how neural networks are reshaping enterprise productivity.',
     date: '2025-03-01', 
     invites: 1500, 
     showUps: 450, 
     buyers: 42, 
     status: 'Live', 
-    transcript: "Hi everyone, welcome to the AI Automation workshop. Today we are discussing legal help and insurance workflows. Let's make an appointment for the review next Tuesday. Send a follow up email to all attendees about the new invoice template. Also, I promised Bob a 20% discount on the enterprise plan if he signs today.",
+    transcript: "Hi everyone, welcome to the AI Automation workshop...",
     roomLink: 'https://meet.google.com/abc-defg-hij',
     accessCode: 'NEURAL-2025',
-    scheduleDay: 4, // Thursday
+    scheduleDay: 4,
     scheduleTime: '14:00',
-    repeatFrequency: 'Weekly'
+    repeatFrequency: 'Weekly',
+    invitePageDesign: DEFAULT_INVITE_DESIGN,
+    signinPageDesign: DEFAULT_SIGNIN_DESIGN,
+    invitesSent: ['admin@omniportal.app'],
+    calendarEventId: 'evt-initial-w1',
+    campaignId: 'camp-initial-w1'
   }
 ];
 
@@ -30,20 +54,18 @@ const WebinarCenter: React.FC = () => {
   });
   const [view, setView] = useState<'dashboard' | 'funnel-builder'>('dashboard');
   const [activeWebinar, setActiveWebinar] = useState<Webinar | null>(null);
-  const [funnelTab, setFunnelTab] = useState<'invite' | 'signin' | 'config' | 'intelligence'>('invite');
-  const [processingWebinar, setProcessingWebinar] = useState<string | null>(null);
-  const [aiActions, setAiActions] = useState<any[]>([]);
-  const [isCodeRevealed, setIsCodeRevealed] = useState(false);
+  const [funnelTab, setFunnelTab] = useState<'analytics' | 'invite' | 'signin' | 'outreach' | 'config'>('analytics');
+  const [isGeneratingPage, setIsGeneratingPage] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
-  // Sign-in states
-  const [signInEmail, setSignInEmail] = useState('');
-  const [isVerified, setIsVerified] = useState(false);
+  const [isCodeRevealed, setIsCodeRevealed] = useState(false);
+  const [inviteEmails, setInviteEmails] = useState('');
+  const [showShareToast, setShowShareToast] = useState(false);
+  const [isNeuralSyncing, setIsNeuralSyncing] = useState(false);
 
   const [newWebinarForm, setNewWebinarForm] = useState({
     title: '',
     description: '',
-    scheduleDay: 1, // Monday
+    scheduleDay: 1,
     scheduleTime: '10:00',
     repeatFrequency: 'Weekly' as 'Weekly' | 'Bi-Weekly' | 'Monthly' | 'None'
   });
@@ -55,387 +77,506 @@ const WebinarCenter: React.FC = () => {
   const openFunnel = (w: Webinar) => {
     setActiveWebinar(w);
     setView('funnel-builder');
-    setFunnelTab('invite');
-    setIsVerified(false);
-    setSignInEmail('');
+    setFunnelTab('analytics');
+  };
+
+  const calculateNextOccurrenceDate = (dayOfWeek: number, time: string) => {
+    const now = new Date();
+    const [hours, minutes] = (time || '10:00').split(':').map(Number);
+    let resultDate = new Date();
+    resultDate.setHours(hours, minutes, 0, 0);
+    const currentDay = now.getDay();
+    let daysUntil = (dayOfWeek - currentDay + 7) % 7;
+    if (daysUntil === 0 && (now.getHours() > hours || (now.getHours() === hours && now.getMinutes() >= minutes))) daysUntil = 7;
+    resultDate.setDate(now.getDate() + daysUntil);
+    return resultDate;
   };
 
   const handleCreateWebinar = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWebinarForm.title) return;
 
+    const id = `w-${Date.now()}`;
+    const slug = newWebinarForm.title.toLowerCase().replace(/\s+/g, '-');
+    const occurrenceDate = calculateNextOccurrenceDate(newWebinarForm.scheduleDay, newWebinarForm.scheduleTime);
+    const dateStr = occurrenceDate.toISOString().split('T')[0];
+
+    const calendarEventId = `evt-${Date.now()}`;
+    const campaignId = `camp-${Date.now()}`;
+
     const created: Webinar = {
-      id: `w-${Date.now()}`,
+      id,
       title: newWebinarForm.title,
+      slug,
+      subdomain: '',
       description: newWebinarForm.description,
-      date: new Date().toISOString().split('T')[0],
-      invites: 0,
-      showUps: 0,
-      buyers: 0,
+      date: dateStr,
+      invites: 0, showUps: 0, buyers: 0,
       status: 'Upcoming',
       scheduleDay: newWebinarForm.scheduleDay,
       scheduleTime: newWebinarForm.scheduleTime,
       repeatFrequency: newWebinarForm.repeatFrequency,
-      roomLink: '',
-      accessCode: '',
-      token: ''
+      invitePageDesign: { ...DEFAULT_INVITE_DESIGN, headline: newWebinarForm.title },
+      signinPageDesign: DEFAULT_SIGNIN_DESIGN,
+      invitesSent: [],
+      calendarEventId,
+      campaignId
     };
 
-    setWebinars([created, ...webinars]);
+    // 1. Save Webinar
+    const updatedWebinars = [created, ...webinars];
+    setWebinars(updatedWebinars);
+
+    // 2. Automatically add to Global Calendar (Tasks Storage)
+    const savedTasks = JSON.parse(localStorage.getItem('OMNI_GLOBAL_TASKS_V1') || '[]');
+    const newCalendarEvent = {
+      id: calendarEventId,
+      title: `📡 Webinar: ${created.title}`,
+      priority: 'High',
+      column: 'To Do',
+      category: 'Event',
+      dueDate: dateStr,
+      isEvent: true,
+      isAvailable: false,
+      eventDetails: created.description,
+      webinarLink: `https://omniportal.app/join/${slug}`
+    };
+    localStorage.setItem('OMNI_GLOBAL_TASKS_V1', JSON.stringify([newCalendarEvent, ...savedTasks]));
+
+    // 3. Automatically create Follow-up Campaign
+    const savedCampaigns = JSON.parse(localStorage.getItem('OMNI_CAMPAIGNS_V3') || '[]');
+    const newCampaign: Campaign = {
+      id: campaignId,
+      name: `Follow-up: ${created.title}`,
+      channel: 'Email',
+      status: 'Draft',
+      reach: 0,
+      conversion: 0,
+      startDate: dateStr,
+      summary: `Automated follow-up sequence for the ${created.title} session.`,
+      steps: [
+        { id: `step-1-${Date.now()}`, type: 'Email', title: 'Post-Event Replay', body: `Hi! Thanks for attending ${created.title}. Here is your requested replay link and the resources we discussed.`, delayDays: 1, status: 'Draft' },
+        { id: `step-2-${Date.now()}`, type: 'Email', title: 'Next Steps & Feedback', body: 'We would love to hear your thoughts on the session. Do you have 2 minutes for a quick survey?', delayDays: 3, status: 'Draft' }
+      ]
+    };
+    localStorage.setItem('OMNI_CAMPAIGNS_V3', JSON.stringify([newCampaign, ...savedCampaigns]));
+
     setIsCreateModalOpen(false);
     setNewWebinarForm({ title: '', description: '', scheduleDay: 1, scheduleTime: '10:00', repeatFrequency: 'Weekly' });
     openFunnel(created);
   };
 
-  const updateWebinar = (updates: Partial<Webinar>) => {
+  /**
+   * Enhanced update function with Neural Syncing
+   */
+  const updateWebinar = async (updates: Partial<Webinar>) => {
     if (!activeWebinar) return;
-    const next = { ...activeWebinar, ...updates };
-    setActiveWebinar(next);
-    setWebinars(prev => prev.map(w => w.id === activeWebinar.id ? next : w));
-  };
 
-  const calculateNextOccurrence = (dayOfWeek: number, time: string, frequency: string = 'Weekly') => {
-    const now = new Date();
-    const [hours, minutes] = time.split(':').map(Number);
-    let resultDate = new Date();
-    resultDate.setHours(hours, minutes, 0, 0);
+    // Detect critical changes that need neural alert synthesis
+    const isScheduleChange = (updates.date && updates.date !== activeWebinar.date) || 
+                             (updates.scheduleTime && updates.scheduleTime !== activeWebinar.scheduleTime);
+    const isCancelChange = updates.status === 'Cancelled';
+    const isTitleChange = updates.title && updates.title !== activeWebinar.title;
 
-    const currentDay = now.getDay();
-    let daysUntil = (dayOfWeek - currentDay + 7) % 7;
-    
-    if (daysUntil === 0) {
-      if (now.getHours() > hours || (now.getHours() === hours && now.getMinutes() >= minutes)) {
-        daysUntil = 7;
+    const nextWebinar = { ...activeWebinar, ...updates };
+    setActiveWebinar(nextWebinar);
+    setWebinars(prev => prev.map(w => w.id === activeWebinar.id ? nextWebinar : w));
+
+    if (isScheduleChange || isCancelChange || isTitleChange) {
+      setIsNeuralSyncing(true);
+      try {
+        const action = isCancelChange ? 'Cancel' : isScheduleChange ? 'Reschedule' : 'Postpone';
+        const brandVoice = JSON.parse(localStorage.getItem('HOBBS_BRAND_VOICE') || '{}');
+        
+        // 1. Synthesize Neural Alerts
+        const alerts = await generateWebinarUpdateAlerts(
+          action as any, 
+          nextWebinar, 
+          activeWebinar.date + ' ' + activeWebinar.scheduleTime, 
+          nextWebinar.date + ' ' + nextWebinar.scheduleTime,
+          brandVoice
+        );
+
+        // 2. Sync Calendar
+        if (nextWebinar.calendarEventId) {
+          const tasks = JSON.parse(localStorage.getItem('OMNI_GLOBAL_TASKS_V1') || '[]');
+          const updatedTasks = tasks.map((t: any) => {
+            if (t.id === nextWebinar.calendarEventId) {
+              return { 
+                ...t, 
+                title: isCancelChange ? `[CANCELLED] ${nextWebinar.title}` : `📡 Webinar: ${nextWebinar.title}`,
+                dueDate: nextWebinar.date,
+                eventDetails: `Update: ${alerts.sms}\n\nOriginal: ${nextWebinar.description}`,
+                column: isCancelChange ? 'Blocked' : t.column
+              };
+            }
+            return t;
+          });
+          localStorage.setItem('OMNI_GLOBAL_TASKS_V1', JSON.stringify(updatedTasks));
+        }
+
+        // 3. Sync Campaign Templates
+        if (nextWebinar.campaignId) {
+          const campaigns = JSON.parse(localStorage.getItem('OMNI_CAMPAIGNS_V3') || '[]');
+          const updatedCampaigns = campaigns.map((c: any) => {
+            if (c.id === nextWebinar.campaignId) {
+              const newStepId = `step-alert-${Date.now()}`;
+              return { 
+                ...c, 
+                name: `Alert: ${nextWebinar.title} (${action})`,
+                startDate: nextWebinar.date,
+                steps: [
+                  { 
+                    id: newStepId, 
+                    type: 'Email', 
+                    title: `Important: ${action} Notice`, 
+                    subject: alerts.email.subject, 
+                    body: alerts.email.body, 
+                    delayDays: 0, 
+                    status: 'Draft' 
+                  },
+                  ...(c.steps || [])
+                ]
+              };
+            }
+            return c;
+          });
+          localStorage.setItem('OMNI_CAMPAIGNS_V3', JSON.stringify(updatedCampaigns));
+        }
+      } catch (e) {
+        console.error("Neural Sync Failed", e);
+      } finally {
+        setIsNeuralSyncing(false);
       }
     }
-
-    if (frequency === 'Bi-Weekly') daysUntil += 7;
-    if (frequency === 'Monthly') daysUntil += 21; // Simple approximation for UI
-    
-    resultDate.setDate(now.getDate() + daysUntil);
-    return resultDate;
   };
 
-  const formatNextOccurrence = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const runNeuralScan = async (webinar: Webinar) => {
-    if (!webinar.transcript) return;
-    setProcessingWebinar(webinar.id);
-    setAiActions([]);
-
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: `Analyze this webinar transcript. Identify high-intent leads and follow-up actions. Transcript: "${webinar.transcript}"`,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                target: { type: Type.STRING },
-                action: { type: Type.STRING },
-                value: { type: Type.STRING },
-                priority: { type: Type.STRING, enum: ["High", "Medium", "Low"] }
-              }
-            }
-          }
+  const handleDeleteWebinar = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("Are you sure you want to delete this webinar and its associated funnel data? This will also remove the linked calendar event and campaigns.")) {
+      const webinarToDelete = webinars.find(w => w.id === id);
+      
+      // Cleanup linked modules
+      if (webinarToDelete) {
+        if (webinarToDelete.calendarEventId) {
+          const tasks = JSON.parse(localStorage.getItem('OMNI_GLOBAL_TASKS_V1') || '[]');
+          localStorage.setItem('OMNI_GLOBAL_TASKS_V1', JSON.stringify(tasks.filter((t: any) => t.id !== webinarToDelete.calendarEventId)));
         }
-      });
-      setAiActions(JSON.parse(response.text || '[]'));
-    } catch (e) { console.error(e); }
-    finally { setProcessingWebinar(null); }
+        if (webinarToDelete.campaignId) {
+          const campaigns = JSON.parse(localStorage.getItem('OMNI_CAMPAIGNS_V3') || '[]');
+          localStorage.setItem('OMNI_CAMPAIGNS_V3', JSON.stringify(campaigns.filter((c: any) => c.id !== webinarToDelete.campaignId)));
+        }
+      }
+
+      setWebinars(prev => prev.filter(w => w.id !== id));
+      if (activeWebinar?.id === id) setView('dashboard');
+    }
+  };
+
+  const sendInvites = () => {
+    const list = inviteEmails.split(',').map(e => e.trim()).filter(Boolean);
+    updateWebinar({ invitesSent: [...(activeWebinar?.invitesSent || []), ...list] });
+    setInviteEmails('');
+    alert(`Dispatched ${list.length} invitations via Neural Email Engine.`);
+  };
+
+  const copyShareLink = () => {
+    const url = activeWebinar?.subdomain 
+      ? `https://${activeWebinar.subdomain}.omniportal.app` 
+      : `https://omniportal.app/join/${activeWebinar?.slug}`;
+    navigator.clipboard.writeText(url);
+    setShowShareToast(true);
+    setTimeout(() => setShowShareToast(false), 2000);
+  };
+
+  const formatNextOccurrence = (dayOfWeek: number, time: string) => {
+    const date = calculateNextOccurrenceDate(dayOfWeek, time);
+    return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   if (view === 'funnel-builder' && activeWebinar) {
-    const nextDate = calculateNextOccurrence(activeWebinar.scheduleDay || 0, activeWebinar.scheduleTime || '10:00', activeWebinar.repeatFrequency);
-    const nextDateString = formatNextOccurrence(nextDate);
-
-    const handleSignIn = () => {
-      if (signInEmail.trim()) {
-        setIsVerified(true);
-      }
-    };
-
-    const addToCalendar = () => {
-      alert(`Synchronizing ${activeWebinar.title} on ${nextDateString} to your workspace calendar.`);
-    };
-
+    const nextDateString = formatNextOccurrence(activeWebinar.scheduleDay || 0, activeWebinar.scheduleTime || '10:00');
+    
     return (
-      <div className="flex-1 flex flex-col h-full bg-[#f8faff] animate-in fade-in duration-500 overflow-hidden">
-        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-white shrink-0 shadow-sm z-10">
+      <div className="flex-1 flex flex-col h-full bg-[#f8faff] animate-in fade-in duration-500 overflow-hidden text-slate-900">
+        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-white shrink-0 z-10 shadow-sm">
           <div className="flex items-center space-x-6">
-            <button onClick={() => setView('dashboard')} className="p-3 hover:bg-slate-100 rounded-full transition-all text-slate-400">
+            <button onClick={() => setView('dashboard')} className="p-3 hover:bg-slate-100 rounded-full text-slate-400 transition-all">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
             </button>
             <div>
-              <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">{activeWebinar.title}</h2>
-              <div className="flex items-center space-x-2 mt-1">
-                <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">Active Funnel Management</span>
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">{activeWebinar.title}</h2>
+              <div className="flex items-center space-x-2 mt-0.5">
+                 <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Funnel Framework</span>
+                 <span className="text-slate-200">•</span>
+                 <span className="text-[10px] font-bold text-slate-400 font-mono">{activeWebinar.subdomain ? `${activeWebinar.subdomain}.omniportal.app` : `omniportal.app/join/${activeWebinar.slug}`}</span>
               </div>
             </div>
           </div>
-          <div className="flex bg-slate-100 p-1 rounded-2xl">
-            {(['invite', 'signin', 'config', 'intelligence'] as const).map(v => (
-              <button key={v} onClick={() => setFunnelTab(v)} className={`px-8 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${funnelTab === v ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
-                {v === 'invite' ? '1. Landing Page' : v === 'signin' ? '2. Sign-In / Check-in' : v === 'config' ? '3. Automation Config' : '4. Post-Event Intel'}
-              </button>
-            ))}
+          <div className="flex items-center space-x-4">
+            {isNeuralSyncing && (
+              <div className="flex items-center space-x-2 bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100 animate-pulse">
+                <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Neural Syncing...</span>
+              </div>
+            )}
+            <div className="flex bg-slate-100 p-1 rounded-2xl">
+              {(['analytics', 'invite', 'signin', 'outreach', 'config'] as const).map(v => (
+                <button key={v} onClick={() => setFunnelTab(v)} className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${funnelTab === v ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
+                  {v === 'analytics' ? '📊 Data' : v === 'invite' ? '🎨 Landing' : v === 'signin' ? '🔑 Sign-In' : v === 'outreach' ? '📢 Invites' : '⚙️ Config'}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-12 pattern-grid-light relative">
-          <div className="max-w-5xl mx-auto pb-40">
-            {funnelTab === 'invite' && (
-              <div className="space-y-12 animate-in slide-in-from-bottom-4">
-                <div className="bg-white rounded-[3.5rem] border border-slate-200 overflow-hidden shadow-2xl relative">
-                  <div className="absolute top-8 right-8 z-20">
-                     <span className="bg-indigo-600 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg animate-pulse">Live Soon</span>
+        <div className="flex-1 overflow-y-auto p-12 pattern-grid-light scrollbar-hide relative">
+          {showShareToast && (
+             <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-full shadow-2xl font-black text-[10px] uppercase tracking-widest animate-in slide-in-from-bottom-4">
+                ✨ URL Copied to Clipboard
+             </div>
+          )}
+
+          <div className="max-w-6xl mx-auto pb-40">
+            {funnelTab === 'analytics' && (
+              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+                <div className="grid grid-cols-3 gap-8">
+                  <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center space-y-2">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Invites</p>
+                     <p className="text-5xl font-black text-slate-900">{activeWebinar.invites.toLocaleString()}</p>
                   </div>
-                  <div className="h-80 bg-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 pattern-grid opacity-10"></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60"></div>
-                    <h1 className="text-5xl font-black text-white z-10 uppercase tracking-tighter text-center max-w-2xl px-10 leading-tight">{activeWebinar.title}</h1>
-                    <p className="text-indigo-400 font-bold uppercase tracking-widest mt-6 z-10 bg-indigo-900/40 px-6 py-2 rounded-full backdrop-blur-md border border-indigo-500/30 shadow-2xl animate-in zoom-in">Exclusive Virtual Event // {nextDateString}</p>
+                  <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center space-y-2">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Show-ups</p>
+                     <p className="text-5xl font-black text-indigo-600">{activeWebinar.showUps.toLocaleString()}</p>
                   </div>
-                  <div className="p-16 grid grid-cols-1 md:grid-cols-2 gap-20">
-                    <div className="space-y-8">
-                      <div className="space-y-3">
-                         <h3 className="text-3xl font-black text-slate-900 leading-tight">Masterclass Series</h3>
-                         <p className="text-slate-500 leading-relaxed font-medium text-lg">{activeWebinar.description || "Unlock high-level strategies in our recurring virtual sessions. Learn the exact frameworks we use to scale production nodes."}</p>
-                      </div>
-                      <div className="space-y-4">
-                         <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-center space-x-6 group hover:bg-white hover:border-indigo-200 transition-all cursor-pointer shadow-inner hover:shadow-xl">
-                            <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-2xl shadow-xl group-hover:scale-110 transition-transform">📅</div>
-                            <div>
-                               <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Next Available Session</p>
-                               <p className="text-sm font-bold text-slate-700">{nextDateString}</p>
-                            </div>
-                         </div>
-                         <button onClick={addToCalendar} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-colors pl-6">Add to Calendar (+)</button>
-                      </div>
-                    </div>
-                    <div className="bg-slate-900 p-12 rounded-[3.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.4)] space-y-8 relative overflow-hidden">
-                       <div className="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                       <div className="relative space-y-6">
-                          <h4 className="text-xl font-black text-white uppercase text-center tracking-tight">Request Access</h4>
-                          <div className="space-y-4">
-                             <input className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl font-bold text-sm text-white outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all placeholder-slate-600" placeholder="Full Name" />
-                             <input className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl font-bold text-sm text-white outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all placeholder-slate-600" placeholder="Work Email" />
-                             <button className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-900/40 hover:bg-indigo-700 active:scale-95 transition-all">Claim Virtual Seat</button>
-                          </div>
-                          <div className="pt-4 text-center">
-                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">System reminders dispatched via<br/>Email, SMS, Telegram, and Discord.</p>
-                          </div>
-                       </div>
-                    </div>
+                  <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center space-y-2">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sent Invites</p>
+                     <p className="text-5xl font-black text-emerald-600">{(activeWebinar.invitesSent?.length || 0).toLocaleString()}</p>
                   </div>
+                </div>
+                <div className="bg-slate-900 rounded-[4rem] p-16 text-white flex justify-between items-center relative overflow-hidden shadow-2xl">
+                   <div className="absolute inset-0 pattern-grid opacity-5"></div>
+                   <div className="relative space-y-4">
+                      <h3 className="text-2xl font-black uppercase tracking-tight">Active Distribution</h3>
+                      <p className="text-slate-400 font-medium max-w-md italic">Public access is live. Forms on linked landing pages are feeding into this dataset. All new leads will receive the automatic follow-up sequence.</p>
+                   </div>
+                   <button onClick={copyShareLink} className="relative px-8 py-4 bg-indigo-600 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-indigo-700 shadow-xl active:scale-95 transition-all">Copy Public Link</button>
                 </div>
               </div>
             )}
 
-            {funnelTab === 'signin' && (
-              <div className="space-y-12 animate-in slide-in-from-bottom-4">
-                <div className="bg-slate-950 rounded-[4rem] p-24 shadow-[0_100px_200px_rgba(0,0,0,0.6)] border border-white/5 flex flex-col items-center text-center space-y-12 relative overflow-hidden">
-                  <div className="absolute inset-0 pattern-grid opacity-5"></div>
-                  <div className="w-28 h-28 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center text-6xl shadow-[0_0_80px_rgba(16,185,129,0.3)] animate-pulse relative z-10">🔑</div>
-                  <div className="space-y-4 relative z-10">
-                    <h2 className="text-6xl font-black text-white tracking-tighter uppercase">Virtual Check-In</h2>
-                    <p className="text-slate-400 text-xl font-medium max-w-lg">Verify your identity to unlock the live session access code and room link.</p>
-                  </div>
-                  <div className="w-full max-w-lg bg-white/5 border border-white/10 rounded-[3.5rem] p-12 space-y-10 relative z-10 backdrop-blur-xl shadow-2xl">
-                    {!isVerified ? (
-                      <div className="space-y-6 animate-in fade-in zoom-in-95">
-                         <div className="space-y-2 text-left px-2">
-                           <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Identity Verification</label>
+            {(funnelTab === 'invite' || funnelTab === 'signin') && (
+              <div className="grid grid-cols-12 gap-10 animate-in fade-in">
+                <div className="col-span-4 space-y-6">
+                  <div className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm space-y-6">
+                     <h4 className="text-xs font-black uppercase text-slate-500 tracking-widest">Visual Designer</h4>
+                     <div className="space-y-4">
+                        <div className="space-y-1">
+                           <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Headline</label>
                            <input 
-                             value={signInEmail}
-                             onChange={(e) => setSignInEmail(e.target.value)}
-                             className="w-full bg-black/60 border-2 border-white/5 p-6 rounded-3xl text-white font-mono text-lg outline-none focus:border-emerald-500 transition-all shadow-inner placeholder-slate-800" 
-                             placeholder="Registered Email" 
+                              className="w-full bg-slate-50 border border-slate-100 p-4 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                              value={funnelTab === 'invite' ? activeWebinar.invitePageDesign?.headline : activeWebinar.signinPageDesign?.headline}
+                              onChange={(e) => {
+                                 const key = funnelTab === 'invite' ? 'invitePageDesign' : 'signinPageDesign';
+                                 const current = activeWebinar[key] || DEFAULT_INVITE_DESIGN;
+                                 updateWebinar({ [key]: { ...current, headline: e.target.value } });
+                              }}
                            />
+                        </div>
+                        <div className="space-y-1">
+                           <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Subheadline</label>
+                           <textarea 
+                              className="w-full bg-slate-50 border border-slate-100 p-4 rounded-xl text-xs font-medium h-24 outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                              value={funnelTab === 'invite' ? activeWebinar.invitePageDesign?.subheadline : activeWebinar.signinPageDesign?.subheadline}
+                              onChange={(e) => {
+                                 const key = funnelTab === 'invite' ? 'invitePageDesign' : 'signinPageDesign';
+                                 const current = activeWebinar[key] || DEFAULT_INVITE_DESIGN;
+                                 updateWebinar({ [key]: { ...current, subheadline: e.target.value } });
+                              }}
+                           />
+                        </div>
+                     </div>
+                  </div>
+                  <div className="p-8 bg-indigo-600 rounded-[2.5rem] text-white shadow-xl flex flex-col items-center text-center space-y-4">
+                     <span className="text-3xl">🌐</span>
+                     <p className="text-xs font-black uppercase tracking-widest leading-relaxed">This form can be embedded in any Site Studio project.</p>
+                     <button onClick={() => alert('Navigate to Site Studio to drag this widget.')} className="px-6 py-2.5 bg-white text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest">Go to Designer</button>
+                  </div>
+                </div>
+
+                <div className="col-span-8">
+                   <div 
+                      className="rounded-[4rem] min-h-[600px] shadow-2xl relative overflow-hidden flex flex-col items-center justify-center text-center p-20"
+                      style={{ backgroundColor: (funnelTab === 'invite' ? activeWebinar.invitePageDesign?.themeColor : activeWebinar.signinPageDesign?.themeColor) || '#000' }}
+                   >
+                      <div className="absolute inset-0 pattern-grid opacity-10"></div>
+                      <div className="relative z-10 space-y-8 max-w-xl">
+                         <h1 className="text-5xl font-black text-white tracking-tighter leading-tight uppercase">
+                            {(funnelTab === 'invite' ? activeWebinar.invitePageDesign?.headline : activeWebinar.signinPageDesign?.headline) || 'Title'}
+                         </h1>
+                         <p className="text-lg text-slate-400 font-medium">
+                            {(funnelTab === 'invite' ? activeWebinar.invitePageDesign?.subheadline : activeWebinar.signinPageDesign?.subheadline) || 'Subtext'}
+                         </p>
+                         <div className="bg-white/5 backdrop-blur-md p-10 rounded-[3rem] border border-white/10 w-full space-y-6">
+                            <input className="w-full bg-black/40 border border-white/5 p-5 rounded-2xl text-white outline-none font-bold placeholder-slate-600" placeholder="Email Address" />
+                            <button className="w-full py-5 rounded-2xl font-black text-white uppercase tracking-widest text-sm shadow-xl" style={{ backgroundColor: activeWebinar.invitePageDesign?.accentColor || '#4f46e5' }}>
+                               {funnelTab === 'invite' ? activeWebinar.invitePageDesign?.ctaText : activeWebinar.signinPageDesign?.ctaText}
+                            </button>
+                            <p className="text-[10px] text-slate-500 uppercase font-black">Next Session: {nextDateString}</p>
                          </div>
-                         <button onClick={handleSignIn} className="w-full py-6 bg-emerald-600 text-white rounded-3xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-emerald-900/40 hover:bg-emerald-700 transition-all transform active:scale-95 text-xs">Verify & Check-In</button>
                       </div>
-                    ) : (
-                      <div className="space-y-10 animate-in fade-in zoom-in-95">
-                        <div className="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-3xl">
-                           <p className="text-emerald-400 font-black uppercase text-xs tracking-widest">Verification Success</p>
-                           <p className="text-slate-400 text-[10px] font-medium mt-1 uppercase tracking-tighter">{signInEmail}</p>
-                        </div>
-                        <div className="space-y-6">
-                           <button onClick={() => setIsCodeRevealed(!isCodeRevealed)} className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] hover:text-white transition-colors">
-                              {isCodeRevealed ? 'Hide Secured Data' : 'Reveal Access Credentials'}
-                           </button>
-                           {isCodeRevealed && (
-                              <div className="flex flex-col space-y-4 animate-in slide-in-from-top-4">
-                                 <div className="bg-black/60 p-6 rounded-[2rem] border border-indigo-500/30 font-mono text-3xl tracking-[0.4em] text-indigo-400 h-24 flex items-center justify-center shadow-inner">
-                                    {activeWebinar.accessCode || 'ALPHA-PRIME'}
-                                 </div>
-                                 <button 
-                                   onClick={() => { navigator.clipboard.writeText(activeWebinar.accessCode || 'ALPHA-PRIME'); alert('Code copied!'); }}
-                                   className="text-[10px] font-black text-white/40 uppercase hover:text-indigo-400 transition-colors tracking-widest"
-                                 >
-                                   📋 Copy Credentials
-                                 </button>
-                              </div>
-                           )}
-                           <a href={activeWebinar.roomLink || '#'} target="_blank" className="w-full py-6 bg-white text-slate-900 rounded-3xl font-black uppercase tracking-[0.3em] text-xs shadow-2xl hover:bg-slate-100 transition-all flex items-center justify-center space-x-3">
-                              <span>Enter Live Room</span>
-                              <span className="text-xl">🚀</span>
-                           </a>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-4 opacity-40 grayscale group hover:grayscale-0 hover:opacity-100 transition-all">
-                     <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Powered by OmniPortal Neural Shield</span>
-                  </div>
+                   </div>
                 </div>
               </div>
             )}
 
-            {funnelTab === 'config' && (
-              <div className="space-y-10 animate-in slide-in-from-bottom-4">
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    <div className="bg-white p-12 rounded-[4rem] border border-slate-200 shadow-sm space-y-10">
-                       <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">📡</div>
-                          <h3 className="text-2xl font-black text-slate-900 uppercase">Room Matrix</h3>
-                       </div>
-                       <div className="space-y-6">
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Production Link (Zoom/Meet)</label>
-                             <input value={activeWebinar.roomLink || ''} onChange={(e) => updateWebinar({ roomLink: e.target.value })} className="w-full bg-slate-50 border border-slate-100 p-5 rounded-2xl text-sm font-bold outline-none focus:bg-white focus:ring-4 focus:ring-indigo-100 transition-all" placeholder="Enter Virtual Room URL" />
-                          </div>
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Identity Token / Reveal Code</label>
-                             <input value={activeWebinar.accessCode || ''} onChange={(e) => updateWebinar({ accessCode: e.target.value })} className="w-full bg-slate-950 border-none p-5 rounded-2xl text-sm font-mono font-bold text-indigo-400 outline-none shadow-inner" placeholder="e.g. VIP-ACCESS-2025" />
-                          </div>
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Custom Value (Workflow Injection)</label>
-                             <input value={activeWebinar.token || ''} onChange={(e) => updateWebinar({ token: e.target.value })} className="w-full bg-slate-50 border border-slate-100 p-5 rounded-2xl text-sm font-mono font-bold outline-none focus:bg-white focus:ring-4 focus:ring-indigo-100 transition-all" placeholder="UUID or Tracking Token" />
-                          </div>
+            {funnelTab === 'outreach' && (
+              <div className="max-w-3xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4">
+                 <div className="bg-white p-12 rounded-[4rem] border border-slate-200 shadow-xl space-y-10">
+                    <div className="flex items-center space-x-4">
+                       <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-2xl shadow-xl">📩</div>
+                       <div>
+                          <h3 className="text-2xl font-black text-slate-900 uppercase">Send Invitations</h3>
+                          <p className="text-slate-500 text-sm font-medium">Dispatched via Neural Email Service.</p>
                        </div>
                     </div>
+                    <div className="space-y-4">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Recipient Emails (Comma separated)</label>
+                       <textarea 
+                          className="w-full h-40 p-8 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 rounded-[2.5rem] outline-none text-sm font-medium transition-all shadow-inner"
+                          placeholder="partner@enterprise.io, cto@cloudscale.net..."
+                          value={inviteEmails}
+                          onChange={e => setInviteEmails(e.target.value)}
+                       />
+                    </div>
+                    <button 
+                       onClick={sendInvites}
+                       disabled={!inviteEmails.trim()}
+                       className="w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-30"
+                    >
+                       Dispatch Invites
+                    </button>
+                 </div>
 
-                    <div className="bg-white p-12 rounded-[4rem] border border-slate-200 shadow-sm space-y-10">
-                       <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">⚡</div>
-                          <h3 className="text-2xl font-black text-slate-900 uppercase">Temporal Logic</h3>
-                       </div>
-                       <div className="space-y-8">
-                          <div className="grid grid-cols-2 gap-6">
-                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Recurrence Window</label>
-                                <select value={activeWebinar.scheduleDay} onChange={(e) => updateWebinar({ scheduleDay: Number(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 p-5 rounded-2xl text-xs font-black uppercase outline-none cursor-pointer hover:bg-slate-100 transition-colors">
-                                   {days.map((d, i) => <option key={i} value={i}>{d}</option>)}
-                                </select>
-                             </div>
-                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Time Matrix (UTC)</label>
-                                <input type="time" value={activeWebinar.scheduleTime} onChange={(e) => updateWebinar({ scheduleTime: e.target.value })} className="w-full bg-slate-50 border border-slate-100 p-5 rounded-2xl text-xs font-black outline-none" />
-                             </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Repeat Frequency</label>
-                             <div className="grid grid-cols-2 gap-3">
-                                {(['Weekly', 'Bi-Weekly', 'Monthly', 'None'] as const).map(freq => (
-                                  <button 
-                                    key={freq} 
-                                    onClick={() => updateWebinar({ repeatFrequency: freq })}
-                                    className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${activeWebinar.repeatFrequency === freq ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
-                                  >
-                                    {freq}
-                                  </button>
-                                ))}
-                             </div>
-                          </div>
-
-                          <div className="p-8 bg-indigo-50 rounded-3xl border border-indigo-100 space-y-6">
-                             <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] flex items-center">
-                                <span className="w-2 h-2 rounded-full bg-indigo-500 mr-2 animate-pulse"></span>
-                                Distribution Pulse
-                             </h4>
-                             <div className="grid grid-cols-2 gap-4">
-                                {['Email Campaign', 'SMS Drip', 'Discord Alert', 'Slack Push'].map(c => (
-                                  <div key={c} className="flex items-center space-x-3 bg-white px-4 py-3 rounded-2xl border border-indigo-100 shadow-sm">
-                                     <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                                     <span className="text-[9px] font-black uppercase text-slate-600 truncate">{c}</span>
-                                  </div>
-                                ))}
-                             </div>
-                          </div>
-                       </div>
+                 <div className="bg-white p-12 rounded-[4rem] border border-slate-200 shadow-xl space-y-8">
+                    <h4 className="text-sm font-black text-slate-900 uppercase px-2 tracking-widest">Sharing Matrix</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                       <button onClick={copyShareLink} className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] flex flex-col items-center space-y-3 hover:bg-white hover:border-indigo-200 transition-all group">
+                          <span className="text-3xl group-hover:scale-110 transition-transform">🔗</span>
+                          <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Copy Direct Link</span>
+                       </button>
+                       <button className="p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] flex flex-col items-center space-y-3 hover:bg-white hover:border-indigo-200 transition-all group opacity-40 grayscale cursor-not-allowed">
+                          <span className="text-3xl">📱</span>
+                          <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Discord/Slack Push</span>
+                       </button>
                     </div>
                  </div>
               </div>
             )}
 
-            {funnelTab === 'intelligence' && (
-              <div className="space-y-12 animate-in slide-in-from-bottom-4">
-                 <div className="grid grid-cols-3 gap-10">
-                   <div className="col-span-1 space-y-6">
-                      <div className="bg-white p-10 rounded-[4rem] border border-slate-200 shadow-sm space-y-4 text-center group">
-                         <div className="w-20 h-20 bg-indigo-50 rounded-3xl mx-auto flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition-transform">🤖</div>
-                         <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Transcript Engine</h4>
-                         <p className="text-xs text-slate-500 leading-relaxed font-medium italic">Autonomous extraction of lead intent and discussion terms.</p>
-                      </div>
-                      <button 
-                         disabled={!activeWebinar.transcript || processingWebinar === activeWebinar.id}
-                         onClick={() => runNeuralScan(activeWebinar)}
-                         className="w-full py-12 bg-slate-900 text-white rounded-[3.5rem] shadow-2xl shadow-indigo-900/40 hover:bg-black transition-all flex flex-col items-center space-y-4 group active:scale-95"
-                      >
-                         <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-xl">✨</div>
-                         <span className="font-black uppercase tracking-[0.3em] text-xs">Run Neural Analysis</span>
-                      </button>
-                   </div>
-                   <div className="col-span-2">
-                      <div className="bg-white rounded-[4rem] p-12 border border-slate-100 shadow-xl min-h-[600px] space-y-10 relative overflow-hidden">
-                         <div className="flex justify-between items-center border-b border-slate-50 pb-8">
-                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Intelligence Matrix</h3>
-                            <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-full uppercase tracking-widest border border-indigo-100">{aiActions.length} Entities Detected</span>
-                         </div>
-                         <div className="space-y-6">
-                            {aiActions.map((action, i) => (
-                               <div key={i} className="flex items-center justify-between p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 hover:border-indigo-300 hover:bg-white hover:shadow-2xl transition-all group relative overflow-hidden">
-                                  <div className={`absolute left-0 top-0 bottom-0 w-2 ${action.priority === 'High' ? 'bg-rose-500' : 'bg-indigo-500'}`}></div>
-                                  <div className="flex items-center space-x-8">
-                                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-4xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">👤</div>
-                                     <div>
-                                        <div className="flex items-center space-x-3">
-                                           <h4 className="font-black text-slate-900 text-lg">{action.target}</h4>
-                                           <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${action.priority === 'High' ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-500'}`}>{action.priority}</span>
-                                        </div>
-                                        <p className="text-xs text-slate-500 font-bold uppercase mt-1 tracking-widest">{action.action} // {action.value}</p>
-                                     </div>
-                                  </div>
-                                  <button className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all shadow-xl active:scale-95">Dispatch Workflow</button>
-                               </div>
-                            ))}
-                            {aiActions.length === 0 && (
-                              <div className="py-40 text-center opacity-10 flex flex-col items-center space-y-6">
-                                 <span className="text-[140px]">📡</span>
-                                 <p className="text-3xl font-black uppercase tracking-[0.4em]">Await Transmission</p>
-                              </div>
-                            )}
-                         </div>
-                      </div>
-                   </div>
+            {funnelTab === 'config' && (
+              <div className="max-w-3xl mx-auto space-y-12 animate-in fade-in">
+                 <div className="bg-white p-12 rounded-[4rem] border border-slate-200 shadow-xl space-y-10">
+                    <div className="flex items-center space-x-4">
+                       <div className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white text-2xl shadow-xl">🌐</div>
+                       <div>
+                          <h3 className="text-2xl font-black text-slate-900 uppercase">Routing & Identity</h3>
+                          <p className="text-slate-500 text-sm font-medium">Configure public access points.</p>
+                       </div>
+                    </div>
+                    
+                    <div className="space-y-8">
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Dedicated Subdomain</label>
+                          <div className="flex">
+                             <input 
+                                className="flex-1 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 p-5 rounded-l-2xl font-black text-lg outline-none transition-all shadow-inner text-right"
+                                value={activeWebinar.subdomain || ''}
+                                onChange={e => updateWebinar({ subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                                placeholder="my-webinar"
+                             />
+                             <div className="bg-slate-200 px-6 flex items-center rounded-r-2xl text-[10px] font-black text-slate-500 uppercase tracking-widest border-l border-white/10">
+                                .omniportal.app
+                             </div>
+                          </div>
+                       </div>
+
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Webinar Header Title</label>
+                          <input 
+                             className="w-full bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 p-5 rounded-2xl font-black text-lg outline-none transition-all shadow-inner"
+                             value={activeWebinar.title}
+                             onChange={e => updateWebinar({ title: e.target.value })}
+                          />
+                       </div>
+
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Custom Slug (Universal Path)</label>
+                          <div className="flex items-center space-x-4 bg-slate-50 p-5 rounded-2xl shadow-inner border border-slate-100">
+                             <span className="text-[10px] font-black text-slate-400 uppercase">omniportal.app/join/</span>
+                             <input 
+                                className="flex-1 bg-transparent border-none p-0 font-black text-lg text-indigo-600 outline-none focus:ring-0"
+                                value={activeWebinar.slug}
+                                onChange={e => updateWebinar({ slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                             />
+                          </div>
+                       </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-6">
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Scheduled Day</label>
+                          <select 
+                             className="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-black uppercase outline-none shadow-inner"
+                             value={activeWebinar.scheduleDay}
+                             onChange={e => updateWebinar({ scheduleDay: Number(e.target.value) })}
+                          >
+                             {days.map((d, i) => <option key={i} value={i}>{d}</option>)}
+                          </select>
+                       </div>
+                       <div className="space-y-3">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">UTC Time Matrix</label>
+                          <input 
+                             type="time"
+                             className="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-black outline-none shadow-inner"
+                             value={activeWebinar.scheduleTime}
+                             onChange={e => updateWebinar({ scheduleTime: e.target.value })}
+                          />
+                       </div>
+                    </div>
+
+                    <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                       <div className="flex justify-between items-center mb-6">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Redirects</p>
+                          <span className="text-[9px] font-bold text-emerald-500 uppercase bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Verified</span>
+                       </div>
+                       <div className="space-y-4">
+                          <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                             <span>Landing Page</span>
+                             <span className="font-mono text-[10px] text-indigo-400">/join/{activeWebinar.slug}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs font-medium text-slate-600">
+                             <span>Sign-in Check-in</span>
+                             <span className="font-mono text-[10px] text-indigo-400">/verify/{activeWebinar.slug}</span>
+                          </div>
+                       </div>
+                    </div>
+                    <div className="pt-6 border-t border-slate-100 flex flex-col space-y-4">
+                       <button 
+                         onClick={() => updateWebinar({ status: 'Cancelled' })}
+                         className="w-full py-4 bg-rose-50 text-rose-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                       >
+                         Neural Cancel Session
+                       </button>
+                       <button 
+                         onClick={(e) => handleDeleteWebinar(activeWebinar.id, e as any)}
+                         className="w-full py-4 bg-slate-100 text-slate-400 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-900 hover:text-white transition-all"
+                       >
+                         Purge All Webinar Data (No Alerts)
+                       </button>
+                    </div>
                  </div>
               </div>
             )}
@@ -446,7 +587,7 @@ const WebinarCenter: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50 p-12 animate-in fade-in duration-700">
+    <div className="flex-1 overflow-y-auto bg-slate-50 p-12 animate-in fade-in duration-700 text-slate-900">
       <div className="max-w-7xl mx-auto space-y-12">
         <div className="flex justify-between items-end border-b border-slate-200 pb-10">
           <div className="space-y-2">
@@ -463,15 +604,19 @@ const WebinarCenter: React.FC = () => {
 
         <div className="grid grid-cols-1 gap-10">
            {webinars.map(w => (
-             <div key={w.id} className="bg-white rounded-[4rem] border border-slate-200 p-12 shadow-sm hover:shadow-[0_40px_80px_rgba(0,0,0,0.05)] transition-all group flex flex-col lg:flex-row lg:items-center gap-16 relative">
+             <div 
+               key={w.id} 
+               onClick={() => openFunnel(w)}
+               className="bg-white rounded-[4rem] border border-slate-200 p-12 shadow-sm hover:shadow-[0_40px_80px_rgba(0,0,0,0.05)] transition-all group flex flex-col lg:flex-row lg:items-center gap-16 relative cursor-pointer"
+             >
                 <div className="lg:w-1/3 space-y-6">
                    <div className="flex items-center space-x-3">
-                      <div className={`w-3 h-3 rounded-full ${w.status === 'Live' ? 'bg-rose-500 animate-pulse' : w.status === 'Completed' ? 'bg-slate-400' : 'bg-indigo-500'}`}></div>
+                      <div className={`w-3 h-3 rounded-full ${w.status === 'Live' ? 'bg-rose-500 animate-pulse' : w.status === 'Completed' ? 'bg-slate-400' : w.status === 'Cancelled' ? 'bg-rose-900' : 'bg-indigo-500'}`}></div>
                       <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{w.status} // Every {days[w.scheduleDay || 0]} @ {w.scheduleTime}</span>
                    </div>
-                   <h3 className="text-4xl font-black text-slate-900 tracking-tighter leading-tight group-hover:text-indigo-600 transition-colors uppercase">{w.title}</h3>
+                   <h3 className={`text-4xl font-black text-slate-900 tracking-tighter leading-tight group-hover:text-indigo-600 transition-colors uppercase ${w.status === 'Cancelled' ? 'line-through opacity-40' : ''}`}>{w.title}</h3>
                    <div className="flex space-x-4 pt-2">
-                      <button onClick={() => openFunnel(w)} className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-indigo-900/20 hover:bg-indigo-700 transition-all active:scale-95">Orchestrate Funnel</button>
+                      <span className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-indigo-900/20 group-hover:bg-indigo-700 transition-all">Orchestrate Funnel</span>
                    </div>
                 </div>
 
@@ -490,22 +635,17 @@ const WebinarCenter: React.FC = () => {
                    </div>
                 </div>
                 
-                <button onClick={() => setWebinars(webinars.filter(wb => wb.id !== w.id))} className="text-slate-200 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 absolute top-12 right-12">
+                <button 
+                  onClick={(e) => handleDeleteWebinar(w.id, e)} 
+                  className="text-slate-200 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 absolute top-12 right-12 p-3 rounded-full hover:bg-rose-50"
+                >
                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
              </div>
            ))}
-           {webinars.length === 0 && (
-             <div className="py-60 text-center border-4 border-dashed border-slate-200 rounded-[5rem] opacity-20 group">
-               <span className="text-[160px] group-hover:scale-110 transition-transform duration-1000 block">📡</span>
-               <p className="text-4xl font-black uppercase tracking-[0.5em] mt-10">Sector Vacuum</p>
-               <p className="text-xs font-bold uppercase tracking-widest mt-4">Initialize virtual pipeline to commence session monitoring</p>
-             </div>
-           )}
         </div>
       </div>
 
-      {/* Creation Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in" onClick={() => setIsCreateModalOpen(false)}>
            <div className="bg-white w-full max-w-2xl rounded-[4rem] shadow-[0_60px_120px_rgba(0,0,0,0.5)] border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
@@ -517,9 +657,7 @@ const WebinarCenter: React.FC = () => {
                        <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mt-2">Autonomous Funnel Architect</p>
                     </div>
                  </div>
-                 <button onClick={() => setIsCreateModalOpen(false)} className="p-4 hover:bg-white rounded-full text-slate-400 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                 </button>
+                 <button onClick={() => setIsCreateModalOpen(false)} className="p-4 hover:bg-white rounded-full text-slate-400 transition-all">✕</button>
               </div>
 
               <form onSubmit={handleCreateWebinar} className="p-12 space-y-10">

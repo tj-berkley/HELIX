@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import BoardHeader from './BoardHeader';
@@ -14,6 +13,7 @@ import ContactManager from './ContactManager';
 import Analytics from './Analytics';
 import Webinars from './Webinars';
 import GlobalTasks from './GlobalTasks';
+// Fix: Corrected import path from './Sidebar' to './SiteBuilder' to fix the error where SiteBuilder was missing required props of Sidebar
 import SiteBuilder from './SiteBuilder';
 import BlogPlatform from './BlogPlatform';
 import BrandVoicePage from './BrandVoice';
@@ -329,7 +329,15 @@ const App: React.FC = () => {
       case 'usage-dashboard': return <UsageDashboard />;
       case 'vault': return <ConnectionVault />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
-      case 'connections': return <ConnectionsHub clonedVoices={clonedVoices} />;
+      // Fix: Passed missing props businessInfo, onUpdateBusiness, and onUpdateOwner to ConnectionsHub to resolve TS error.
+      case 'connections': return (
+        <ConnectionsHub 
+          clonedVoices={clonedVoices} 
+          businessInfo={businessInfo}
+          onUpdateBusiness={setBusinessInfo}
+          onUpdateOwner={setOwnerInfo}
+        />
+      );
       case 'integrations': return <IntegrationsCenter onNavigate={setActivePage} />;
       case 'workflows': return <WorkflowBuilder />;
       case 'campaigns': return <CampaignManager />;

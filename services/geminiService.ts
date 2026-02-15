@@ -163,3 +163,84 @@ export const generateCampaignScript = async (type: string, intent: string, brand
   });
   return JSON.parse(response.text);
 };
+
+/**
+ * Generates content for webinar change alerts
+ */
+export const generateWebinarUpdateAlerts = async (
+  action: 'Reschedule' | 'Cancel' | 'Postpone', 
+  webinar: any, 
+  oldValue: string, 
+  newValue: string, 
+  brandVoice: any
+) => {
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Act as a customer engagement architect. A webinar event is being ${action === 'Reschedule' ? 'rescheduled' : action === 'Cancel' ? 'cancelled' : 'postponed'}.
+    WEBINAR TITLE: "${webinar.title}"
+    DETAILS: ${action === 'Reschedule' ? `Moving from ${oldValue} to ${newValue}.` : `Event is ${action}ed.`}
+    BRAND VOICE: Tone is ${brandVoice.tone}, Audience is ${brandVoice.audience}.
+    
+    Generate high-fidelity notification drafts for:
+    1. A professional Email alert (Subject + Body)
+    2. A punchy SMS/WhatsApp alert.
+    
+    Return JSON format: { "email": { "subject": "", "body": "" }, "sms": "" }`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          email: {
+            type: Type.OBJECT,
+            properties: {
+              subject: { type: Type.STRING },
+              body: { type: Type.STRING }
+            }
+          },
+          sms: { type: Type.STRING }
+        }
+      }
+    }
+  });
+  return JSON.parse(response.text);
+};
+
+/**
+ * AI Website Synthesis
+ */
+export const generateSiteDesign = async (prompt: string, brandVoice: any) => {
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Architect a modern landing page design based on: "${prompt}".
+    Brand Context: ${brandVoice.tone}. 
+    Translate this into a logical sequence of site elements.
+    Include headlines, body copy, and suggested UI components.
+    
+    Return JSON array of site elements.
+    Each element must have:
+    - type: 'text' | 'section' | 'button' | 'form'
+    - content: string (the text content or label)
+    - config: object (optional, e.g. { fields: ['Name', 'Email'] } for forms)`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            type: { type: Type.STRING, enum: ['text', 'section', 'button', 'form'] },
+            content: { type: Type.STRING },
+            config: {
+              type: Type.OBJECT,
+              properties: {
+                fields: { type: Type.ARRAY, items: { type: Type.STRING } }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+  return JSON.parse(response.text);
+};

@@ -39,6 +39,13 @@ export interface OwnerInfo {
   bio: string;
   email: string;
   avatarUrl?: string;
+  assignedPhone?: string;
+  socialLinks?: {
+    linkedin?: string;
+    twitter?: string;
+    instagram?: string;
+    github?: string;
+  };
 }
 
 export interface BusinessInfo {
@@ -48,6 +55,7 @@ export interface BusinessInfo {
   website: string;
   size: string;
   assignedPhone?: string;
+  logoUrl?: string;
 }
 
 export interface Comment {
@@ -140,96 +148,98 @@ export type Page =
   | 'business-identity'
   | 'usage-dashboard';
 
-export type ConnectionChannel = 'Email' | 'SMS' | 'WhatsApp' | 'Telegram' | 'Discord' | 'Slack' | 'Circle' | 'Instagram' | 'Facebook' | 'LinkedIn' | 'Phone' | 'Twilio' | 'Telnyx' | 'Vonage';
-
-export interface MessageThread {
-  id: string;
-  channel: ConnectionChannel;
-  contactName: string;
-  lastMessage: string;
-  timestamp: string;
-  isAiAutoPilot: boolean;
-  avatarUrl: string;
-  unreadCount: number;
+export interface PageDesign {
+  headline: string;
+  subheadline: string;
+  ctaText: string;
+  heroImage?: string;
+  themeColor: string;
+  accentColor: string;
 }
 
-export interface MemoryNode {
+export interface Webinar {
   id: string;
   title: string;
-  type: 'Document' | 'Link' | 'Note' | 'Voice' | 'Interaction';
-  content: string;
-  timestamp: string;
-  category: string;
+  slug: string;
+  subdomain?: string;
+  description?: string;
+  date: string;
+  invites: number;
+  showUps: number;
+  buyers: number;
+  status: 'Upcoming' | 'Live' | 'Completed' | 'Cancelled';
+  transcript?: string;
+  roomLink?: string;
+  accessCode?: string;
+  token?: string;
+  scheduleDay?: number;
+  scheduleTime?: string;
+  repeatFrequency?: 'Weekly' | 'Bi-Weekly' | 'Monthly' | 'None';
+  invitePageDesign?: PageDesign;
+  signinPageDesign?: PageDesign;
+  invitesSent?: string[];
+  calendarEventId?: string;
+  campaignId?: string;
 }
-
-export type HobbsPersona = 
-  | 'Emergency Responder' | 'Health Coach' | 'Business Mentor' 
-  | 'Home Manager' | 'Travel Agent' | 'Financial Advisor' 
-  | 'Medical Assistant' | 'Career Coach' | 'Fitness Trainer' 
-  | 'Local Guide' | 'Life Coach' | 'Personal Assistant';
 
 export interface WorkflowMaterial {
-  type: 'document' | 'video' | 'image' | 'slide' | 'note' | 'task';
-  url?: string;
-  title: string;
+  id: string;
+  name: string;
+  type: string;
 }
 
 export interface WorkflowNode {
   id: string;
   type: 'trigger' | 'action' | 'condition';
   label: string;
-  description: string;
-  purpose?: string;
   icon: string;
-  logoUrl?: string;
   color: string;
-  apiConnected: boolean;
-  mcpEnabled: boolean;
-  materials: WorkflowMaterial[];
-  config?: any;
+  description: string;
+  apiConnected?: boolean;
+  mcpEnabled?: boolean;
+  materials?: WorkflowMaterial[];
 }
 
 export interface Workflow {
   id: string;
   name: string;
-  status: 'Active' | 'Draft' | 'Paused';
+  status: Status;
   nodes: WorkflowNode[];
 }
 
-export type CampaignStepType = 'Email' | 'SMS' | 'DM' | 'Call' | 'Wait' | 'Trigger';
-
-export interface CampaignStep {
-  id: string;
-  type: CampaignStepType;
-  title: string;
-  subject?: string;
-  body: string;
-  delayDays: number;
-  status: 'Draft' | 'Active' | 'Completed';
-  config?: any;
-}
-
-export type CampaignTriggerSource = 'Form' | 'IncomingSMS' | 'IncomingCall' | 'IncomingDM' | 'WebinarJoin' | 'PaperworkSigned' | 'LinkClick' | 'LandingPageVisit' | 'Manual';
+export type CampaignTriggerSource = 
+  | 'Form' | 'LinkClick' | 'PaperworkSigned' | 'IncomingCall' 
+  | 'IncomingSMS' | 'WebinarJoin' | 'LandingPageVisit' | 'Manual';
 
 export interface CampaignTrigger {
   id: string;
   source: CampaignTriggerSource;
   label: string;
-  config?: any;
+}
+
+export interface CampaignStep {
+  id: string;
+  type: 'Email' | 'SMS' | 'DM' | 'Call' | 'Wait';
+  title: string;
+  subject?: string;
+  body: string;
+  delayDays: number;
+  status: Status;
 }
 
 export interface Campaign {
   id: string;
   name: string;
   channel: string;
-  status: Status; 
-  reach: number; 
-  conversion: number; 
+  status: Status;
+  reach: number;
+  conversion: number;
   startDate: string;
-  trigger?: CampaignTrigger;
+  summary?: string;
   steps?: CampaignStep[];
-  audienceType?: 'CRM_Segment' | 'CSV_Import' | 'Manual_Entry';
-  audienceMeta?: any;
+  trigger?: CampaignTrigger;
+  audienceType?: 'CRM_Segment' | 'CSV_Import';
+  audienceMeta?: { fileName: string; count: number };
 }
 
 export interface CustomFieldValue {
@@ -243,10 +253,10 @@ export interface Contact {
   email: string;
   company: string;
   role: string;
-  status: 'Lead' | 'Customer' | 'Lost' | 'Nurturing';
+  status: 'Lead' | 'Customer' | 'Nurturing' | 'Lost';
   lastContacted: string;
-  category?: LeadCategory;
-  customFields?: CustomFieldValue[];
+  category: LeadCategory;
+  customFields: CustomFieldValue[];
 }
 
 export interface Manuscript {
@@ -256,63 +266,6 @@ export interface Manuscript {
   genre: string;
   tone: string;
   createdAt: string;
-}
-
-export interface MovieCharacter {
-  id: string;
-  name: string;
-  description: string;
-  traits: string[];
-  avatarUrl?: string;
-  voiceId?: string;
-}
-
-export interface MovieScene {
-  id: string;
-  slugline: string;
-  description: string;
-  visualPrompt: string;
-  action: string;
-  audioScript?: string;
-  voiceId?: string;
-  dialogue: { character: string; line: string }[];
-  videoUrl?: string;
-  isGenerating?: boolean;
-  isApproved?: boolean;
-}
-
-export interface MovieScript {
-  id: string;
-  title: string;
-  logline: string;
-  characters: MovieCharacter[];
-  scenes: MovieScene[];
-  status: 'Pre-Production' | 'In Production' | 'Rendered' | 'Released';
-}
-
-export interface ReleasedMovie {
-  id: string;
-  title: string;
-  description: string;
-  posterUrl: string;
-  ticketPrice: number;
-  ticketsSold: number;
-  totalRevenue: number;
-  author: string;
-}
-
-export type LipSyncMode = 'Political Satire' | 'Cartoon Avatar' | 'Personal Clone' | 'Youtube Deepfake';
-
-export interface SocialPost {
-  id: string;
-  title: string;
-  content: string;
-  mediaUrl: string;
-  mediaType: 'image' | 'video';
-  scheduledTime: string; // YYYY-MM-DD HH:mm
-  platforms: string[];
-  status: 'Scheduled' | 'Published' | 'Failed';
-  campaignId?: string;
 }
 
 export interface AudioClip {
@@ -328,24 +281,93 @@ export interface ClonedVoice {
   label: string;
   description: string;
   emoji: string;
-  sourceType: 'video' | 'audio';
-  provider: 'Yapper' | 'ElevenLabs' | 'Internal';
+  provider?: 'ElevenLabs' | 'Gemini';
+  sourceType?: 'audio' | 'video';
 }
 
-export interface Webinar {
+export interface MovieCharacter {
+  id: string;
+  name: string;
+  description: string;
+  traits: string[];
+  voiceId?: string;
+  avatarUrl?: string;
+}
+
+export interface MovieScene {
+  id: string;
+  slugline: string;
+  description: string;
+  visualPrompt: string;
+  audioScript?: string;
+  action?: string;
+  isApproved: boolean;
+  voiceId?: string;
+  videoUrl?: string;
+  isGenerating?: boolean;
+}
+
+export interface MovieScript {
   id: string;
   title: string;
-  description?: string;
-  date: string;
-  invites: number;
-  showUps: number;
-  buyers: number;
-  status: 'Upcoming' | 'Live' | 'Completed';
-  transcript?: string;
-  roomLink?: string;
-  accessCode?: string;
-  token?: string;
-  scheduleDay?: number; // 0 (Sun) to 6 (Sat)
-  scheduleTime?: string; // HH:mm
-  repeatFrequency?: 'Weekly' | 'Bi-Weekly' | 'Monthly' | 'None';
+  logline: string;
+  characters: MovieCharacter[];
+  scenes: MovieScene[];
+  status: string;
+}
+
+export interface ReleasedMovie {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  posterUrl: string;
+  ticketPrice: number;
+  ticketsSold: number;
+  totalRevenue: number;
+  author: string;
+  ticketStatus: 'Draft' | 'Live';
+  watchUrl?: string;
+}
+
+export type ConnectionChannel = 
+  | 'Email' | 'SMS' | 'Twilio' | 'Telnyx' | 'Vonage' | 'WhatsApp' 
+  | 'Telegram' | 'Discord' | 'Slack' | 'Circle' | 'Instagram' 
+  | 'Facebook' | 'LinkedIn' | 'Phone';
+
+export interface MessageThread {
+  id: string;
+  channel: ConnectionChannel;
+  contactName: string;
+  lastMessage: string;
+  timestamp: string;
+  isAiAutoPilot: boolean;
+  avatarUrl: string;
+  unreadCount: number;
+}
+
+export interface MemoryNode {
+  id: string;
+  title: string;
+  type: 'Note' | 'Document' | 'Link';
+  content: string;
+  timestamp: string;
+  category: string;
+}
+
+export type HobbsPersona = 
+  | 'Emergency Responder' | 'Health Coach' | 'Business Mentor' 
+  | 'Home Manager' | 'Travel Agent' | 'Financial Advisor' 
+  | 'Medical Assistant' | 'Career Coach' | 'Fitness Trainer' 
+  | 'Local Guide' | 'Life Coach' | 'Personal Assistant';
+
+export interface SocialPost {
+  id: string;
+  title: string;
+  content: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video';
+  scheduledTime: string;
+  platforms: string[];
+  status: Status;
 }

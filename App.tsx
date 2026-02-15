@@ -17,7 +17,6 @@ import GlobalTasks from './components/GlobalTasks';
 import SiteBuilder from './components/SiteBuilder';
 import BlogPlatform from './components/BlogPlatform';
 import BrandVoicePage from './components/BrandVoice';
-import SocialConnector from './components/SocialConnector';
 import SocialCalendar from './components/SocialCalendar';
 import ContentCreator from './components/ContentCreator';
 import AudioCreator from './components/AudioCreator';
@@ -30,6 +29,7 @@ import OwnerProfile from './components/OwnerProfile';
 import BusinessIdentity from './components/BusinessIdentity';
 import ProjectPortfolio from './components/ProjectPortfolio';
 import UsageDashboard from './components/UsageDashboard';
+// Fix: Corrected import path for ApiManagement located in components/
 import ApiManagement from './components/ApiManagement';
 import AIChatbot from './components/AIChatbot';
 import { Icons } from './constants';
@@ -89,20 +89,28 @@ const App: React.FC = () => {
   });
 
   // Identity States
-  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo>({ 
-    name: 'Senior Engineer', 
-    role: 'Full-stack Architect', 
-    email: 'engineer@hobbs.studio',
-    bio: 'Lead architect at Hobbs Studio. Specialized in autonomous agent orchestration and high-fidelity portal development.' 
+  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo>(() => {
+    const saved = localStorage.getItem('OMNI_OWNER_INFO');
+    return saved ? JSON.parse(saved) : { 
+      name: 'Senior Engineer', 
+      role: 'Full-stack Architect', 
+      email: 'engineer@hobbs.studio',
+      bio: 'Lead architect at Hobbs Studio. Specialized in autonomous agent orchestration and high-fidelity portal development.',
+      socialLinks: {}
+    };
   });
   
-  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({ 
-    name: 'Hobbs Studio', 
-    industry: 'Creative Technology', 
-    mission: 'Empowering the next generation of creators with autonomous AI production environments.',
-    website: 'https://hobbs.studio',
-    size: 'Medium (11-50)',
-    assignedPhone: '+1 (415) 555-0123'
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>(() => {
+    const saved = localStorage.getItem('OMNI_BUSINESS_INFO');
+    return saved ? JSON.parse(saved) : { 
+      name: '', // Using empty string to trigger default display in components
+      industry: 'Creative Technology', 
+      mission: 'Empowering the next generation of creators with autonomous AI production environments.',
+      website: 'https://hobbs.studio',
+      size: 'Medium (11-50)',
+      assignedPhone: '',
+      logoUrl: ''
+    };
   });
 
   // Library & Shared states
@@ -114,6 +122,14 @@ const App: React.FC = () => {
   const [movieProjects, setMovieProjects] = useState<MovieScript[]>([]);
   const [currentMovieScript, setCurrentMovieScript] = useState<MovieScript | null>(null);
   const [releasedMovies, setReleasedMovies] = useState<ReleasedMovie[]>([]);
+
+  useEffect(() => {
+    localStorage.setItem('OMNI_OWNER_INFO', JSON.stringify(ownerInfo));
+  }, [ownerInfo]);
+
+  useEffect(() => {
+    localStorage.setItem('OMNI_BUSINESS_INFO', JSON.stringify(businessInfo));
+  }, [businessInfo]);
 
   const allBoards = useMemo(() => workspaces.flatMap(ws => ws.boards), [workspaces]);
 
@@ -331,7 +347,14 @@ const App: React.FC = () => {
       // Fix: Changed 'api-management' to 'vault' to match the union type defined in types.ts
       case 'vault': return <ApiManagement />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
-      case 'connections': return <ConnectionsHub clonedVoices={clonedVoices} />;
+      case 'connections': return (
+        <ConnectionsHub 
+          clonedVoices={clonedVoices} 
+          onUpdateBusiness={setBusinessInfo}
+          onUpdateOwner={setOwnerInfo}
+          businessInfo={businessInfo}
+        />
+      );
       case 'integrations': return <IntegrationsCenter onNavigate={setActivePage} />;
       case 'workflows': return <WorkflowBuilder />;
       case 'campaigns': return <CampaignManager />;
@@ -349,7 +372,6 @@ const App: React.FC = () => {
           }} 
         />
       );
-      case 'social': return <SocialConnector />;
       case 'social-calendar': return <SocialCalendar />;
       case 'content-creator': return <ContentCreator />;
       case 'audio-lab': return (
@@ -452,9 +474,13 @@ const App: React.FC = () => {
                 className="flex items-center space-x-2 cursor-pointer group"
                 onClick={() => setActivePage('owner-profile')}
               >
-                 <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shadow-lg group-hover:scale-110 transition-transform">
-                   {ownerInfo.name[0]}
-                 </div>
+                 {ownerInfo.avatarUrl ? (
+                   <img src={ownerInfo.avatarUrl} className="w-8 h-8 rounded-full border border-indigo-500 shadow-lg group-hover:scale-110 transition-transform object-cover" />
+                 ) : (
+                   <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shadow-lg group-hover:scale-110 transition-transform">
+                     {ownerInfo.name[0]}
+                   </div>
+                 )}
               </div>
            </div>
         </header>

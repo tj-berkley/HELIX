@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Modality, Type } from '@google/genai';
-import { ConnectionChannel, MessageThread, MemoryNode, HobbsPersona, ClonedVoice } from '../types';
+import { ConnectionChannel, MessageThread, MemoryNode, HobbsPersona, ClonedVoice, BusinessInfo, OwnerInfo } from '../types';
 
 const CHANNELS: { id: ConnectionChannel; icon: string; color: string }[] = [
   { id: 'Email', icon: '📧', color: 'bg-blue-500' },
@@ -333,19 +333,24 @@ const OutboundView: React.FC<{
 
 interface ConnectionsHubProps {
   clonedVoices: ClonedVoice[];
+  businessInfo: BusinessInfo;
+  // Fix: Used React.Dispatch<React.SetStateAction<...>> to properly type functional state updates and resolve TS assignment error.
+  onUpdateBusiness: React.Dispatch<React.SetStateAction<BusinessInfo>>;
+  onUpdateOwner: React.Dispatch<React.SetStateAction<OwnerInfo>>;
 }
 
-const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) => {
+const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [], businessInfo, onUpdateBusiness, onUpdateOwner }) => {
   const [activeTab, setActiveTab] = useState<'Inbound' | 'Outbound' | 'AI Memory' | 'Voice' | 'Provisioning'>('Inbound');
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [activePersona, setActivePersona] = useState<HobbsPersona>('Personal Assistant');
-  const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>('Kore');
   const availableVoices = [...clonedVoices, ...DEFAULT_VOICES];
   const [connectedChannels, setConnectedChannels] = useState<Set<ConnectionChannel>>(new Set(['Email', 'SMS']));
-  const [assignedNumber, setAssignedNumber] = useState<string | null>(localStorage.getItem('HOBBS_MOBILE_NUMBER'));
   const [isProvisioning, setIsProvisioning] = useState(false);
   const [provisionSuccess, setProvisionSuccess] = useState(false);
+
+  // Sync assignedNumber from businessInfo or ownerInfo (business preference)
+  const assignedNumber = businessInfo.assignedPhone || '';
 
   const provisionNumber = () => {
     setIsProvisioning(true);
@@ -353,8 +358,15 @@ const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) =>
     setTimeout(() => {
       const areaCode = [415, 650, 212, 310][Math.floor(Math.random() * 4)];
       const number = `+1 (${areaCode}) ${Math.floor(Math.random()*899+100)}-${Math.floor(Math.random()*8999+1000)}`;
-      setAssignedNumber(number);
-      localStorage.setItem('HOBBS_MOBILE_NUMBER', number);
+      
+      // Update global context: prefer business if name exists, else owner
+      if (businessInfo.name && businessInfo.name.trim().length > 0) {
+        onUpdateBusiness({ ...businessInfo, assignedPhone: number });
+      } else {
+        // Assume owner update handler is available via prop
+        onUpdateOwner(prev => ({ ...prev, assignedPhone: number }));
+      }
+      
       setConnectedChannels(prev => new Set([...Array.from(prev), 'Phone', 'Twilio']));
       setIsProvisioning(false);
       setProvisionSuccess(true);
@@ -369,10 +381,6 @@ const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) =>
       next.add(channelId);
     }
     setConnectedChannels(next);
-  };
-
-  const connectAllChannels = () => {
-    setConnectedChannels(new Set(CHANNELS.map(c => c.id)));
   };
 
   return (
@@ -446,7 +454,7 @@ const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) =>
         
         {activeTab === 'Provisioning' && (
            <div className="flex-1 flex flex-col items-center justify-center p-20 bg-black/60 relative overflow-hidden">
-             <div className="max-w-3xl w-full bg-slate-900 border border-white/10 rounded-[5rem] p-20 space-y-12 relative z-10">
+             <div className="max-w-4xl w-full bg-slate-900 border border-white/10 rounded-[5rem] p-16 space-y-12 relative z-10 overflow-y-auto scrollbar-hide">
                 {!provisionSuccess ? (
                   <>
                     <div className="text-center space-y-6">
@@ -454,14 +462,22 @@ const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) =>
                        <h3 className="text-5xl font-black text-white">Acquire Identity</h3>
                        <p className="text-slate-400 text-lg">Provision a verified mobile number for your AI agent to communicate via voice and text.</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-8">
-                       <button onClick={provisionNumber} disabled={isProvisioning} className="p-10 bg-black/40 border-2 border-white/5 rounded-[3rem] hover:border-indigo-500 transition-all flex flex-col items-center space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                       <button onClick={provisionNumber} disabled={isProvisioning} className="p-8 bg-black/40 border-2 border-white/5 rounded-[3rem] hover:border-indigo-500 transition-all flex flex-col items-center space-y-4">
                           <span className="text-5xl">🇬</span>
                           <span className="text-[10px] font-black uppercase text-slate-500">Google Hub</span>
                        </button>
-                       <button onClick={provisionNumber} disabled={isProvisioning} className="p-10 bg-black/40 border-2 border-white/5 rounded-[3rem] hover:border-rose-500 transition-all flex flex-col items-center space-y-4">
+                       <button onClick={provisionNumber} disabled={isProvisioning} className="p-8 bg-black/40 border-2 border-white/5 rounded-[3rem] hover:border-rose-500 transition-all flex flex-col items-center space-y-4">
                           <span className="text-4xl font-black text-rose-500">Twilio</span>
                           <span className="text-[10px] font-black uppercase text-slate-500">API Gateway</span>
+                       </button>
+                       <button onClick={provisionNumber} disabled={isProvisioning} className="p-8 bg-black/40 border-2 border-white/5 rounded-[3rem] hover:border-indigo-600 transition-all flex flex-col items-center space-y-4">
+                          <span className="text-4xl font-black text-indigo-600">Telnyx</span>
+                          <span className="text-[10px] font-black uppercase text-slate-500">SIP Trunking</span>
+                       </button>
+                       <button onClick={provisionNumber} disabled={isProvisioning} className="p-8 bg-black/40 border-2 border-white/5 rounded-[3rem] hover:border-orange-500 transition-all flex flex-col items-center space-y-4">
+                          <span className="text-4xl font-black text-orange-500">Vonage</span>
+                          <span className="text-[10px] font-black uppercase text-slate-500">Video API</span>
                        </button>
                     </div>
                     {isProvisioning && (

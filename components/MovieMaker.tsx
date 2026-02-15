@@ -66,15 +66,18 @@ const MovieMaker: React.FC<MovieMakerProps> = ({ savedProjects, onRelease }) => 
         setAssemblyProgress(p);
         if (p >= 100) {
             clearInterval(interval);
+            // Fix: Added missing 'slug' and 'ticketStatus' properties to the ReleasedMovie object to resolve TS assignment error.
             onRelease?.({
                 id: `m-${Date.now()}`,
                 title: activeProject.title,
+                slug: activeProject.title.toLowerCase().replace(/\s+/g, '-'),
                 description: activeProject.logline,
                 posterUrl: activeProject.scenes[0].videoUrl || `https://picsum.photos/1280/720?random=${Date.now()}`,
                 ticketPrice: 12.50,
                 ticketsSold: 0,
                 totalRevenue: 0,
-                author: "Hobbs Studio AI"
+                author: "Hobbs Studio AI",
+                ticketStatus: 'Live'
             });
             setIsReleasing(false);
         }

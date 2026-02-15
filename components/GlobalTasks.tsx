@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icons, STATUS_COLORS, PRIORITY_COLORS } from '../constants';
 
 type TaskView = 'List' | 'Board' | 'Calendar';
@@ -11,7 +11,7 @@ interface Task {
   column: string;
   category: string;
   dueDate: string;
-  isAvailable?: boolean; // If true, slot is 'Not Busy' for appointments
+  isAvailable?: boolean; 
   isEvent?: boolean;
   attendees?: string[];
   paymentOption?: string;
@@ -45,7 +45,10 @@ const INITIAL_TASKS: Task[] = [
 const GlobalTasks: React.FC<GlobalTasksProps> = ({ activeViewInitial = 'List' }) => {
   const [activeView, setActiveView] = useState<TaskView>(activeViewInitial);
   const [selectedCalendarSources, setSelectedCalendarSources] = useState<string[]>(['Internal', 'G-Calendar', 'G-Tasks']);
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    const saved = localStorage.getItem('OMNI_GLOBAL_TASKS_V1');
+    return saved ? JSON.parse(saved) : INITIAL_TASKS;
+  });
   
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -75,8 +78,12 @@ const GlobalTasks: React.FC<GlobalTasksProps> = ({ activeViewInitial = 'List' })
     attachmentType: 'None' as 'Article' | 'Image' | 'Video' | 'None',
     attachmentRef: '',
     selectedPlatforms: [] as string[],
-    isAvailable: true // Default to 'Not Busy' for events with social distribution
+    isAvailable: true 
   });
+
+  useEffect(() => {
+    localStorage.setItem('OMNI_GLOBAL_TASKS_V1', JSON.stringify(tasks));
+  }, [tasks]);
 
   const columns = ['To Do', 'In Progress', 'Blocked', 'Done'];
 
@@ -119,7 +126,7 @@ const GlobalTasks: React.FC<GlobalTasksProps> = ({ activeViewInitial = 'List' })
       category: newEvent.socialEnabled ? 'Social Post' : 'Event',
       dueDate: newEvent.dueDate,
       isEvent: true,
-      isAvailable: newEvent.isAvailable, // Captured from form
+      isAvailable: newEvent.isAvailable,
       attendees: newEvent.attendees.split(',').map(s => s.trim()).filter(Boolean),
       paymentOption: newEvent.paymentOption,
       webinarLink: newEvent.webinarDetails,
@@ -173,6 +180,10 @@ const GlobalTasks: React.FC<GlobalTasksProps> = ({ activeViewInitial = 'List' })
     setTasks(prev => prev.map(t => t.id === id ? { ...t, title: newTitle } : t));
   };
 
+  const deleteTask = (id: string) => {
+    setTasks(prev => prev.filter(t => t.id !== id));
+  };
+
   const externalEvents = [
     { id: 'e1', title: 'Google Sync: Team Lead Interview', source: 'G-Calendar', time: '10:00 AM', date: '2025-02-15' },
     { id: 'e2', title: 'Google Tasks: Renew Cloud Credentials', source: 'G-Tasks', time: 'All Day', date: '2025-02-16' },
@@ -182,7 +193,7 @@ const GlobalTasks: React.FC<GlobalTasksProps> = ({ activeViewInitial = 'List' })
   const calendarDays = Array.from({ length: 35 }, (_, i) => i - 3);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden font-sans">
+    <div className="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden font-sans text-slate-900">
       <div className="p-8 border-b border-slate-200 bg-white flex justify-between items-center shrink-0">
         <div className="flex items-center space-x-6">
            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
@@ -223,7 +234,7 @@ const GlobalTasks: React.FC<GlobalTasksProps> = ({ activeViewInitial = 'List' })
 
       <div className="flex-1 overflow-hidden flex">
         {activeView === 'Calendar' && (
-           <div className="w-80 border-r border-slate-200 bg-white p-8 flex flex-col shrink-0 space-y-10 overflow-y-auto">
+           <div className="w-80 border-r border-slate-200 bg-white p-8 flex flex-col shrink-0 space-y-10 overflow-y-auto scrollbar-hide">
               <div className="space-y-4">
                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Linked Intelligence</h3>
                  <div className="space-y-3">
@@ -276,12 +287,12 @@ const GlobalTasks: React.FC<GlobalTasksProps> = ({ activeViewInitial = 'List' })
 
                   <div className="flex-1 space-y-3">
                     {tasks.filter(t => t.column === col).map(task => (
-                      <div key={task.id} className={`p-6 rounded-[1.8rem] shadow-sm border transition-all cursor-grab active:cursor-grabbing group ${task.isEvent ? (task.isAvailable ? 'bg-amber-50/40 border-dashed border-amber-200' : 'bg-indigo-50 border-indigo-200') : 'bg-white border-slate-200 hover:shadow-xl'}`}>
+                      <div key={task.id} className={`p-6 rounded-[1.8rem] shadow-sm border transition-all cursor-grab active:cursor-grabbing group relative ${task.isEvent ? (task.isAvailable ? 'bg-amber-50/40 border-dashed border-amber-200' : 'bg-indigo-50 border-indigo-200') : 'bg-white border-slate-200 hover:shadow-xl'}`}>
+                          <button onClick={() => deleteTask(task.id)} className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-500 transition-all">✕</button>
                           <div className="flex justify-between items-start mb-4">
                             <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border ${task.isEvent ? (task.isAvailable ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-indigo-600 text-white border-indigo-500') : 'bg-indigo-50 text-indigo-400 border-indigo-100'}`}>
                                 {task.category}
                             </span>
-                            {task.isEvent && <span className="text-xs">{task.isAvailable ? '🔓' : '📅'}</span>}
                           </div>
                           <input 
                             className="text-sm font-black text-slate-800 leading-tight mb-6 bg-transparent border-none outline-none w-full focus:ring-0" 
@@ -320,7 +331,7 @@ const GlobalTasks: React.FC<GlobalTasksProps> = ({ activeViewInitial = 'List' })
                       {tasks.map(task => (
                         <tr key={task.id} className={`hover:bg-slate-50/80 transition-all cursor-pointer group ${task.isEvent ? (task.isAvailable ? 'bg-amber-50/20' : 'bg-indigo-50/30') : ''}`}>
                           <td className="p-5">
-                            <button className={`w-5 h-5 rounded-full border-2 transition-all ${task.column === 'Done' ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 hover:border-indigo-500'}`}>
+                            <button onClick={(e) => { e.stopPropagation(); deleteTask(task.id); }} className={`w-5 h-5 rounded-full border-2 transition-all ${task.column === 'Done' ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 hover:border-indigo-500'}`}>
                                {task.column === 'Done' && <span className="text-white text-[10px]">✓</span>}
                             </button>
                           </td>
@@ -401,7 +412,8 @@ const GlobalTasks: React.FC<GlobalTasksProps> = ({ activeViewInitial = 'List' })
                              
                              <div className="space-y-1">
                                 {internalTasks.map(t => (
-                                   <div key={t.id} className={`p-1.5 rounded-lg text-[9px] font-bold shadow-sm truncate border transition-all ${t.isAvailable ? 'bg-white border-dashed border-amber-400 text-amber-600 opacity-80' : (t.isEvent ? 'bg-slate-900 border-l-4 border-indigo-400 text-white' : 'bg-indigo-500 text-white')}`}>
+                                   <div key={t.id} className={`p-1.5 rounded-lg text-[9px] font-bold shadow-sm truncate border transition-all relative group/item ${t.isAvailable ? 'bg-white border-dashed border-amber-400 text-amber-600 opacity-80' : (t.isEvent ? 'bg-slate-900 border-l-4 border-indigo-400 text-white' : 'bg-indigo-500 text-white')}`}>
+                                      <button onClick={(e) => { e.stopPropagation(); deleteTask(t.id); }} className="absolute right-1 top-1 text-[8px] opacity-0 group-hover/item:opacity-100 transition-opacity">✕</button>
                                       {t.title}
                                    </div>
                                 ))}
