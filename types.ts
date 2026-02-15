@@ -115,7 +115,8 @@ export type Page =
   | 'api-management'
   | 'audio-lab'
   | 'owner-profile'
-  | 'business-identity';
+  | 'business-identity'
+  | 'usage-dashboard';
 
 export type ConnectionChannel = 'Email' | 'SMS' | 'WhatsApp' | 'Telegram' | 'Discord' | 'Slack' | 'Circle' | 'Instagram' | 'Facebook' | 'LinkedIn' | 'Phone' | 'Twilio' | 'Telnyx' | 'Vonage';
 

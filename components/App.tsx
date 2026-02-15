@@ -13,6 +13,8 @@ import ContactManager from './ContactManager';
 import GlobalTasks from './GlobalTasks';
 import SiteBuilder from './SiteBuilder';
 import BlogPlatform from './BlogPlatform';
+// Added missing import for BrandVoicePage
+import BrandVoicePage from './BrandVoice';
 import SocialConnector from './SocialConnector';
 import SocialCalendar from './SocialCalendar';
 import ContentCreator from './ContentCreator';
@@ -25,6 +27,8 @@ import ConnectionsHub from './ConnectionsHub';
 import OwnerProfile from './OwnerProfile';
 import BusinessIdentity from './BusinessIdentity';
 import ProjectPortfolio from './ProjectPortfolio';
+import UsageDashboard from './UsageDashboard';
+import ApiManagement from './ApiManagement';
 import AIChatbot from './AIChatbot';
 import { Workspace, Board, Group, Item, BoardView, Page, Status, Priority, ReleasedMovie, MovieScript, Manuscript, OwnerInfo, BusinessInfo } from '../types';
 import { generateBoardFromPrompt, BoardGenerationOptions } from '../services/geminiService';
@@ -95,7 +99,8 @@ const App: React.FC = () => {
     industry: 'Creative Technology', 
     mission: 'Empowering the next generation of creators with autonomous AI production environments.',
     website: 'https://hobbs.studio',
-    size: 'Medium (11-50)'
+    size: 'Medium (11-50)',
+    assignedPhone: '+1 (415) 555-0123'
   });
 
   // Library & Shared states
@@ -289,6 +294,9 @@ const App: React.FC = () => {
     switch (activePage) {
       case 'owner-profile': return <OwnerProfile info={ownerInfo} onUpdate={setOwnerInfo} />;
       case 'business-identity': return <BusinessIdentity info={businessInfo} onUpdate={setBusinessInfo} />;
+      case 'brand-voice': return <BrandVoicePage />;
+      case 'usage-dashboard': return <UsageDashboard />;
+      case 'api-management': return <ApiManagement />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
       case 'connections': return <ConnectionsHub />;
       case 'integrations': return <IntegrationsCenter />;
@@ -318,7 +326,7 @@ const App: React.FC = () => {
           manuscriptLibrary={manuscriptLibrary}
           script={currentMovieScript}
           onUpdateScript={(s) => setCurrentMovieScript(s)}
-          onMoveToProduction={() => setActivePage('movie-maker')}
+          onMoveToProduction={() => setActivePage('movie-studio')}
         />
       );
       case 'movie-maker': return (
