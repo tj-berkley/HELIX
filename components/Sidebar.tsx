@@ -17,69 +17,72 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
   const [isAdminExpanded, setIsAdminExpanded] = useState(true);
 
   const mainNav = [
-    { id: 'board', label: 'Home', icon: <Icons.Home /> },
+    { id: 'dashboard', label: 'Dashboard', icon: <Icons.Home /> },
     { id: 'portfolio', label: 'Portfolios', icon: <span>📊</span> },
     { id: 'connections', label: 'Connections Hub', icon: <span>💬</span> },
     { id: 'tasks', label: 'My Tasks', icon: <span>✅</span> },
+    { id: 'calendar', label: 'Calendar', icon: <Icons.Calendar /> },
     { id: 'workflows', label: 'Workflows', icon: <span>⚡</span> },
     { id: 'campaigns', label: 'Campaigns', icon: <span>📢</span> },
     { id: 'contacts', label: 'Contacts', icon: <span>👥</span> },
     { id: 'brand-voice', label: 'Brand Voice', icon: <span>✨</span> },
-    { id: 'integrations', label: 'Integrations Center', icon: <span>🔌</span> },
+    { id: 'integrations', label: 'Integrations', icon: <span>🔌</span> },
   ];
 
   const platformNav = [
     { id: 'blog', label: 'Blog & Writing', icon: <span>✍️</span> },
-    { id: 'content-creator', label: 'Content marketing', icon: <span>🎨</span> },
+    { id: 'content-creator', label: 'Content Marketing', icon: <span>🎨</span> },
     { id: 'video-maker', label: 'Video Marketing', icon: <span>📹</span> },
-    { id: 'audio-lab', label: 'Audio & Voice Lab', icon: <span>🔊</span> },
+    { id: 'audio-lab', label: 'Audio Lab', icon: <span>🔊</span> },
     { id: 'social', label: 'Social Connect', icon: <span>🔗</span> },
-    { id: 'social-calendar', label: 'Social Calendar', icon: <span>🗓️</span> },
     { id: 'movie-studio', label: 'Movie Studio', icon: <span>🎥</span> },
     { id: 'movie-maker', label: 'Movie Maker', icon: <span>🎬</span> },
-    { id: 'box-office', label: 'Box Office', icon: <span>🎟️</span> },
-    { id: 'site-builder', label: 'Site Builder', icon: <span>🌐</span> },
+    { id: 'box-office', label: 'Box Office', icon: <span>🍿</span> },
   ];
 
   const adminNav = [
-    { id: 'api-management', label: 'API Management', icon: <span>🔑</span> },
-    { id: 'owner-profile', label: 'Owner Profile', icon: <span>👤</span> },
-    { id: 'business-identity', label: 'Business Identity', icon: <span>🏢</span> },
-    { id: 'usage-dashboard', label: 'Usage & Billing', icon: <span>🏦</span> },
+    { id: 'api-management', label: 'API Keys', icon: <span>🔑</span> },
+    { id: 'owner-profile', label: 'My Profile', icon: <span>👤</span> },
+    { id: 'business-identity', label: 'Company ID', icon: <span>🏢</span> },
+    { id: 'usage-dashboard', label: 'Usage', icon: <span>🏦</span> },
   ];
 
   return (
-    <aside className="w-64 h-screen bg-slate-900 text-slate-300 flex flex-col border-r border-slate-700 select-none overflow-hidden shrink-0">
-      <div className="p-4 flex items-center space-x-2 border-b border-slate-700 cursor-pointer shrink-0" onClick={() => onSelectPage('board')}>
-        <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">H</div>
-        <span className="font-bold text-white text-lg tracking-tight">Hobbs Studio</span>
+    <aside className="w-[240px] h-screen bg-[#0c0e12] text-slate-400 flex flex-col border-r border-white/5 select-none overflow-hidden shrink-0">
+      <div className="h-14 flex items-center px-6 border-b border-white/5 shrink-0">
+        <div className="flex items-center space-x-3 group cursor-pointer" onClick={() => onSelectPage('dashboard')}>
+          <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-black text-xs shadow-lg shadow-indigo-500/20 group-hover:rotate-6 transition-transform">O</div>
+          <span className="font-black text-white text-sm tracking-tight">OMNIPORTAL</span>
+        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-2 space-y-6 scrollbar-hide">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-8 scrollbar-hide">
         <div className="space-y-1">
           {mainNav.map(item => (
             <button 
               key={item.id}
               onClick={() => onSelectPage(item.id as Page)}
-              className={`flex items-center space-x-3 w-full p-2.5 rounded-lg transition-all text-sm ${activePage === item.id ? 'bg-blue-600 text-white font-semibold shadow-md' : 'hover:bg-slate-800'}`}
+              className={`flex items-center space-x-3 w-full px-3 py-2 rounded-xl transition-all text-xs font-bold ${activePage === item.id ? 'bg-white/10 text-white shadow-inner relative' : 'hover:bg-white/5 hover:text-slate-200'}`}
             >
-              <span className="w-5 h-5 flex items-center justify-center">{item.icon}</span>
+              {activePage === item.id && <div className="absolute left-0 w-1 h-4 bg-indigo-500 rounded-r-full shadow-[0_0_8px_rgba(99,102,241,1)]"></div>}
+              <span className="w-4 h-4 flex items-center justify-center opacity-80">{item.icon}</span>
               <span>{item.label}</span>
             </button>
           ))}
         </div>
 
         <div>
-          <div className="px-2 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Creative Suite</div>
+          <div className="px-3 pb-3 text-[9px] font-black text-slate-600 uppercase tracking-[0.2em]">Creative Suite</div>
           <div className="space-y-1">
             {platformNav.map(item => (
               <button 
                 key={item.id}
                 onClick={() => onSelectPage(item.id as Page)}
-                className={`flex items-center space-x-3 w-full p-2.5 rounded-lg transition-all text-sm ${activePage === item.id ? 'bg-indigo-600 text-white font-semibold shadow-md' : 'hover:bg-slate-800'}`}
+                className={`flex items-center space-x-3 w-full px-3 py-2 rounded-xl transition-all text-xs font-bold ${activePage === item.id ? 'bg-white/10 text-white shadow-inner relative' : 'hover:bg-white/5 hover:text-slate-200'}`}
               >
-                <span className="w-5 h-5 flex items-center justify-center">{item.icon}</span>
-                <span>{item.label}</span>
+                {activePage === item.id && <div className="absolute left-0 w-1 h-4 bg-purple-500 rounded-r-full shadow-[0_0_8px_rgba(168,85,247,1)]"></div>}
+                <span className="w-4 h-4 flex items-center justify-center opacity-80">{item.icon}</span>
+                <span className="truncate">{item.label}</span>
               </button>
             ))}
           </div>
@@ -88,20 +91,21 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
         <div>
           <button 
             onClick={() => setIsAdminExpanded(!isAdminExpanded)}
-            className="px-2 pb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center justify-between w-full hover:text-slate-300"
+            className="px-3 pb-3 text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] flex items-center justify-between w-full hover:text-slate-400 group"
           >
             <span>Administration</span>
-            <span className={`transition-transform ${isAdminExpanded ? 'rotate-180' : ''}`}><Icons.ChevronDown /></span>
+            <span className={`transition-transform duration-300 ${isAdminExpanded ? 'rotate-180 text-indigo-400' : ''}`}><Icons.ChevronDown /></span>
           </button>
           {isAdminExpanded && (
-            <div className="space-y-1 animate-in slide-in-from-top-1">
+            <div className="space-y-1 animate-in slide-in-from-top-2 duration-300">
               {adminNav.map(item => (
                 <button 
                   key={item.id}
                   onClick={() => onSelectPage(item.id as Page)}
-                  className={`flex items-center space-x-3 w-full p-2.5 rounded-lg transition-all text-sm ${activePage === item.id ? 'bg-slate-700 text-white font-semibold' : 'hover:bg-slate-800'}`}
+                  className={`flex items-center space-x-3 w-full px-3 py-2 rounded-xl transition-all text-xs font-bold ${activePage === item.id ? 'bg-white/10 text-white relative' : 'hover:bg-white/5 hover:text-slate-200'}`}
                 >
-                  <span className="w-5 h-5 flex items-center justify-center">{item.icon}</span>
+                  {activePage === item.id && <div className="absolute left-0 w-1 h-4 bg-slate-400 rounded-r-full"></div>}
+                  <span className="w-4 h-4 flex items-center justify-center opacity-80">{item.icon}</span>
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -110,13 +114,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
         </div>
       </nav>
 
-      <div className="p-4 bg-slate-950/80 border-t border-slate-700 flex items-center space-x-3 shrink-0 cursor-pointer hover:bg-slate-900 transition-all" onClick={() => onSelectPage('owner-profile')}>
-        <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-black text-white">
+      <div className="p-4 bg-white/5 border-t border-white/5 flex items-center space-x-3 shrink-0 cursor-pointer hover:bg-white/10 transition-all" onClick={() => onSelectPage('owner-profile')}>
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-800 flex items-center justify-center text-[10px] font-black text-white shadow-lg border border-white/10">
           {ownerInfo.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
         </div>
         <div className="flex-1 overflow-hidden">
-          <p className="text-[11px] font-black text-white truncate">{ownerInfo.name}</p>
-          <p className="text-[9px] text-slate-500 font-bold truncate uppercase tracking-tighter">{businessInfo.assignedPhone || 'No assigned phone'}</p>
+          <p className="text-[11px] font-black text-white truncate leading-none mb-1">{ownerInfo.name}</p>
+          <p className="text-[9px] text-slate-500 font-bold truncate uppercase tracking-tighter">{businessInfo.name}</p>
         </div>
       </div>
     </aside>

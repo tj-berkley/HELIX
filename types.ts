@@ -94,6 +94,7 @@ export interface Integration {
 }
 
 export type Page = 
+  | 'dashboard'
   | 'board' 
   | 'portfolio'
   | 'integrations' 
@@ -101,6 +102,7 @@ export type Page =
   | 'campaigns' 
   | 'contacts' 
   | 'tasks'
+  | 'calendar'
   | 'site-builder'
   | 'blog'
   | 'brand-voice'
@@ -203,6 +205,7 @@ export interface MovieCharacter {
   description: string;
   traits: string[];
   avatarUrl?: string;
+  voiceId?: string;
 }
 
 export interface MovieScene {
@@ -211,6 +214,8 @@ export interface MovieScene {
   description: string;
   visualPrompt: string;
   action: string;
+  audioScript?: string;
+  voiceId?: string;
   dialogue: { character: string; line: string }[];
   videoUrl?: string;
   isGenerating?: boolean;
@@ -257,4 +262,13 @@ export interface AudioClip {
   voice: string;
   url: string;
   timestamp: string;
+}
+
+export interface ClonedVoice {
+  id: string;
+  label: string;
+  description: string;
+  emoji: string;
+  sourceType: 'video' | 'audio';
+  provider: 'Yapper' | 'ElevenLabs' | 'Internal';
 }

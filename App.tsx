@@ -6,6 +6,7 @@ import BoardTable from './components/BoardTable';
 import KanbanView from './components/KanbanView';
 import TimelineView from './components/TimelineView';
 import CalendarView from './components/CalendarView';
+import Dashboard from './components/Dashboard';
 import IntegrationsCenter from './components/IntegrationsCenter';
 import WorkflowBuilder from './components/WorkflowBuilder';
 import CampaignManager from './components/CampaignManager';
@@ -27,10 +28,10 @@ import OwnerProfile from './components/OwnerProfile';
 import BusinessIdentity from './components/BusinessIdentity';
 import ProjectPortfolio from './components/ProjectPortfolio';
 import UsageDashboard from './components/UsageDashboard';
-// Added missing import for ApiManagement
 import ApiManagement from './components/ApiManagement';
 import AIChatbot from './components/AIChatbot';
-import { Workspace, Board, Group, Item, BoardView, Page, Status, Priority, ReleasedMovie, MovieScript, Manuscript, OwnerInfo, BusinessInfo } from './types';
+import { Icons } from './constants';
+import { Workspace, Board, Group, Item, BoardView, Page, Status, Priority, ReleasedMovie, MovieScript, Manuscript, OwnerInfo, BusinessInfo, ClonedVoice } from './types';
 import { generateBoardFromPrompt, BoardGenerationOptions } from './services/geminiService';
 
 const MOCK_WORKSPACE: Workspace = {
@@ -77,9 +78,8 @@ const App: React.FC = () => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([MOCK_WORKSPACE]);
   const [activeBoardId, setActiveBoardId] = useState(MOCK_WORKSPACE.boards[0].id);
   const [activeView, setActiveView] = useState<BoardView>('Table');
-  const [activePage, setActivePage] = useState<Page>('board');
+  const [activePage, setActivePage] = useState<Page>('dashboard');
   const [isGenerating, setIsGenerating] = useState(false);
-  
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<{ status: Status[]; priority: Priority[] }>({
     status: [],
@@ -99,12 +99,17 @@ const App: React.FC = () => {
     industry: 'Creative Technology', 
     mission: 'Empowering the next generation of creators with autonomous AI production environments.',
     website: 'https://hobbs.studio',
-    size: 'Medium (11-50)'
+    size: 'Medium (11-50)',
+    assignedPhone: '+1 (415) 555-0123'
   });
 
   // Library & Shared states
   const [manuscriptLibrary, setManuscriptLibrary] = useState<Manuscript[]>([]);
+  const [clonedVoices, setClonedVoices] = useState<ClonedVoice[]>([]);
   const [pendingMovieContent, setPendingMovieContent] = useState<{title: string, content: string} | undefined>();
+  
+  // Cinematic Registry
+  const [movieProjects, setMovieProjects] = useState<MovieScript[]>([]);
   const [currentMovieScript, setCurrentMovieScript] = useState<MovieScript | null>(null);
   const [releasedMovies, setReleasedMovies] = useState<ReleasedMovie[]>([]);
 
@@ -284,6 +289,14 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSaveMovieProject = (script: MovieScript) => {
+    setMovieProjects(prev => {
+      const exists = prev.find(p => p.id === script.id);
+      if (exists) return prev.map(p => p.id === script.id ? script : p);
+      return [script, ...prev];
+    });
+  };
+
   const handleReleaseMovie = (movie: ReleasedMovie) => {
     setReleasedMovies(prev => [movie, ...prev]);
     setActivePage('box-office');
@@ -291,19 +304,28 @@ const App: React.FC = () => {
 
   const renderActiveModule = () => {
     switch (activePage) {
+      case 'dashboard': return (
+        <Dashboard 
+          ownerInfo={ownerInfo} 
+          businessInfo={businessInfo} 
+          boards={allBoards} 
+          onSelectPage={setActivePage} 
+          onSelectBoard={(id) => { setActiveBoardId(id); setActivePage('board'); }}
+        />
+      );
       case 'owner-profile': return <OwnerProfile info={ownerInfo} onUpdate={setOwnerInfo} />;
       case 'business-identity': return <BusinessIdentity info={businessInfo} onUpdate={setBusinessInfo} />;
       case 'brand-voice': return <BrandVoicePage />;
       case 'usage-dashboard': return <UsageDashboard />;
-      // Added missing handling for api-management page
       case 'api-management': return <ApiManagement />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
-      case 'connections': return <ConnectionsHub />;
+      case 'connections': return <ConnectionsHub clonedVoices={clonedVoices} />;
       case 'integrations': return <IntegrationsCenter />;
       case 'workflows': return <WorkflowBuilder />;
       case 'campaigns': return <CampaignManager />;
       case 'contacts': return <ContactManager />;
-      case 'tasks': return <GlobalTasks />;
+      case 'tasks': return <GlobalTasks activeViewInitial="List" />;
+      case 'calendar': return <GlobalTasks activeViewInitial="Calendar" />;
       case 'site-builder': return <SiteBuilder />;
       case 'blog': return (
         <BlogPlatform 
@@ -318,21 +340,29 @@ const App: React.FC = () => {
       case 'social': return <SocialConnector />;
       case 'social-calendar': return <SocialCalendar />;
       case 'content-creator': return <ContentCreator />;
-      case 'audio-lab': return <AudioCreator />;
-      case 'video-maker': return <VideoMaker />;
+      case 'audio-lab': return (
+        <AudioCreator 
+          onAddClonedVoice={(v) => setClonedVoices(prev => [v, ...prev])}
+          clonedVoices={clonedVoices}
+        />
+      );
+      case 'video-maker': return <VideoMaker clonedVoices={clonedVoices} />;
       case 'movie-studio': return (
         <MovieStudio 
           initialContent={pendingMovieContent} 
           manuscriptLibrary={manuscriptLibrary}
+          clonedVoices={clonedVoices}
           script={currentMovieScript}
-          onUpdateScript={(s) => setCurrentMovieScript(s)}
+          onUpdateScript={(s) => {
+            setCurrentMovieScript(s);
+            handleSaveMovieProject(s);
+          }}
           onMoveToProduction={() => setActivePage('movie-maker')}
         />
       );
       case 'movie-maker': return (
         <MovieMaker 
-          script={currentMovieScript}
-          onUpdateScript={(s) => setCurrentMovieScript(s)}
+          savedProjects={movieProjects}
           onRelease={handleReleaseMovie}
         />
       );
@@ -367,11 +397,60 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden font-sans text-slate-900 bg-slate-950">
-      <Sidebar workspaces={workspaces} activeBoardId={activeBoardId} onSelectBoard={setActiveBoardId} activePage={activePage} onSelectPage={setActivePage} ownerInfo={ownerInfo} businessInfo={businessInfo} />
-      <main className="flex-1 flex flex-col min-w-0 bg-slate-50 overflow-hidden relative shadow-2xl rounded-l-[2rem] border-l border-slate-200">
-        {renderActiveModule()}
-      </main>
+    <div className="flex h-screen w-screen overflow-hidden font-sans text-slate-900 bg-[#0c0e12]">
+      <Sidebar 
+        workspaces={workspaces} 
+        activeBoardId={activeBoardId} 
+        onSelectBoard={setActiveBoardId} 
+        activePage={activePage} 
+        onSelectPage={setActivePage} 
+        ownerInfo={ownerInfo} 
+        businessInfo={businessInfo} 
+      />
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        {/* Global Modern Top Bar */}
+        <header className="h-14 border-b border-white/5 bg-[#0c0e12]/80 backdrop-blur-md flex items-center justify-between px-8 shrink-0 z-40">
+           <div className="flex items-center space-x-6 flex-1">
+              <div className="flex items-center space-x-2 text-slate-400">
+                 <span className="text-xs font-black uppercase tracking-[0.2em]">{activePage.replace('-', ' ')}</span>
+                 <Icons.ChevronRight />
+                 <span className="text-xs font-black text-slate-100">{activeBoard?.name || (activePage === 'dashboard' ? 'Overview' : activePage.charAt(0).toUpperCase() + activePage.slice(1))}</span>
+              </div>
+              <div className="relative max-w-md w-full">
+                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                    <Icons.Search />
+                 </div>
+                 <input 
+                   type="text" 
+                   placeholder="Command + K to Search Everywhere" 
+                   className="w-full bg-white/5 border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-xs text-slate-300 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:bg-white/10 transition-all"
+                 />
+              </div>
+           </div>
+           <div className="flex items-center space-x-4">
+              <button className="p-2 text-slate-400 hover:text-white transition-colors relative">
+                 <Icons.Message />
+                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-[#0c0e12]"></span>
+              </button>
+              <button className="p-2 text-slate-400 hover:text-white transition-colors">
+                 <Icons.Settings />
+              </button>
+              <div className="h-6 w-px bg-white/10 mx-2"></div>
+              <div 
+                className="flex items-center space-x-2 cursor-pointer group"
+                onClick={() => setActivePage('owner-profile')}
+              >
+                 <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shadow-lg group-hover:scale-110 transition-transform">
+                   {ownerInfo.name[0]}
+                 </div>
+              </div>
+           </div>
+        </header>
+
+        <main className="flex-1 flex flex-col min-w-0 bg-[#f9fafb] overflow-hidden relative shadow-2xl rounded-tl-[1.5rem] border-t border-l border-white/5">
+          {renderActiveModule()}
+        </main>
+      </div>
       <AIChatbot />
     </div>
   );

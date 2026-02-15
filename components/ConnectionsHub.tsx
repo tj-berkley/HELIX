@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Modality, Type } from '@google/genai';
-import { ConnectionChannel, MessageThread, MemoryNode, HobbsPersona } from '../types';
+import { ConnectionChannel, MessageThread, MemoryNode, HobbsPersona, ClonedVoice } from '../types';
 
 const CHANNELS: { id: ConnectionChannel; icon: string; color: string }[] = [
   { id: 'Email', icon: '📧', color: 'bg-blue-500' },
@@ -33,6 +33,14 @@ const PERSONAS: { role: HobbsPersona; icon: string; description: string }[] = [
   { role: 'Local Guide', icon: '📍', description: 'Hidden gems and navigation intelligence.' },
   { role: 'Life Coach', icon: '🧘', description: 'Mindfulness, goals, and existential clarity.' },
   { role: 'Personal Assistant', icon: '🤖', description: 'Scheduling and day-to-day administrative flow.' },
+];
+
+const DEFAULT_VOICES = [
+  { id: 'Puck', label: 'Puck', description: 'Energy & Youth', emoji: '👦' },
+  { id: 'Kore', label: 'Kore', description: 'Calm & Professional', emoji: '👩' },
+  { id: 'Fenrir', label: 'Fenrir', description: 'Deep Authority', emoji: '🐺' },
+  { id: 'Charon', label: 'Charon', description: 'Wise Storytelling', emoji: '🛶' },
+  { id: 'Zephyr', label: 'Zephyr', description: 'Service Friendly', emoji: '🌬️' },
 ];
 
 const MOCK_THREADS: MessageThread[] = [
@@ -135,15 +143,19 @@ const MemoryStudio: React.FC = () => {
   };
 
   const filteredMemories = memories.filter(m => m.category === activeFolder);
+  const totalTokens = memories.length * 450; // Mock calculation
 
   return (
     <div className="flex-1 flex overflow-hidden animate-in fade-in duration-500 bg-slate-950">
       {/* Memory Folders Sidebar */}
       <div className="w-80 border-r border-white/5 bg-black/20 flex flex-col shrink-0 p-6 space-y-8">
         <div className="flex justify-between items-center px-2">
-           <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Knowledge Clusters</h3>
-           <button className="text-indigo-400 hover:text-indigo-300">
-             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+           <div className="space-y-1">
+              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Neural Hierarchy</h3>
+              <p className="text-sm font-bold text-white tracking-tight">Knowledge Clusters</p>
+           </div>
+           <button className="text-indigo-400 hover:text-indigo-300 p-2 hover:bg-white/5 rounded-xl transition-all">
+             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
            </button>
         </div>
         <div className="space-y-1">
@@ -154,85 +166,120 @@ const MemoryStudio: React.FC = () => {
               className={`w-full text-left p-4 rounded-2xl border transition-all flex items-center space-x-3 group ${activeFolder === f ? 'bg-indigo-600 border-indigo-400 shadow-xl shadow-indigo-900/20 text-white' : 'bg-slate-900/40 border-white/5 text-slate-400 hover:border-white/10'}`}
             >
               <span className="text-lg">{activeFolder === f ? '📂' : '📁'}</span>
-              <span className="text-xs font-black uppercase tracking-tight truncate">{f}</span>
+              <div className="flex-1 min-w-0">
+                 <span className="text-[10px] font-black uppercase tracking-tight block truncate">{f}</span>
+                 <span className={`text-[8px] font-bold ${activeFolder === f ? 'text-indigo-200' : 'text-slate-600'}`}>{memories.filter(m => m.category === f).length} Parameters</span>
+              </div>
             </button>
           ))}
         </div>
 
-        <div className="mt-auto bg-slate-900 border border-white/5 rounded-[2rem] p-6 space-y-4 shadow-2xl">
-           <div className="flex items-center space-x-3">
-              <div className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-indigo-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`}></div>
-              <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Assistant Brain Status</span>
+        <div className="mt-auto bg-slate-900 border border-white/5 rounded-[2.5rem] p-8 space-y-6 shadow-2xl relative overflow-hidden group/status">
+           <div className="absolute -right-10 -top-10 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover/status:bg-emerald-500/10 transition-all"></div>
+           <div className="space-y-4 relative">
+              <div className="flex items-center space-x-3">
+                 <div className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-indigo-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`}></div>
+                 <span className="text-[10px] font-black uppercase text-slate-200 tracking-widest">Global Brain Matrix</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div>
+                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Training Depth</p>
+                    <p className="text-lg font-black text-white">{memories.length > 5 ? 'Stable' : 'Sparse'}</p>
+                 </div>
+                 <div>
+                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Context Size</p>
+                    <p className="text-lg font-black text-indigo-400">{(totalTokens / 1000).toFixed(1)}k</p>
+                 </div>
+              </div>
+              <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">Training nodes in the <strong>{activeFolder}</strong> cluster are currently grounding all Gemini-3 operations.</p>
            </div>
-           <p className="text-[10px] text-slate-500 font-medium leading-relaxed italic">Grounding active for <strong>{memories.length}</strong> parameters across all platform chatbots.</p>
            {isSyncing && (
-             <div className="flex items-center space-x-2 text-[8px] font-black text-indigo-400 uppercase animate-pulse">
-                <span>Neural Frequency Syncing...</span>
+             <div className="flex items-center space-x-2 text-[8px] font-black text-indigo-400 uppercase animate-pulse border-t border-white/5 pt-4">
+                <svg className="animate-spin h-3 w-3 mr-2" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span>Synapsing Knowledge...</span>
              </div>
            )}
         </div>
       </div>
 
       {/* Memory Nodes Grid */}
-      <div className="flex-1 bg-slate-900/10 p-10 overflow-y-auto pattern-grid-dark relative">
-        <div className="max-w-5xl mx-auto space-y-10">
-          <div className="flex justify-between items-end border-b border-white/5 pb-6">
-            <div>
-              <h3 className="text-3xl font-black tracking-tighter text-white">Cluster: {activeFolder}</h3>
-              <p className="text-slate-500 text-sm font-medium mt-1">Grounding instructions and proprietary knowledge nodes.</p>
+      <div className="flex-1 bg-slate-900/10 p-12 overflow-y-auto pattern-grid-dark relative">
+        <div className="max-w-5xl mx-auto space-y-12">
+          <div className="flex justify-between items-end border-b border-white/5 pb-8">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-3 mb-2">
+                 <span className="text-3xl">🧠</span>
+                 <h3 className="text-4xl font-black tracking-tighter text-white">{activeFolder}</h3>
+              </div>
+              <p className="text-slate-500 font-medium text-lg">Manage proprietary context nodes to train your autonomous agents.</p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex space-x-4 mb-1">
                <button 
                 onClick={() => setIsAddingMemory(true)}
-                className="px-6 py-3 bg-white/5 border border-white/10 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all flex items-center"
+                className="px-6 py-3.5 bg-white/5 border border-white/10 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all flex items-center shadow-lg active:scale-95"
               >
                 Manual Node
               </button>
               <button 
                 onClick={() => setIsSmartCapturing(true)}
-                className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-900/40 hover:bg-indigo-700 transition-all flex items-center"
+                className="px-10 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-indigo-900/40 hover:bg-indigo-700 transition-all flex items-center active:scale-95"
               >
-                <span className="mr-2">✨</span>
+                <span className="mr-3">✨</span>
                 Smart Capture
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {filteredMemories.map(m => (
-              <div key={m.id} className="bg-slate-900 border border-white/5 rounded-[2.5rem] p-8 space-y-6 hover:border-white/20 transition-all group shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                   <button onClick={() => deleteMemory(m.id)} className="p-2 bg-rose-500/10 text-rose-500 hover:bg-rose-50 hover:text-white rounded-xl transition-all">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              <div key={m.id} className="bg-slate-900 border border-white/5 rounded-[3rem] p-10 space-y-8 hover:border-indigo-500/30 transition-all group shadow-2xl relative overflow-hidden flex flex-col">
+                <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <button onClick={() => deleteMemory(m.id)} className="p-3 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-2xl transition-all shadow-xl">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                    </button>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
+                
+                <div className="flex items-center space-x-6">
+                  <div className="w-16 h-16 bg-white/5 rounded-[1.5rem] flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform ring-1 ring-white/10">
                     {m.type === 'Note' ? '📝' : m.type === 'Link' ? '🔗' : '📄'}
                   </div>
-                  <div>
-                    <h4 className="font-black text-white text-lg tracking-tight truncate w-48">{m.title}</h4>
-                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">{m.timestamp}</span>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-black text-white text-xl tracking-tight truncate">{m.title}</h4>
+                    <div className="flex items-center space-x-2 mt-1">
+                       <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">{m.timestamp}</span>
+                       <span className="text-slate-800">•</span>
+                       <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{m.type}</span>
+                    </div>
                   </div>
                 </div>
-                <p className="text-sm text-slate-400 font-medium leading-relaxed italic pr-4">"{m.content}"</p>
-                <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                   <span className="text-[8px] font-black text-emerald-500 bg-emerald-500/5 px-2 py-1 rounded-full border border-emerald-500/20 uppercase tracking-widest">Grounding Active</span>
+
+                <div className="flex-1 bg-black/30 rounded-[2rem] p-6 border border-white/5">
+                   <p className="text-sm text-slate-400 font-medium leading-relaxed italic pr-4">"{m.content}"</p>
+                </div>
+
+                <div className="pt-6 border-t border-white/5 flex items-center justify-between mt-auto">
+                   <div className="flex items-center bg-emerald-500/5 text-emerald-500 px-3 py-1 rounded-full border border-emerald-500/10">
+                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+                      <span className="text-[9px] font-black uppercase tracking-widest">Grounding Active</span>
+                   </div>
                    <div className="flex items-center space-x-1.5">
                       <div className="w-1 h-1 rounded-full bg-indigo-500"></div>
                       <div className="w-1 h-1 rounded-full bg-indigo-500"></div>
-                      <div className="w-1 h-1 rounded-full bg-indigo-500 opacity-30"></div>
-                      <span className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">Strength</span>
+                      <div className="w-1 h-1 rounded-full bg-indigo-500 opacity-20"></div>
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-tighter ml-1">Strength</span>
                    </div>
                 </div>
               </div>
             ))}
 
             {filteredMemories.length === 0 && !isAddingMemory && !isSmartCapturing && (
-               <div className="col-span-full py-40 text-center space-y-6 border-4 border-dashed border-white/5 rounded-[3rem] opacity-20">
-                  <div className="text-8xl">🧠</div>
-                  <p className="text-2xl font-black uppercase tracking-widest">Empty Cluster</p>
-                  <p className="text-sm font-bold uppercase tracking-widest">Use Smart Capture to train the brain instantly</p>
+               <div className="col-span-full py-40 text-center space-y-8 border-4 border-dashed border-white/5 rounded-[4rem] opacity-30 group hover:opacity-50 transition-opacity">
+                  <div className="text-[120px] filter grayscale group-hover:grayscale-0 transition-all">🧠</div>
+                  <div className="space-y-2">
+                    <p className="text-3xl font-black uppercase tracking-widest text-white">Cluster Void</p>
+                    <p className="text-lg font-bold uppercase tracking-widest text-slate-500">No context nodes found in this knowledge cluster</p>
+                  </div>
+                  <button onClick={() => setIsSmartCapturing(true)} className="px-10 py-4 bg-indigo-600/10 border border-indigo-600/30 rounded-2xl text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] hover:bg-indigo-600 hover:text-white transition-all">Launch Neural Extraction</button>
                </div>
             )}
           </div>
@@ -242,48 +289,48 @@ const MemoryStudio: React.FC = () => {
       {/* Manual Memory Modal */}
       {isAddingMemory && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in" onClick={() => setIsAddingMemory(false)}>
-          <div className="bg-slate-900 w-full max-w-xl rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
-            <div className="p-10 border-b border-white/5 flex justify-between items-center">
+          <div className="bg-slate-900 w-full max-w-xl rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-white/10 overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="p-10 border-b border-white/5 flex justify-between items-center bg-slate-950/50">
               <div>
-                <h3 className="text-3xl font-black text-white tracking-tighter">New Memory Node</h3>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Manual Brain Augmentation</p>
+                <h3 className="text-3xl font-black text-white tracking-tighter">Manual Augmentation</h3>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Direct Brain Interface</p>
               </div>
               <button onClick={() => setIsAddingMemory(false)} className="p-3 hover:bg-white/5 rounded-full text-slate-500 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
 
-            <div className="p-10 space-y-8">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Node Title</label>
+            <div className="p-10 space-y-10">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Node Identity</label>
                 <input 
                   type="text" 
                   autoFocus
-                  placeholder="e.g. Brand Tone Guidelines"
-                  className="w-full px-8 py-5 bg-slate-950 border-2 border-white/5 rounded-[1.8rem] focus:border-indigo-500 outline-none transition-all font-black text-xl text-white shadow-inner"
+                  placeholder="e.g. Legal Compliance Matrix"
+                  className="w-full px-8 py-5 bg-slate-950 border-2 border-white/5 rounded-[2rem] focus:border-indigo-500 outline-none transition-all font-black text-xl text-white shadow-inner"
                   value={newNode.title}
                   onChange={(e) => setNewNode({ ...newNode, title: e.target.value })}
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Instruction Content</label>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Instructional Payload</label>
                 <textarea 
-                  placeholder="The factual or logical information to ground the AI..."
-                  className="w-full px-8 py-5 bg-slate-950 border-2 border-white/5 rounded-[2.5rem] focus:border-indigo-500 outline-none transition-all font-medium text-slate-300 h-40 resize-none shadow-inner leading-relaxed"
+                  placeholder="Detailed factual or logical information to ground the AI model..."
+                  className="w-full px-8 py-6 bg-slate-950 border-2 border-white/5 rounded-[2.5rem] focus:border-indigo-500 outline-none transition-all font-medium text-slate-300 h-48 resize-none shadow-inner leading-relaxed"
                   value={newNode.content}
                   onChange={(e) => setNewNode({ ...newNode, content: e.target.value })}
                 />
               </div>
 
               <div className="pt-4 flex space-x-4">
-                <button onClick={() => setIsAddingMemory(false)} className="flex-1 py-5 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-white/5 rounded-2xl transition-all">Cancel</button>
+                <button onClick={() => setIsAddingMemory(false)} className="flex-1 py-6 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-white/5 rounded-2xl transition-all">Discard</button>
                 <button 
                   onClick={addMemory}
                   disabled={!newNode.title || !newNode.content}
-                  className="flex-[2] py-5 bg-indigo-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-700 shadow-2xl shadow-indigo-900/20 transition-all transform active:scale-95 disabled:opacity-20"
+                  className="flex-[2] py-6 bg-indigo-600 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-700 shadow-2xl shadow-indigo-900/40 transition-all transform active:scale-95 disabled:opacity-20"
                 >
-                  Commit Memory Sync
+                  Confirm Memory Sync
                 </button>
               </div>
             </div>
@@ -294,51 +341,52 @@ const MemoryStudio: React.FC = () => {
       {/* Smart Capture Modal */}
       {isSmartCapturing && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in" onClick={() => setIsSmartCapturing(false)}>
-           <div className="bg-slate-900 w-full max-w-2xl rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+           <div className="bg-slate-900 w-full max-w-2xl rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-white/10 overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
               <div className="p-10 border-b border-white/5 flex justify-between items-center bg-indigo-600/10">
                 <div>
                    <h3 className="text-3xl font-black text-white tracking-tighter flex items-center">
-                     <span className="mr-3">✨</span> Smart Memory Capture
+                     <span className="mr-4">✨</span> Smart Extraction
                    </h3>
-                   <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mt-1">Gemini 3 Pro Extraction Suite</p>
+                   <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mt-1">Gemini 3 Pro context Distillation</p>
                 </div>
                 <button onClick={() => setIsSmartCapturing(false)} className="p-3 hover:bg-white/5 rounded-full text-slate-500 transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
 
-              <div className="p-10 space-y-8">
+              <div className="p-12 space-y-10">
                  <div className="space-y-4">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Knowledge Payload</label>
                     <textarea 
-                      placeholder="Paste unstructured notes, emails, or guidelines here. Gemini will analyze and distill them into trainable memory nodes..."
-                      className="w-full px-8 py-8 bg-slate-950 border-2 border-white/5 rounded-[2.5rem] focus:border-indigo-500 outline-none transition-all font-medium text-slate-300 h-64 resize-none shadow-inner leading-relaxed"
+                      placeholder="Paste unstructured notes, emails, or company guidelines here. Gemini will analyze and distill them into 3 high-value memory nodes..."
+                      className="w-full px-8 py-8 bg-slate-950 border-2 border-white/5 rounded-[3rem] focus:border-indigo-500 outline-none transition-all font-medium text-slate-300 h-72 resize-none shadow-inner leading-relaxed"
                       value={smartCaptureText}
                       onChange={(e) => setSmartCaptureText(e.target.value)}
                     />
                  </div>
 
-                 <div className="pt-4 flex flex-col space-y-4">
+                 <div className="pt-4 flex flex-col space-y-6">
                     <button 
                       onClick={handleSmartCapture}
                       disabled={!smartCaptureText.trim() || isSmartCapturing}
-                      className={`w-full py-6 bg-indigo-600 text-white text-sm font-black uppercase tracking-[0.2em] rounded-3xl hover:bg-indigo-700 shadow-2xl shadow-indigo-900/40 transition-all transform active:scale-95 disabled:opacity-30 flex items-center justify-center space-x-3`}
+                      className={`w-full py-8 bg-indigo-600 text-white text-sm font-black uppercase tracking-[0.3em] rounded-[2rem] hover:bg-indigo-700 shadow-2xl shadow-indigo-900/40 transition-all transform active:scale-95 disabled:opacity-30 flex items-center justify-center space-x-4`}
                     >
                       {isSmartCapturing ? (
                         <>
-                           <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-                           <span>Analyzing Neural context...</span>
+                           <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                           <span>Analyzing context...</span>
                         </>
                       ) : (
                         <>
-                           <span>Extract & Embed Nodes</span>
-                           <span className="text-xl">🚀</span>
+                           <span>Embed Neural Nodes</span>
+                           <span className="text-2xl">🚀</span>
                         </>
                       )}
                     </button>
-                    <p className="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                       Training data will be categorized into: <span className="text-indigo-400">{activeFolder}</span>
-                    </p>
+                    <div className="p-6 bg-indigo-950/20 rounded-2xl border border-indigo-500/10 flex items-center justify-between">
+                       <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Target Cluster</span>
+                       <span className="text-[10px] font-black text-white uppercase tracking-widest px-3 py-1 bg-indigo-600 rounded-lg">{activeFolder}</span>
+                    </div>
                  </div>
               </div>
            </div>
@@ -378,27 +426,30 @@ const OutboundView: React.FC<{
   };
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      <div className="w-[450px] border-r border-white/5 bg-black/20 p-8 space-y-8 flex flex-col">
-        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Broadcast Studio</h3>
+    <div className="flex-1 flex overflow-hidden bg-[#f9fafb]">
+      <div className="w-[450px] border-r border-slate-200 bg-white p-10 space-y-10 flex flex-col shrink-0">
+        <div className="space-y-1">
+           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-1">Broadcast Studio</h3>
+           <p className="text-sm font-bold text-slate-900 tracking-tight px-1">Outbound Transmission</p>
+        </div>
         
         <div className="space-y-4">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">1. Distribution Path</label>
-          <div className="grid grid-cols-4 gap-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">1. Path Selection</label>
+          <div className="grid grid-cols-4 gap-3">
             {CHANNELS.map(c => (
               <button 
                 key={c.id} 
                 onClick={() => setSelectedChannel(c.id)}
-                className={`p-3 rounded-2xl border-2 transition-all flex flex-col items-center space-y-1 ${
+                className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center space-y-2 group ${
                   selectedChannel === c.id 
-                    ? 'border-indigo-500 bg-indigo-500/10 shadow-lg' 
+                    ? 'border-indigo-600 bg-indigo-50 shadow-md' 
                     : connectedChannels.has(c.id) 
-                      ? 'border-white/10 hover:border-indigo-500/50' 
-                      : 'border-white/5 opacity-30 grayscale cursor-not-allowed'
+                      ? 'border-slate-100 bg-white hover:border-indigo-200' 
+                      : 'border-slate-50 opacity-20 grayscale cursor-not-allowed'
                 }`}
                 disabled={!connectedChannels.has(c.id)}
               >
-                <span className="text-xl">{c.icon}</span>
+                <span className="text-2xl group-hover:scale-110 transition-transform">{c.icon}</span>
                 <span className="text-[8px] font-black uppercase tracking-tighter truncate w-full text-center">{c.id}</span>
               </button>
             ))}
@@ -410,45 +461,45 @@ const OutboundView: React.FC<{
           <textarea 
             value={outboundMessage}
             onChange={(e) => setOutboundMessage(e.target.value)}
-            placeholder="Draft outbound communication..."
-            className="flex-1 w-full bg-slate-900/50 border border-white/10 rounded-[2rem] p-6 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none shadow-inner"
+            placeholder="Draft secure communication..."
+            className="flex-1 w-full bg-slate-50 border border-slate-200 rounded-[2rem] p-6 text-sm font-medium outline-none focus:ring-4 focus:ring-indigo-100 transition-all resize-none shadow-inner placeholder-slate-300"
           />
           <button 
             onClick={handleSend}
             disabled={!outboundMessage.trim() || !selectedChannel || isSending}
-            className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all transform active:scale-95 shadow-2xl ${
-              isSending ? 'bg-slate-800 animate-pulse' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-900/40'
+            className={`w-full py-6 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] transition-all transform active:scale-95 shadow-2xl ${
+              isSending ? 'bg-slate-800 animate-pulse' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
             } disabled:opacity-20`}
           >
-            {isSending ? 'Transmitting Data...' : 'Initiate Outbound Push'}
+            {isSending ? 'Transmitting...' : 'Initiate Push'}
           </button>
         </div>
       </div>
 
-      <div className="flex-1 bg-slate-900/10 p-10 overflow-y-auto">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <div className="flex justify-between items-end border-b border-white/5 pb-4">
-            <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest">Sent Transmissions</h3>
-            <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-[0.2em]">Live Tracking Matrix</span>
+      <div className="flex-1 p-12 overflow-y-auto pattern-grid-light">
+        <div className="max-w-4xl mx-auto space-y-10">
+          <div className="flex justify-between items-end border-b border-slate-200 pb-6">
+            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Live Transmission Matrix</h3>
+            <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-[0.2em]">Real-time Tracking</span>
           </div>
 
           <div className="space-y-4">
             {sentHistory.map(item => (
-              <div key={item.id} className="bg-slate-900 border border-white/5 rounded-3xl p-6 flex items-center space-x-6 hover:border-white/10 transition-all group shadow-lg">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-xl ${CHANNELS.find(c => c.id === item.channel)?.color} bg-opacity-20`}>
+              <div key={item.id} className="bg-white border border-slate-200 rounded-[2.5rem] p-8 flex items-center space-x-8 hover:shadow-2xl hover:border-indigo-100 transition-all group shadow-sm">
+                <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-3xl shadow-xl ${CHANNELS.find(c => c.id === item.channel)?.color} bg-opacity-10 group-hover:scale-110 transition-transform`}>
                   {CHANNELS.find(c => c.id === item.channel)?.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className="font-black text-slate-200 text-sm">{item.recipient}</h4>
-                    <span className="text-[9px] font-bold text-slate-500 uppercase">{item.time}</span>
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-black text-slate-900 text-lg tracking-tight">{item.recipient}</h4>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">{item.time}</span>
                   </div>
-                  <p className="text-xs text-slate-400 truncate pr-10">{item.message}</p>
+                  <p className="text-sm text-slate-500 truncate pr-12 font-medium italic">"{item.message}"</p>
                 </div>
                 <div className="flex flex-col items-end">
-                   <span className={`text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${
-                     item.status === 'Delivered' ? 'bg-indigo-500/20 text-indigo-400' :
-                     item.status === 'Read' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-slate-500'
+                   <span className={`text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border ${
+                     item.status === 'Delivered' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
+                     item.status === 'Read' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'
                    }`}>{item.status}</span>
                 </div>
               </div>
@@ -460,11 +511,19 @@ const OutboundView: React.FC<{
   );
 };
 
-const ConnectionsHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'Inbound' | 'Outbound' | 'Brain' | 'Voice' | 'Provisioning'>('Inbound');
+interface ConnectionsHubProps {
+  clonedVoices?: ClonedVoice[];
+}
+
+const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) => {
+  const [activeTab, setActiveTab] = useState<'Inbound' | 'Outbound' | 'AI Memory' | 'Voice' | 'Provisioning'>('Inbound');
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [activePersona, setActivePersona] = useState<HobbsPersona>('Personal Assistant');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+  
+  // Voice Selection
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>('Kore');
+  const availableVoices = [...clonedVoices, ...DEFAULT_VOICES];
   
   // Channels State
   const [connectedChannels, setConnectedChannels] = useState<Set<ConnectionChannel>>(new Set(['Email', 'SMS']));
@@ -500,31 +559,29 @@ const ConnectionsHub: React.FC = () => {
     setConnectedChannels(new Set(CHANNELS.map(c => c.id)));
   };
 
-  const toggleAutoPilot = (id: string) => {
-    console.log(`Toggling AI Auto-Pilot for thread ${id}`);
-  };
-
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-950 overflow-hidden text-white font-sans">
       {/* Header */}
-      <div className="p-8 bg-black/40 border-b border-white/5 flex justify-between items-center shrink-0">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-indigo-600 rounded-[1.2rem] flex items-center justify-center text-2xl shadow-xl shadow-indigo-900/40">
-             {PERSONAS.find(p => p.role === activePersona)?.icon}
+      <div className="p-8 bg-black/40 border-b border-white/5 flex justify-between items-center shrink-0 z-10">
+        <div className="flex items-center space-x-6">
+          <div className="w-14 h-14 bg-indigo-600 rounded-[1.5rem] flex items-center justify-center text-3xl shadow-2xl shadow-indigo-900/40 border border-white/10 group-hover:rotate-6 transition-transform">
+             {availableVoices.find(v => v.id === selectedVoiceId)?.emoji || PERSONAS.find(p => p.role === activePersona)?.icon}
           </div>
           <div>
-            <h2 className="text-3xl font-black tracking-tighter">Hobbs Connections Hub</h2>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">AI Memory Center // Multi-Channel Control</p>
+            <h2 className="text-3xl font-black tracking-tighter">Connections Hub</h2>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">
+                {availableVoices.find(v => v.id === selectedVoiceId)?.label || activePersona} Voice Active
+            </p>
           </div>
         </div>
-        <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-white/5">
-           {(['Inbound', 'Outbound', 'Brain', 'Voice', 'Provisioning'] as const).map(tab => (
+        <div className="flex bg-slate-900/50 p-1.5 rounded-[1.5rem] border border-white/5 shadow-inner">
+           {(['Inbound', 'Outbound', 'AI Memory', 'Voice', 'Provisioning'] as const).map(tab => (
              <button 
                key={tab} 
                onClick={() => setActiveTab(tab)}
-               className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/40' : 'text-slate-500 hover:text-slate-300'}`}
+               className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-900/40' : 'text-slate-500 hover:text-slate-300'}`}
              >
-               {tab === 'Brain' ? 'AI Memory' : tab}
+               {tab}
              </button>
            ))}
         </div>
@@ -533,31 +590,41 @@ const ConnectionsHub: React.FC = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* Inbound Mode */}
         {activeTab === 'Inbound' && (
-          <div className="flex-1 flex overflow-hidden animate-in fade-in duration-500">
+          <div className="flex-1 flex overflow-hidden animate-in fade-in duration-500 bg-slate-950">
             {/* Thread List Sidebar */}
-            <div className="w-96 border-r border-white/5 bg-black/20 flex flex-col shrink-0 overflow-y-auto p-4 space-y-4">
-              <div className="p-5 bg-indigo-600/10 border border-indigo-500/20 rounded-[2.5rem] mb-2 shadow-2xl">
-                 <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400 mb-1">OmniPortal Mobile Identity</p>
+            <div className="w-96 border-r border-white/5 bg-black/20 flex flex-col shrink-0 overflow-y-auto p-6 space-y-6">
+              <div className="p-6 bg-indigo-600/10 border border-indigo-500/20 rounded-[2.5rem] mb-2 shadow-2xl relative overflow-hidden group">
+                 <div className="absolute -right-5 -top-5 w-16 h-16 bg-indigo-500/10 rounded-full blur-xl group-hover:bg-indigo-500/20 transition-all"></div>
+                 <div className="flex justify-between items-center mb-2">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400 relative">Active Phone Line</p>
+                    {assignedNumber && <span className="text-[7px] font-black text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20 uppercase">Neural Voice Answering</span>}
+                 </div>
                  {assignedNumber ? (
-                   <div className="flex justify-between items-center">
-                     <span className="font-mono text-sm text-indigo-100">{assignedNumber}</span>
-                     <span className="text-[8px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded uppercase">Live</span>
+                   <div className="flex justify-between items-center relative">
+                     <span className="font-mono text-lg text-white tracking-widest">{assignedNumber}</span>
+                     <div className="flex -space-x-2">
+                        {availableVoices.slice(0, 3).map(v => (
+                            <div key={v.id} className={`w-6 h-6 rounded-full border-2 border-slate-950 flex items-center justify-center text-[10px] ${selectedVoiceId === v.id ? 'bg-indigo-500 z-10' : 'bg-slate-800'}`}>{v.emoji}</div>
+                        ))}
+                     </div>
                    </div>
                  ) : (
-                   <button onClick={() => setActiveTab('Provisioning')} className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 transition-colors rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-900/40 mt-2">Get Mobile Number</button>
+                   <button onClick={() => setActiveTab('Provisioning')} className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 transition-all rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-900/40 mt-2">Provision Line</button>
                  )}
               </div>
 
-              <div className="flex justify-between items-center px-2 mb-2">
-                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Network Nodes</h3>
+              <div className="flex justify-between items-center px-2 mb-1">
+                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Signal Nodes</h3>
                  <button 
                     onClick={connectAllChannels}
                     className="text-[9px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest"
                   >
-                    Sync All
+                    Sync Network
                   </button>
               </div>
-              <div className="flex space-x-3 overflow-x-auto pb-6 scrollbar-hide px-2">
+              
+              {/* SIGNAL NODES GRID FIX: Switched from a scrolling row to a 5-column grid to prevent overlap and ensure visibility. */}
+              <div className="grid grid-cols-5 gap-2 px-1 pb-4">
                  {CHANNELS.map(c => {
                    const isConnected = connectedChannels.has(c.id);
                    return (
@@ -565,39 +632,39 @@ const ConnectionsHub: React.FC = () => {
                         key={c.id} 
                         title={`${c.id}: ${isConnected ? 'Active' : 'Offline'}`} 
                         onClick={() => toggleChannelConnection(c.id)}
-                        className={`w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center text-xl transition-all border-2 relative group ${
+                        className={`w-12 h-12 rounded-xl shrink-0 flex items-center justify-center text-xl transition-all border-2 relative group ${
                           isConnected 
-                          ? `${c.color} bg-opacity-20 border-white/10 shadow-lg scale-105` 
-                          : 'bg-slate-900 border-white/5 opacity-40 hover:opacity-100'
+                          ? `${c.color} bg-opacity-20 border-white/20 shadow-lg scale-105 z-10` 
+                          : 'bg-slate-900 border-white/5 opacity-40 hover:opacity-100 hover:border-white/10'
                         }`}
                      >
                        {c.icon}
-                       {isConnected && <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-slate-950 rounded-full animate-pulse shadow-xl"></div>}
+                       {isConnected && <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-slate-950 rounded-full animate-pulse shadow-2xl"></div>}
                      </button>
                    );
                  })}
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {MOCK_THREADS.map(t => (
                   <button 
                     key={t.id} 
                     onClick={() => setSelectedThreadId(t.id)}
-                    className={`w-full text-left p-5 rounded-[2rem] border transition-all relative group ${selectedThreadId === t.id ? 'bg-indigo-600 border-indigo-400 shadow-2xl' : 'bg-slate-900/50 border-white/5 hover:bg-slate-900 hover:border-white/10'}`}
+                    className={`w-full text-left p-6 rounded-[2.5rem] border transition-all relative group overflow-hidden ${selectedThreadId === t.id ? 'bg-indigo-600 border-indigo-400 shadow-[0_20px_50px_rgba(79,70,229,0.3)]' : 'bg-slate-900/40 border-white/5 hover:bg-slate-900 hover:border-white/10'}`}
                   >
-                    <div className="flex items-center space-x-4">
-                       <div className="relative">
-                          <img src={t.avatarUrl} className="w-12 h-12 rounded-2xl object-cover border border-white/10" alt="avatar" />
-                          <div className={`absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-xl flex items-center justify-center text-[10px] border-4 border-slate-950 shadow-xl ${CHANNELS.find(c => c.id === t.channel)?.color}`}>
+                    <div className="flex items-center space-x-5 relative z-10">
+                       <div className="relative shrink-0">
+                          <img src={t.avatarUrl} className="w-14 h-14 rounded-[1.2rem] object-cover border border-white/10 group-hover:scale-105 transition-transform" alt="avatar" />
+                          <div className={`absolute -bottom-2 -right-2 w-7 h-7 rounded-xl flex items-center justify-center text-xs border-4 border-slate-950 shadow-2xl ${CHANNELS.find(c => c.id === t.channel)?.color}`}>
                              {CHANNELS.find(c => c.id === t.channel)?.icon}
                           </div>
                        </div>
                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-center mb-0.5">
-                             <span className="font-black text-sm truncate tracking-tight">{t.contactName}</span>
-                             <span className="text-[9px] font-bold opacity-30">{t.timestamp}</span>
+                          <div className="flex justify-between items-center mb-1">
+                             <span className="font-black text-sm truncate tracking-tight text-white">{t.contactName}</span>
+                             <span className={`text-[8px] font-bold ${selectedThreadId === t.id ? 'text-indigo-200' : 'text-slate-600'}`}>{t.timestamp}</span>
                           </div>
-                          <p className={`text-[11px] truncate leading-tight ${selectedThreadId === t.id ? 'text-indigo-100' : 'text-slate-500'}`}>{t.lastMessage}</p>
+                          <p className={`text-xs truncate leading-tight font-medium ${selectedThreadId === t.id ? 'text-indigo-100' : 'text-slate-500'}`}>{t.lastMessage}</p>
                        </div>
                     </div>
                   </button>
@@ -609,53 +676,80 @@ const ConnectionsHub: React.FC = () => {
             <div className="flex-1 bg-slate-900/30 flex flex-col relative pattern-grid-dark">
                {selectedThreadId ? (
                  <>
-                   <div className="p-8 bg-black/20 border-b border-white/5 flex justify-between items-center backdrop-blur-md z-10">
-                      <div className="flex items-center space-x-4">
-                         <h3 className="text-2xl font-black tracking-tighter">{MOCK_THREADS.find(t => t.id === selectedThreadId)?.contactName}</h3>
-                         <span className="text-[10px] font-bold bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full border border-indigo-500/20 uppercase tracking-tighter">Verified Node</span>
+                   <div className="p-8 bg-black/20 border-b border-white/5 flex justify-between items-center backdrop-blur-xl z-10">
+                      <div className="flex items-center space-x-6">
+                         <div className="relative">
+                            <img src={MOCK_THREADS.find(t => t.id === selectedThreadId)?.avatarUrl} className="w-12 h-12 rounded-2xl border border-white/10" />
+                            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-slate-900 rounded-full"></div>
+                         </div>
+                         <div>
+                            <h3 className="text-2xl font-black tracking-tighter text-white">{MOCK_THREADS.find(t => t.id === selectedThreadId)?.contactName}</h3>
+                            <div className="flex items-center space-x-2">
+                               <span className="text-[9px] font-black bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded uppercase tracking-widest border border-indigo-500/20">Secured Node</span>
+                               <span className="text-[9px] font-bold text-slate-600 uppercase">via {MOCK_THREADS.find(t => t.id === selectedThreadId)?.channel}</span>
+                            </div>
+                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
-                         <div className="flex items-center space-x-3 bg-slate-950/80 border border-white/10 px-6 py-2.5 rounded-2xl shadow-xl">
-                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Hobbs AI Engine</span>
-                            <button 
-                              onClick={() => toggleAutoPilot(selectedThreadId)}
-                              className={`w-12 h-6 rounded-full p-1 transition-all ${MOCK_THREADS.find(t => t.id === selectedThreadId)?.isAiAutoPilot ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-slate-700'}`}
-                            >
-                               <div className={`w-4 h-4 bg-white rounded-full shadow-lg transition-transform ${MOCK_THREADS.find(t => t.id === selectedThreadId)?.isAiAutoPilot ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                         <div className="flex flex-col items-end px-4 border-r border-white/10 mr-4">
+                            <span className="text-[7px] font-black uppercase text-slate-500 tracking-widest">Assistant Voice</span>
+                            <div className="flex items-center space-x-1 text-[10px] font-black text-indigo-400">
+                                <span>{availableVoices.find(v => v.id === selectedVoiceId)?.emoji}</span>
+                                <span>{availableVoices.find(v => v.id === selectedVoiceId)?.label}</span>
+                            </div>
+                         </div>
+                         <div className="flex items-center space-x-4 bg-slate-950/80 border border-white/10 pl-6 pr-2 py-2 rounded-2xl shadow-2xl">
+                            <div className="flex flex-col text-right">
+                               <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">Auto-Pilot</span>
+                               <span className="text-[9px] font-bold text-emerald-400 uppercase">Active Agent</span>
+                            </div>
+                            <button className="w-12 h-6 bg-emerald-500 rounded-full p-1 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                               <div className="w-4 h-4 bg-white rounded-full translate-x-6 transition-transform"></div>
                             </button>
                          </div>
-                         <button className="p-3 bg-indigo-600 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-900/40 active:scale-95 text-lg">📞</button>
+                         <button className="w-12 h-12 bg-indigo-600 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-900/40 active:scale-95 text-xl flex items-center justify-center">📞</button>
                       </div>
                    </div>
-                   <div className="flex-1 p-10 overflow-y-auto space-y-8 scrollbar-hide">
+                   <div className="flex-1 p-10 overflow-y-auto space-y-10 scrollbar-hide">
                       <div className="flex justify-center mb-10">
-                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] bg-white/5 px-6 py-2 rounded-full border border-white/5 backdrop-blur-sm">Security Handshake Complete // 128-bit Encryption</span>
+                         <div className="flex items-center space-x-3 bg-white/5 border border-white/5 px-8 py-2.5 rounded-full backdrop-blur-md">
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
+                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.5em]">Quantum Handshake Verified // E2EE Active</span>
+                         </div>
                       </div>
-                      <div className="flex flex-col space-y-2 max-w-lg self-start">
-                         <div className="bg-slate-900 border border-white/5 p-6 rounded-[2.5rem] rounded-tl-lg text-sm leading-relaxed text-slate-200 shadow-xl">
+                      <div className="flex flex-col space-y-2 max-w-lg self-start animate-in slide-in-from-left-4">
+                         <div className="bg-slate-900 border border-white/10 p-8 rounded-[3rem] rounded-tl-lg text-sm leading-relaxed text-slate-200 shadow-2xl">
                             Hey Hobbs, just confirming if you received the NDA from the cloudscale team? I sent it via email an hour ago.
                          </div>
-                         <span className="text-[9px] font-bold text-slate-600 uppercase ml-4">Sent 10:42 AM</span>
+                         <span className="text-[9px] font-bold text-slate-600 uppercase ml-6">Sent 10:42 AM</span>
                       </div>
-                      <div className="flex flex-col space-y-2 max-w-lg self-end ml-auto">
-                         <div className="bg-indigo-600 p-6 rounded-[2.5rem] rounded-tr-lg text-sm leading-relaxed text-white shadow-[0_20px_50px_rgba(79,70,229,0.3)]">
-                            Received! I've already cross-referenced it with your previous legal guidelines and flagged Clause 4.2 for review.
+                      <div className="flex flex-col space-y-2 max-w-lg self-end ml-auto animate-in slide-in-from-right-4">
+                         <div className="bg-indigo-600 p-8 rounded-[3rem] rounded-tr-lg text-sm leading-relaxed text-white shadow-[0_30px_60px_rgba(79,70,229,0.3)] relative group">
+                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-white text-indigo-600 rounded-full flex items-center justify-center text-[10px] font-black shadow-xl group-hover:scale-110 transition-transform">
+                                {availableVoices.find(v => v.id === selectedVoiceId)?.emoji || '🧠'}
+                            </div>
+                            Received! I've already cross-referenced it with your previous legal guidelines and flagged Clause 4.2 for review. I've also drafted a response for your approval.
                          </div>
-                         <span className="text-[9px] font-black text-indigo-400 uppercase mr-4 text-right">Hobbs AI // 10:43 AM</span>
+                         <span className="text-[9px] font-black text-indigo-400 uppercase mr-6 text-right">
+                            {availableVoices.find(v => v.id === selectedVoiceId)?.label || 'Hobbs'} Neural Node // 10:43 AM
+                         </span>
                       </div>
                    </div>
-                   <div className="p-10 border-t border-white/5 bg-black/20">
-                      <div className="bg-slate-950/90 backdrop-blur-2xl border border-white/10 p-5 rounded-[3rem] flex items-center space-x-5 shadow-2xl">
-                         <button className="w-14 h-14 bg-white/5 hover:bg-white/10 rounded-2xl transition-all text-2xl flex items-center justify-center">📎</button>
-                         <textarea className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-sm py-4 resize-none h-14 font-medium" placeholder="Instruct Hobbs or send a raw transmission..."></textarea>
-                         <button className="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-3xl shadow-2xl shadow-indigo-900/50 hover:bg-indigo-700 active:scale-90 transition-all">🚀</button>
+                   <div className="p-10 border-t border-white/5 bg-black/30 backdrop-blur-2xl">
+                      <div className="bg-slate-950/90 border border-white/10 p-6 rounded-[3.5rem] flex items-center space-x-6 shadow-2xl group focus-within:border-indigo-500 transition-all">
+                         <button className="w-14 h-14 bg-white/5 hover:bg-white/10 rounded-[1.5rem] transition-all text-2xl flex items-center justify-center border border-white/5">📎</button>
+                         <textarea className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-sm py-4 resize-none h-14 font-medium text-white placeholder-slate-600" placeholder={`Instruct ${availableVoices.find(v => v.id === selectedVoiceId)?.label || 'the agent'} or send transmission...`}></textarea>
+                         <button className="w-16 h-16 bg-indigo-600 text-white rounded-[1.8rem] flex items-center justify-center text-4xl shadow-2xl shadow-indigo-900/50 hover:bg-indigo-700 active:scale-90 transition-all">🚀</button>
                       </div>
                    </div>
                  </>
                ) : (
-                 <div className="flex-1 flex flex-col items-center justify-center space-y-8 opacity-20 animate-pulse">
-                    <div className="text-[120px]">📡</div>
-                    <h3 className="text-3xl font-black uppercase tracking-[0.3em] text-slate-400">Await Inbound Signal</h3>
+                 <div className="flex-1 flex flex-col items-center justify-center space-y-10 opacity-20 animate-pulse">
+                    <div className="text-[140px] filter drop-shadow-[0_0_50px_rgba(99,102,241,0.5)]">📡</div>
+                    <div className="text-center space-y-2">
+                       <h3 className="text-4xl font-black uppercase tracking-[0.4em] text-white">Await Signal</h3>
+                       <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Awaiting inbound connection from network nodes</p>
+                    </div>
                  </div>
                )}
             </div>
@@ -669,69 +763,76 @@ const ConnectionsHub: React.FC = () => {
           </div>
         )}
 
-        {/* Memory Mode (formerly Brain) */}
-        {activeTab === 'Brain' && (
+        {/* AI Memory Mode */}
+        {activeTab === 'AI Memory' && (
           <MemoryStudio />
         )}
 
         {/* Provisioning Mode */}
         {activeTab === 'Provisioning' && (
-          <div className="flex-1 flex flex-col items-center justify-center p-20 animate-in fade-in duration-500 bg-black/40">
-             <div className="max-w-2xl w-full bg-slate-900 border border-white/10 rounded-[4rem] p-16 space-y-12 shadow-[0_80px_160px_rgba(0,0,0,0.8)] relative overflow-hidden group">
-                <div className="absolute -top-32 -left-32 w-80 h-80 bg-indigo-600/10 rounded-full blur-[100px] group-hover:bg-indigo-600/20 transition-all"></div>
-                <div className="text-center space-y-6 relative">
-                   <div className="w-32 h-32 bg-gradient-to-tr from-indigo-500 via-purple-600 to-indigo-800 rounded-[2.5rem] mx-auto flex items-center justify-center text-6xl shadow-2xl border-2 border-white/10">📱</div>
-                   <h3 className="text-5xl font-black tracking-tighter">Provision Global Line</h3>
-                   <p className="text-slate-400 font-medium text-lg leading-relaxed max-w-md mx-auto">Instantly acquire a verified cloud mobile number for encrypted talk, text, and enterprise data logging.</p>
+           <div className="flex-1 flex flex-col items-center justify-center p-20 animate-in fade-in duration-700 bg-black/60 relative overflow-hidden">
+             {/* Background Blobs */}
+             <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] animate-pulse"></div>
+             <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] animate-pulse [animation-delay:2s]"></div>
+
+             <div className="max-w-3xl w-full bg-slate-900 border border-white/10 rounded-[5rem] p-20 space-y-16 shadow-[0_100px_200px_rgba(0,0,0,0.9)] relative z-10 group overflow-hidden">
+                <div className="text-center space-y-8 relative">
+                   <div className="w-40 h-40 bg-gradient-to-tr from-indigo-500 via-purple-600 to-indigo-900 rounded-[3.5rem] mx-auto flex items-center justify-center text-7xl shadow-[0_20px_80px_rgba(79,70,229,0.4)] border-2 border-white/20 transform group-hover:scale-105 group-hover:rotate-3 transition-all duration-700">📱</div>
+                   <div className="space-y-3">
+                      <h3 className="text-6xl font-black tracking-tighter text-white">Cloud Telephony</h3>
+                      <p className="text-slate-400 font-medium text-xl leading-relaxed max-w-lg mx-auto">Instantly acquire verified mobile identities for encrypted talk, text, and data-driven communications.</p>
+                   </div>
                 </div>
 
-                <div className="space-y-8 relative">
-                   <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-10 relative">
+                   <div className="grid grid-cols-2 gap-8">
                       <button 
                         onClick={provisionNumber}
                         disabled={isProvisioning}
-                        className="p-10 bg-black/40 border-2 border-white/5 rounded-[3rem] hover:border-indigo-500 hover:shadow-2xl hover:shadow-indigo-900/20 transition-all group flex flex-col items-center space-y-4"
+                        className="p-12 bg-black/40 border-2 border-white/5 rounded-[3.5rem] hover:border-indigo-500 hover:shadow-[0_0_50px_rgba(79,70,229,0.2)] transition-all group/btn flex flex-col items-center space-y-6 relative overflow-hidden"
                       >
-                         <span className="text-5xl grayscale group-hover:grayscale-0 transition-all mb-2">🇬</span>
-                         <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-indigo-400">Google Voice Hub</span>
+                         <div className="absolute inset-0 bg-indigo-600/0 group-hover/btn:bg-indigo-600/5 transition-colors"></div>
+                         <span className="text-6xl grayscale group-hover/btn:grayscale-0 transition-all mb-2 filter drop-shadow-lg">🇬</span>
+                         <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 group-hover/btn:text-indigo-400">Google Voice Hub</span>
                       </button>
                       <button 
                         onClick={provisionNumber}
                         disabled={isProvisioning}
-                        className="p-10 bg-black/40 border-2 border-white/5 rounded-[3rem] hover:border-rose-500 hover:shadow-2xl hover:shadow-rose-900/20 transition-all group flex flex-col items-center space-y-4"
+                        className="p-12 bg-black/40 border-2 border-white/5 rounded-[3.5rem] hover:border-rose-500 hover:shadow-[0_0_50px_rgba(244,63,94,0.2)] transition-all group/btn flex flex-col items-center space-y-6 relative overflow-hidden"
                       >
-                         <span className="text-5xl text-rose-500 font-black mb-2 tracking-tighter">Twilio</span>
-                         <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-rose-400">Programmable SMS</span>
+                         <div className="absolute inset-0 bg-rose-600/0 group-hover/btn:bg-rose-600/5 transition-colors"></div>
+                         <span className="text-6xl text-rose-500 font-black mb-2 tracking-tighter filter drop-shadow-lg">Twilio</span>
+                         <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-500 group-hover/btn:text-rose-400">Programmable SMS</span>
                       </button>
                    </div>
 
                    {isProvisioning && (
-                     <div className="py-10 text-center space-y-5 animate-in slide-in-from-bottom-5">
-                        <div className="relative w-12 h-12 mx-auto">
+                     <div className="py-12 text-center space-y-6 animate-in slide-in-from-bottom-5">
+                        <div className="relative w-16 h-16 mx-auto">
                           <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
                           <div className="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.3em] animate-pulse">Allocating Neural Frequency...</p>
-                          <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">ETA: {'<'} 10 SECONDS</p>
+                        <div className="space-y-2">
+                          <p className="text-sm font-black text-indigo-400 uppercase tracking-[0.5em] animate-pulse">Allocating Neural Frequency...</p>
+                          <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Estimated Wait: <span className="text-white">7 SECONDS</span></p>
                         </div>
                      </div>
                    )}
 
                    {assignedNumber && !isProvisioning && (
-                      <div className="p-8 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-[2.5rem] flex flex-col items-center space-y-3 animate-in zoom-in-95 shadow-2xl">
-                         <div className="flex items-center space-x-2">
-                           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
-                           <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em]">Successfully Provisioned</span>
+                      <div className="p-12 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-[4rem] flex flex-col items-center space-y-4 animate-in zoom-in-95 shadow-[0_30px_100px_rgba(16,185,129,0.1)]">
+                         <div className="flex items-center space-x-3">
+                           <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
+                           <span className="text-xs font-black text-emerald-400 uppercase tracking-[0.5em]">Identity Verified</span>
                          </div>
-                         <span className="text-4xl font-mono text-white tracking-[0.2em] font-black">{assignedNumber}</span>
+                         <span className="text-5xl font-mono text-white tracking-[0.2em] font-black border-b-4 border-emerald-500/30 pb-2">{assignedNumber}</span>
                       </div>
                    )}
                 </div>
 
-                <div className="pt-10 border-t border-white/5 text-center">
-                   <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase tracking-widest opacity-40">
-                     Proprietary Hobbs Studio telephony infrastructure. Supports cross-region carrier roaming & deep packet logging.
+                <div className="pt-12 border-t border-white/5 text-center">
+                   <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase tracking-widest opacity-60 max-w-md mx-auto">
+                     Proprietary OmniPortal Studio telephony infrastructure. Supports cross-region carrier roaming & automated sentiment logging.
                    </p>
                 </div>
              </div>
@@ -740,15 +841,54 @@ const ConnectionsHub: React.FC = () => {
 
         {/* Voice Lab */}
         {activeTab === 'Voice' && (
-          <div className="flex-1 flex flex-col items-center justify-center p-20 relative overflow-hidden bg-black">
+          <div className="flex-1 flex overflow-hidden bg-black relative">
              <div className="absolute inset-0 opacity-10 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600 rounded-full blur-[160px] animate-pulse"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-indigo-600 rounded-full blur-[200px] animate-pulse"></div>
              </div>
-             <div className="z-10 flex flex-col items-center space-y-16 max-w-3xl w-full">
-                <div className="text-center space-y-8">
+
+             {/* Voice Selection Sidebar */}
+             <div className="w-96 border-r border-white/5 bg-black/40 p-10 flex flex-col space-y-10 shrink-0 z-20 overflow-y-auto scrollbar-hide">
+                <div className="space-y-1">
+                   <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] px-1">Neural Registry</h3>
+                   <p className="text-sm font-bold text-white tracking-tight px-1">Active Call Persona</p>
+                </div>
+
+                <div className="space-y-4">
+                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest px-2">Select Target Voice</p>
+                   <div className="grid grid-cols-1 gap-3">
+                      {availableVoices.map(v => (
+                         <button 
+                            key={v.id} 
+                            onClick={() => setSelectedVoiceId(v.id)}
+                            className={`w-full text-left p-5 rounded-[2rem] border transition-all flex items-center space-x-5 ${selectedVoiceId === v.id ? 'bg-indigo-600 border-indigo-400 shadow-2xl' : 'bg-slate-900 border-white/5 hover:border-white/10'}`}
+                         >
+                            <span className="text-3xl">{v.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                               <h4 className="font-black text-sm uppercase tracking-tight flex items-center">
+                                  {v.label}
+                                  {v.id.includes('cloned') && <span className="ml-2 text-[7px] bg-indigo-400 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">CLONE</span>}
+                               </h4>
+                               <p className="text-[10px] text-slate-400 truncate font-medium mt-0.5">{v.description}</p>
+                            </div>
+                            {selectedVoiceId === v.id && <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>}
+                         </button>
+                      ))}
+                   </div>
+                </div>
+
+                <div className="p-8 bg-slate-900/50 rounded-[2.5rem] border border-white/5 space-y-4">
+                   <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Voice Protocol</h4>
+                   <p className="text-[11px] text-slate-400 leading-relaxed font-medium italic">
+                      This voice will be used for both answering inbound telephony calls and for all real-time voice link sessions.
+                   </p>
+                </div>
+             </div>
+
+             <div className="flex-1 flex flex-col items-center justify-center p-20 z-10">
+                <div className="text-center space-y-12 max-w-4xl w-full">
                    <div className="relative">
-                      <div className={`w-56 h-56 bg-gradient-to-tr from-indigo-500 via-purple-600 to-pink-500 rounded-[4rem] flex items-center justify-center text-9xl shadow-[0_0_120px_rgba(79,70,229,0.5)] border-4 border-white/10 relative overflow-hidden transition-all duration-700 ${isVoiceActive ? 'scale-110 rotate-3' : 'scale-100 rotate-0 grayscale-[0.3]'}`}>
-                         <span className={`${isVoiceActive ? 'animate-bounce' : ''}`}>✨</span>
+                      <div className={`w-72 h-72 bg-gradient-to-tr from-indigo-500 via-purple-600 to-pink-500 rounded-[5rem] flex items-center justify-center text-[140px] shadow-[0_0_150px_rgba(79,70,229,0.6)] border-4 border-white/10 relative overflow-hidden transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)] ${isVoiceActive ? 'scale-110 rotate-6' : 'scale-100 rotate-0 grayscale-[0.5]'}`}>
+                         <span className={`${isVoiceActive ? 'animate-bounce' : ''}`}>{availableVoices.find(v => v.id === selectedVoiceId)?.emoji || '✨'}</span>
                          {isVoiceActive && (
                            <div className="absolute inset-0 flex items-center justify-center">
                               <div className="w-full h-full bg-white/10 animate-ping rounded-full scale-150 opacity-20"></div>
@@ -756,21 +896,38 @@ const ConnectionsHub: React.FC = () => {
                          )}
                       </div>
                    </div>
-                   <div className="space-y-4">
-                      <h3 className="text-6xl font-black tracking-tighter">Hobbs Live Voice</h3>
-                      <p className="text-slate-400 font-medium text-lg uppercase tracking-widest opacity-60">Ultra-low latency audio synthesis v2.5</p>
+                   <div className="space-y-6">
+                      <h3 className="text-7xl font-black tracking-tighter text-white leading-none">Live Neural Link</h3>
+                      <p className="text-slate-400 font-bold text-xl uppercase tracking-[0.4em] opacity-60">
+                          Active Voice: <span className="text-indigo-400">{availableVoices.find(v => v.id === selectedVoiceId)?.label || 'System Core'}</span>
+                      </p>
                    </div>
-                   <div className="pt-8">
+                   <div className="pt-10">
                       <button 
                         onClick={() => setIsVoiceActive(!isVoiceActive)}
-                        className={`px-20 py-8 rounded-[3rem] font-black text-2xl uppercase tracking-[0.2em] shadow-2xl transition-all transform active:scale-95 border-2 ${
+                        className={`px-24 py-10 rounded-[4rem] font-black text-3xl uppercase tracking-[0.3em] shadow-[0_40px_100px_rgba(0,0,0,0.5)] transition-all transform active:scale-95 border-4 ${
                           isVoiceActive 
                           ? 'bg-rose-600 border-rose-400 shadow-rose-900/40 hover:bg-rose-700' 
                           : 'bg-indigo-600 border-indigo-400 shadow-indigo-900/40 hover:bg-indigo-700'
                         }`}
                       >
-                         {isVoiceActive ? 'End Live Link' : 'Establish Session'}
+                         {isVoiceActive ? 'Kill Link' : 'Open Link'}
                       </button>
+                   </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-10 w-full opacity-40 mt-20">
+                   <div className="text-center space-y-2">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sample Rate</p>
+                      <p className="text-2xl font-black text-white">48kHz</p>
+                   </div>
+                   <div className="text-center space-y-2">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Jitter Buffer</p>
+                      <p className="text-2xl font-black text-white">12ms</p>
+                   </div>
+                   <div className="text-center space-y-2">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Protocol</p>
+                      <p className="text-2xl font-black text-white">WSS/RTC</p>
                    </div>
                 </div>
              </div>

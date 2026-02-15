@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
-import { PublishingDestination } from '../types';
+import { GoogleGenAI, Modality } from "@google/genai";
+import { PublishingDestination, ClonedVoice } from '../types';
 import { Icons } from '../constants';
 import BlogPublishModal from './BlogPublishModal';
 
@@ -23,6 +23,25 @@ const MOTION_PRESETS = [
   { id: 'orbit', label: '360 Orbit', icon: '🔄', prompt: 'Full 360-degree orbital camera rotation around the subject.' },
 ];
 
+const LIPSYNC_CATEGORIES = [
+  { id: 'politic', label: 'Politic', icon: '🏛️' },
+  { id: 'tech', label: 'Tech', icon: '💻' },
+  { id: 'avatars', label: 'Avatars', icon: '🎭' },
+  { id: 'ugc', label: 'UGC', icon: '🤳' },
+  { id: 'sports', label: 'Sports', icon: '🏀' },
+  { id: 'entertainment', label: 'Entertainment', icon: '🍿' },
+  { id: 'motivation', label: 'Motivation', icon: '🔥' },
+  { id: 'news', label: 'News', icon: '📰' },
+];
+
+const DEFAULT_VOICES = [
+  { id: 'Puck', label: 'Puck', desc: 'Youthful, energetic', emoji: '👦' },
+  { id: 'Kore', label: 'Kore', desc: 'Professional, calm', emoji: '👩' },
+  { id: 'Fenrir', label: 'Fenrir', desc: 'Deep, authoritative', emoji: '🐺' },
+  { id: 'Charon', label: 'Charon', desc: 'Wise, storytelling', emoji: '🛶' },
+  { id: 'Zephyr', label: 'Zephyr', desc: 'Helpful assistant', emoji: '🌬️' },
+];
+
 interface TimelineClip {
   id: string;
   url: string;
@@ -33,9 +52,14 @@ interface TimelineClip {
   resolution: '720p' | '1080p';
   thumbnail?: string;
   type: 'scene' | 'lipsync';
+  category?: string;
 }
 
-const VideoMaker: React.FC = () => {
+interface VideoMakerProps {
+  clonedVoices?: ClonedVoice[];
+}
+
+const VideoMaker: React.FC<VideoMakerProps> = ({ clonedVoices = [] }) => {
   const [activeStudioTab, setActiveStudioTab] = useState<'scene' | 'lipsync'>('scene');
   const [script, setScript] = useState('');
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16'>('16:9');
@@ -46,15 +70,24 @@ const VideoMaker: React.FC = () => {
   const [loadingMessageIdx, setLoadingMessageIdx] = useState(0);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   
-  // Scene Generation state
+  // Voice Selection State
+  const [selectedVoice, setSelectedVoice] = useState('Kore');
+  const [isTestingVoice, setIsTestingVoice] = useState(false);
+  
+  // Advanced Motion Control & Scene state
   const [startingFrame, setStartingFrame] = useState<string | null>(null);
+  const [motionReferenceVideo, setMotionReferenceVideo] = useState<string | null>(null);
+  const [characterAsset, setCharacterAsset] = useState<string | null>(null);
   
   // LipSync state
   const [syncVideo, setSyncVideo] = useState<string | null>(null);
   const [syncAudioText, setSyncAudioText] = useState('');
   const [syncMode, setSyncMode] = useState<'clone' | 'avatar' | 'satire'>('avatar');
+  const [syncCategory, setSyncCategory] = useState('news');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const motionVideoRef = useRef<HTMLInputElement>(null);
+  const charAssetRef = useRef<HTMLInputElement>(null);
   const syncVideoInputRef = useRef<HTMLInputElement>(null);
 
   // Timeline & Clip State
@@ -71,11 +104,94 @@ const VideoMaker: React.FC = () => {
     return () => clearInterval(interval);
   }, [isGenerating]);
 
+  // Combined voice list
+  const availableVoices = [...clonedVoices, ...DEFAULT_VOICES];
+
+  // Audio Decoding Helpers
+  const decodeBase64 = (base64: string) => {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  };
+
+  const decodeAudioData = async (data: Uint8Array, ctx: AudioContext, sampleRate: number, numChannels: number) => {
+    const dataInt16 = new Int16Array(data.buffer);
+    const frameCount = dataInt16.length / numChannels;
+    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+    for (let channel = 0; channel < numChannels; channel++) {
+      const channelData = buffer.getChannelData(channel);
+      for (let i = 0; i < frameCount; i++) {
+        channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+      }
+    }
+    return buffer;
+  };
+
+  const handleTestVoice = async () => {
+    const textToSpeak = activeStudioTab === 'scene' ? script : syncAudioText;
+    if (!textToSpeak.trim()) return;
+    setIsTestingVoice(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const voiceToUse = availableVoices.find(v => v.id === selectedVoice)?.id || 'Kore';
+      const isPrebuilt = ['Puck', 'Kore', 'Fenrir', 'Charon', 'Zephyr'].includes(voiceToUse);
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text: textToSpeak }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: isPrebuilt ? voiceToUse : 'Kore' },
+            },
+          },
+        },
+      });
+
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (base64Audio) {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        const decodedBytes = decodeBase64(base64Audio);
+        const audioBuffer = await decodeAudioData(decodedBytes, audioCtx, 24000, 1);
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start();
+      }
+    } catch (e) {
+      console.error("Voice preview failed", e);
+    } finally {
+      setIsTestingVoice(false);
+    }
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setStartingFrame(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleMotionVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setMotionReferenceVideo(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCharAssetUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setCharacterAsset(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -93,7 +209,6 @@ const VideoMaker: React.FC = () => {
     setIsExtracting(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      
       let promptContent: any = `Act as a professional cinematographer. `;
       if (startingFrame) {
         promptContent = {
@@ -105,7 +220,6 @@ const VideoMaker: React.FC = () => {
       } else {
         promptContent = `Expand this short description into a highly detailed, 100-word production prompt for a high-end video AI: "${script || 'A beautiful cinematic scene'}". Include lighting, textures, camera lens details, and atmospheric conditions.`;
       }
-
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: promptContent
@@ -144,7 +258,8 @@ const VideoMaker: React.FC = () => {
           motionId: activeMotion,
           resolution: currentRes,
           thumbnail: activeStudioTab === 'scene' ? (startingFrame || undefined) : (syncVideo || undefined),
-          type: activeStudioTab
+          type: activeStudioTab,
+          category: activeStudioTab === 'lipsync' ? syncCategory : undefined
         };
         setTimeline(prev => [...prev, newClip]);
         setActiveClipId(clipId);
@@ -154,21 +269,28 @@ const VideoMaker: React.FC = () => {
 
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       let operation;
+      const modelName = (startingFrame || motionReferenceVideo || characterAsset) ? 'veo-3.1-generate-preview' : 'veo-3.1-fast-generate-preview';
 
       if (activeStudioTab === 'scene') {
-        const finalPrompt = `${script}. Camera Motion: ${motion}. Cinematic masterpiece, 8k, master color grade, highly detailed, photorealistic.`;
+        const finalPrompt = `${script}. Camera Motion: ${motion}. Cinematic masterpiece, 8k, master color grade, highly detailed, photorealistic. Voice Overlay: ${selectedVoice}.`;
         const generationConfig: any = {
-          model: 'veo-3.1-fast-generate-preview',
+          model: modelName,
           prompt: finalPrompt,
           config: { numberOfVideos: 1, resolution: currentRes as any, aspectRatio: aspectRatio }
         };
         if (startingFrame) {
           generationConfig.image = { imageBytes: startingFrame.split(',')[1], mimeType: 'image/png' };
         }
+        if (characterAsset) {
+          if (!generationConfig.config.referenceImages) generationConfig.config.referenceImages = [];
+          generationConfig.config.referenceImages.push({
+             image: { imageBytes: characterAsset.split(',')[1], mimeType: 'image/png' },
+             referenceType: "ASSET"
+          });
+        }
         operation = await ai.models.generateVideos(generationConfig);
       } else {
-        // LipSync Simulation through specific Prompt engineering for Veo
-        const lipSyncPrompt = `High fidelity neural lip sync. The character in the video speaks the following clearly: "${syncAudioText}". Ensure perfect mouth movement match, expressive facial acting, and professional studio lighting. Mode: ${syncMode}.`;
+        const lipSyncPrompt = `[Category: ${syncCategory}] High fidelity neural lip sync. The character in the video speaks the following clearly: "${syncAudioText}". Ensure perfect mouth movement match, expressive facial acting, and professional studio lighting. Mode: ${syncMode}. Voice Reference: ${selectedVoice}.`;
         operation = await ai.models.generateVideos({
           model: 'veo-3.1-fast-generate-preview',
           prompt: lipSyncPrompt,
@@ -259,23 +381,35 @@ const VideoMaker: React.FC = () => {
             <>
               <section className="space-y-4">
                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex justify-between">
-                    <span>1. Visual Reference</span>
-                    {startingFrame && <button onClick={() => setStartingFrame(null)} className="text-rose-500 hover:text-rose-400">Clear</button>}
+                    <span>1. Motion Control Reference</span>
+                    {(startingFrame || motionReferenceVideo || characterAsset) && <button onClick={() => { setStartingFrame(null); setMotionReferenceVideo(null); setCharacterAsset(null); }} className="text-rose-500 hover:text-rose-400">Clear All</button>}
                  </h3>
-                 <div 
-                   onClick={() => fileInputRef.current?.click()}
-                   className={`aspect-video rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden relative group ${startingFrame ? 'border-indigo-500/50' : 'border-white/10 hover:border-indigo-500/30 hover:bg-indigo-500/5'}`}
-                 >
-                    {startingFrame ? (
-                      <img src={startingFrame} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    ) : (
-                      <>
-                        <span className="text-2xl mb-2">🖼️</span>
-                        <span className="text-[8px] font-black uppercase text-slate-500">Starting Frame (Optional)</span>
-                      </>
-                    )}
+                 <div className="grid grid-cols-2 gap-2">
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`aspect-square rounded-xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden relative group ${startingFrame ? 'border-indigo-500/50' : 'border-white/10 hover:border-indigo-500/30 hover:bg-indigo-500/5'}`}
+                      title="Starting Frame"
+                    >
+                        {startingFrame ? <img src={startingFrame} className="w-full h-full object-cover" /> : <span className="text-xs">Starting Frame</span>}
+                    </div>
+                    <div 
+                      onClick={() => motionVideoRef.current?.click()}
+                      className={`aspect-square rounded-xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden relative group ${motionReferenceVideo ? 'border-purple-500/50' : 'border-white/10 hover:border-purple-500/30 hover:bg-purple-500/5'}`}
+                      title="Motion Guidance Video"
+                    >
+                        {motionReferenceVideo ? <div className="text-purple-400 text-[10px] font-black">Video Linked</div> : <span className="text-xs text-center p-2 leading-tight">Motion Guidance Video</span>}
+                    </div>
+                    <div 
+                      onClick={() => charAssetRef.current?.click()}
+                      className={`col-span-2 h-20 rounded-xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden relative group ${characterAsset ? 'border-emerald-500/50' : 'border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5'}`}
+                      title="Character/Subject Reference"
+                    >
+                        {characterAsset ? <img src={characterAsset} className="w-full h-full object-cover" /> : <span className="text-xs">Character/Subject Reference</span>}
+                    </div>
                  </div>
                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
+                 <input type="file" ref={motionVideoRef} className="hidden" accept="video/*" onChange={handleMotionVideoUpload} />
+                 <input type="file" ref={charAssetRef} className="hidden" accept="image/*" onChange={handleCharAssetUpload} />
               </section>
 
               <section className="space-y-4">
@@ -301,7 +435,39 @@ const VideoMaker: React.FC = () => {
               </section>
 
               <section className="space-y-4">
-                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">3. AI Motion Control</h3>
+                 <div className="flex justify-between items-center px-1">
+                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">3. Voice Selection</h3>
+                    <button 
+                       onClick={handleTestVoice} 
+                       disabled={isTestingVoice || !script.trim()}
+                       className={`text-indigo-400 hover:text-indigo-300 text-[8px] font-black uppercase tracking-widest flex items-center ${isTestingVoice ? 'animate-pulse' : ''}`}
+                    >
+                      {isTestingVoice ? '...' : 'Preview Voice'}
+                    </button>
+                 </div>
+                 <div className="relative group">
+                    <select 
+                       value={selectedVoice}
+                       onChange={(e) => setSelectedVoice(e.target.value)}
+                       className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none appearance-none cursor-pointer"
+                    >
+                       {clonedVoices.length > 0 && (
+                          <optgroup label="Neural Clones" className="bg-slate-900 text-indigo-400">
+                             {clonedVoices.map(v => <option key={v.id} value={v.id}>{v.emoji} {v.label}</option>)}
+                          </optgroup>
+                       )}
+                       <optgroup label="System Library" className="bg-slate-900 text-slate-500">
+                          {DEFAULT_VOICES.map(v => <option key={v.id} value={v.id}>{v.emoji} {v.label}</option>)}
+                       </optgroup>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 scale-75">
+                       <Icons.ChevronDown />
+                    </div>
+                 </div>
+              </section>
+
+              <section className="space-y-4">
+                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">4. Motion Presets</h3>
                  <div className="grid grid-cols-2 gap-2">
                     {MOTION_PRESETS.map(m => (
                       <button 
@@ -340,24 +506,68 @@ const VideoMaker: React.FC = () => {
               </section>
 
               <section className="space-y-4">
-                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 flex justify-between">
-                    <span>2. Speech Script</span>
-                 </h3>
+                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">2. Project Category</h3>
+                 <div className="grid grid-cols-2 gap-2">
+                    {LIPSYNC_CATEGORIES.map(cat => (
+                      <button 
+                        key={cat.id}
+                        onClick={() => setSyncCategory(cat.id)}
+                        className={`p-2.5 rounded-xl border transition-all flex items-center space-x-2 ${syncCategory === cat.id ? 'bg-rose-600 border-rose-400 shadow-lg' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
+                      >
+                         <span className="text-xs">{cat.icon}</span>
+                         <span className="text-[8px] font-black uppercase tracking-tight">{cat.label}</span>
+                      </button>
+                    ))}
+                 </div>
+              </section>
+
+              <section className="space-y-4">
+                 <div className="flex justify-between items-center px-1">
+                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">3. Speech & Voice Lab</h3>
+                    <button 
+                       onClick={handleTestVoice} 
+                       disabled={isTestingVoice || !syncAudioText.trim()}
+                       className={`text-rose-400 hover:text-rose-300 transition-colors flex items-center text-[8px] font-black uppercase tracking-widest ${isTestingVoice ? 'animate-pulse' : ''}`}
+                    >
+                      {isTestingVoice ? <div className="w-2 h-2 border border-rose-400 border-t-transparent rounded-full animate-spin mr-1"></div> : '🔊'} 
+                      <span>Test Audio</span>
+                    </button>
+                 </div>
                  <textarea 
                    value={syncAudioText} 
                    onChange={(e) => setSyncAudioText(e.target.value)} 
                    className="w-full h-32 p-5 text-xs bg-slate-900/80 border border-white/10 rounded-2xl focus:ring-2 focus:ring-rose-500/50 outline-none resize-none font-medium text-slate-300 shadow-inner leading-relaxed" 
                    placeholder="Enter the speech content for the lip sync..."
                  />
+                 
+                 <div className="relative group mt-2">
+                    <select 
+                       value={selectedVoice}
+                       onChange={(e) => setSelectedVoice(e.target.value)}
+                       className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold focus:ring-2 focus:ring-rose-500 outline-none appearance-none cursor-pointer"
+                    >
+                       {clonedVoices.length > 0 && (
+                          <optgroup label="Neural Clones" className="bg-slate-900 text-rose-400">
+                             {clonedVoices.map(v => <option key={v.id} value={v.id}>{v.emoji} {v.label}</option>)}
+                          </optgroup>
+                       )}
+                       <optgroup label="System Registry" className="bg-slate-900 text-slate-500">
+                          {DEFAULT_VOICES.map(v => <option key={v.id} value={v.id}>{v.emoji} {v.label}</option>)}
+                       </optgroup>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 scale-75">
+                       <Icons.ChevronDown />
+                    </div>
+                 </div>
               </section>
 
               <section className="space-y-4">
-                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">3. Sync Protocol</h3>
+                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1">4. Sync Protocol</h3>
                  <div className="grid grid-cols-1 gap-2">
                     {[
                       { id: 'avatar', label: 'Cartoon Avatar', desc: 'Synthesized stylized sync' },
                       { id: 'clone', label: 'Neural Clone', desc: 'High-fidelity realistic sync' },
-                      { id: 'satire', label: 'Deepfake Satire', desc: 'Exaggerated emotive sync' },
+                      { id: 'satire', label: 'Deepfake Satire', desc: 'Deeply emotive sync' },
                     ].map(mode => (
                       <button 
                         key={mode.id}
@@ -402,9 +612,10 @@ const VideoMaker: React.FC = () => {
                    <button 
                      onClick={upscaleActiveClip} 
                      disabled={activeClip.resolution === '1080p'}
-                     className={`px-4 py-2 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeClip.resolution === '1080p' ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:bg-indigo-600'}`}
+                     className={`px-4 py-2 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center space-x-2 ${activeClip.resolution === '1080p' ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:bg-indigo-600'}`}
                    >
-                     {activeClip.resolution === '1080p' ? 'Maximum Fidelity' : 'Neural Upscale (1080p)'}
+                     <span>✨</span>
+                     <span>{activeClip.resolution === '1080p' ? 'Maximum Fidelity' : 'Neural Upscale 2x (1080p)'}</span>
                    </button>
                 </div>
               </>
@@ -454,7 +665,7 @@ const VideoMaker: React.FC = () => {
                          </div>
                          <div className="absolute bottom-2 left-3 flex items-center justify-between right-3">
                             <span className="text-[8px] font-black text-white/60">SCENE 0{idx + 1}</span>
-                            <span className="text-[8px] font-black text-white/60">6s</span>
+                            {clip.category && <span className="text-[8px] font-black text-rose-400 uppercase">{clip.category}</span>}
                          </div>
                        </>
                      )}
@@ -466,7 +677,14 @@ const VideoMaker: React.FC = () => {
                 ))}
                 
                 <button 
-                  onClick={() => { setScript(''); setStartingFrame(null); setSyncVideo(null); setSyncAudioText(''); }}
+                  onClick={() => { 
+                    setScript(''); 
+                    setStartingFrame(null); 
+                    setSyncVideo(null); 
+                    setSyncAudioText('');
+                    setMotionReferenceVideo(null);
+                    setCharacterAsset(null);
+                  }}
                   className="flex-shrink-0 w-60 h-full rounded-2xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center space-y-2 text-slate-600 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all group"
                 >
                    <div className="w-8 h-8 rounded-full border border-slate-700 flex items-center justify-center group-hover:bg-indigo-600 group-hover:border-indigo-600 group-hover:text-white transition-all">
