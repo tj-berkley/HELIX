@@ -146,7 +146,8 @@ export type Page =
   | 'audio-lab'
   | 'owner-profile'
   | 'business-identity'
-  | 'usage-dashboard';
+  | 'usage-dashboard'
+  | 'email';
 
 export interface PageDesign {
   headline: string;

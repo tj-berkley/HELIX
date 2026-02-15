@@ -244,3 +244,54 @@ export const generateSiteDesign = async (prompt: string, brandVoice: any) => {
   });
   return JSON.parse(response.text);
 };
+
+/**
+ * AI Article Outline Generation
+ */
+export const generateArticleOutline = async (topic: string, keywords: string, brandVoice: any) => {
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Generate a high-conversion, SEO-optimized article outline for the topic: "${topic}". 
+    Target Keywords: ${keywords}. 
+    Audience: ${brandVoice.audience}. 
+    Tone: ${brandVoice.tone}.
+    
+    Provide a logical flow of H2 and H3 subheadings.
+    Return as a JSON array of strings.`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.ARRAY,
+        items: { type: Type.STRING }
+      }
+    }
+  });
+  return JSON.parse(response.text);
+};
+
+/**
+ * AI Email Reply Synthesis
+ */
+export const generateEmailReply = async (emailContent: string, intent: string, brandVoice: any) => {
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-pro-preview',
+    contents: `Act as a world-class executive assistant.
+    INBOUND EMAIL: "${emailContent}"
+    USER INTENT: "${intent}"
+    BRAND VOICE: ${brandVoice.tone}
+    
+    Draft a professional, effective reply. 
+    Return as JSON: { "subject": "Suggested Subject", "body": "Suggested Body" }`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          subject: { type: Type.STRING },
+          body: { type: Type.STRING }
+        }
+      }
+    }
+  });
+  return JSON.parse(response.text);
+};

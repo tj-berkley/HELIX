@@ -29,8 +29,8 @@ import OwnerProfile from './components/OwnerProfile';
 import BusinessIdentity from './components/BusinessIdentity';
 import ProjectPortfolio from './components/ProjectPortfolio';
 import UsageDashboard from './components/UsageDashboard';
-// Fix: Corrected import path for ApiManagement located in components/
 import ApiManagement from './components/ApiManagement';
+import EmailManager from './components/EmailManager';
 import AIChatbot from './components/AIChatbot';
 import { Icons } from './constants';
 import { Workspace, Board, Group, Item, BoardView, Page, Status, Priority, ReleasedMovie, MovieScript, Manuscript, OwnerInfo, BusinessInfo, ClonedVoice } from './types';
@@ -338,13 +338,13 @@ const App: React.FC = () => {
           onSelectBoard={(id) => { setActiveBoardId(id); setActivePage('board'); }}
         />
       );
+      case 'email': return <EmailManager />;
       case 'analytics': return <Analytics boards={allBoards} />;
       case 'webinars': return <Webinars />;
       case 'owner-profile': return <OwnerProfile info={ownerInfo} onUpdate={setOwnerInfo} />;
       case 'business-identity': return <BusinessIdentity info={businessInfo} onUpdate={setBusinessInfo} />;
       case 'brand-voice': return <BrandVoicePage />;
       case 'usage-dashboard': return <UsageDashboard />;
-      // Fix: Changed 'api-management' to 'vault' to match the union type defined in types.ts
       case 'vault': return <ApiManagement />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
       case 'connections': return (

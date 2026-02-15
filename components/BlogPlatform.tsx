@@ -4,6 +4,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Manuscript, PublishingDestination } from '../types';
 import BlogPublishModal from './BlogPublishModal';
 import { Icons } from '../constants';
+import { generateArticleOutline } from '../services/geminiService';
 
 type PlatformTab = 'toolbox' | 'book' | 'script' | 'editor' | 'library' | 'analysis';
 type WritingGenre = 
@@ -55,6 +56,11 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
   const [productDetails, setProductDetails] = useState<{ title?: string; image?: string; specs?: string[] } | null>(null);
   const [isFetchingProduct, setIsFetchingProduct] = useState(false);
   
+  // Outline State
+  const [outline, setOutline] = useState<string[]>([]);
+  const [isGeneratingOutline, setIsGeneratingOutline] = useState(false);
+  const [showOutlineEditor, setShowOutlineEditor] = useState(false);
+
   const [analysisFile, setAnalysisFile] = useState<{ name: string; data: string; mimeType: string } | null>(null);
   const [analysisStep, setAnalysisStep] = useState<'upload' | 'options' | 'result'>('upload');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -97,11 +103,28 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
     }
   };
 
+  const handleGenerateOutline = async () => {
+    if (!topic.trim()) return;
+    setIsGeneratingOutline(true);
+    try {
+      const voice = getBrandVoice();
+      const headers = await generateArticleOutline(topic, seoKeywords, voice);
+      setOutline(headers);
+      setShowOutlineEditor(true);
+    } catch (e) {
+      console.error(e);
+      alert("Neural outline generation failed.");
+    } finally {
+      setIsGeneratingOutline(false);
+    }
+  };
+
   const handleGenerate = async (mode: PlatformTab | string) => {
     const finalTopic = topic.trim();
     if (!finalTopic) return;
     setIsGenerating(true);
     setIsConfigModalOpen(false);
+    setShowOutlineEditor(false);
     
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -125,10 +148,10 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
       - Author: ${authorInfo}
       - Affiliate/Buy Link: ${affiliateLink}
       
-      PRODUCT INTELLIGENCE:
-      ${productDetails ? `Detected Title: ${productDetails.title}. Specs: ${productDetails.specs?.join(', ')}` : 'None provided.'}
+      ARTICLE STRUCTURE (OUTLINE):
+      ${outline.join('\n')}
 
-      TASK: Write a highly optimized, high-converting article. `;
+      TASK: Write a highly optimized, high-converting full article. `;
 
       if (locationsList.length > 0) {
         systemPrompt += `CRITICAL: Seamlessly weave in the following locations to dominate local search: ${locationsList.join(', ')}. `;
@@ -136,8 +159,6 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
 
       if (mode === 'amazon-review') {
         systemPrompt += `FORMAT: Use a product review structure with Pros/Cons, "Why We Love It", technical specs, and 3 clear call-to-actions linking to ${affiliateLink}. `;
-      } else if (mode === 'bulk-seo') {
-        systemPrompt += `TASK: Create a master structure that can be used to generate pages for ${locationsList.length} different locations. Focus on the core value proposition but leave placeholders [LOCATION] where city names should go. `;
       }
 
       const response = await ai.models.generateContent({
@@ -170,7 +191,6 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
     }
   };
 
-  // Fix: Added handleFileUpload to process document uploads for analysis
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -188,7 +208,6 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
     }
   };
 
-  // Fix: Added runDocumentAnalysis to process documents using Gemini AI
   const runDocumentAnalysis = async (task: string) => {
     if (!analysisFile) return;
     setIsGenerating(true);
@@ -238,6 +257,8 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
     setIsConfigModalOpen(true);
     setTopic('');
     setProductDetails(null);
+    setOutline([]);
+    setShowOutlineEditor(false);
   };
 
   return (
@@ -345,7 +366,7 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
           </div>
         )}
 
-        {/* Configuration Modal for Tools - Expanded for SEO/Review */}
+        {/* Configuration Modal for Tools */}
         {isConfigModalOpen && selectedTool && (
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-xl animate-in fade-in">
              <div className="bg-white w-full max-w-4xl rounded-[4rem] shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
@@ -363,131 +384,142 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-12 space-y-10 scrollbar-hide">
-                   <div className="grid grid-cols-2 gap-10">
-                      <div className="space-y-6">
-                         <div className="space-y-4">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] px-2">Primary Topic / Headline</label>
-                            <input 
-                              autoFocus
-                              className="w-full p-5 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 rounded-2xl outline-none text-lg font-black shadow-inner transition-all placeholder-slate-300"
-                              placeholder="e.g. Best Noise Cancelling Headphones 2025"
-                              value={topic}
-                              onChange={e => setTopic(e.target.value)}
-                            />
-                         </div>
+                   {!showOutlineEditor ? (
+                      <>
+                        <div className="grid grid-cols-2 gap-10">
+                            <div className="space-y-6">
+                               <div className="space-y-4">
+                                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] px-2">Primary Topic / Headline</label>
+                                  <input 
+                                    autoFocus
+                                    className="w-full p-5 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 rounded-2xl outline-none text-lg font-black shadow-inner transition-all placeholder-slate-300"
+                                    placeholder="e.g. Best Noise Cancelling Headphones 2025"
+                                    value={topic}
+                                    onChange={e => setTopic(e.target.value)}
+                                  />
+                               </div>
 
-                         <div className="space-y-4">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] px-2">Amazon / Product URL</label>
-                            <div className="flex space-x-2">
-                               <input 
-                                 className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-bold shadow-inner"
-                                 placeholder="https://amazon.com/dp/..."
-                                 value={targetUrl}
-                                 onChange={e => setTargetUrl(e.target.value)}
-                               />
-                               <button 
-                                 onClick={handleFetchProduct}
-                                 disabled={isFetchingProduct || !targetUrl}
-                                 className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center"
-                               >
-                                 {isFetchingProduct ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Fetch Details'}
-                               </button>
+                               <div className="space-y-4">
+                                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] px-2">Amazon / Product URL</label>
+                                  <div className="flex space-x-2">
+                                     <input 
+                                       className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-bold shadow-inner"
+                                       placeholder="https://amazon.com/dp/..."
+                                       value={targetUrl}
+                                       onChange={e => setTargetUrl(e.target.value)}
+                                     />
+                                     <button 
+                                       onClick={handleFetchProduct}
+                                       disabled={isFetchingProduct || !targetUrl}
+                                       className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center"
+                                     >
+                                       {isFetchingProduct ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Fetch Details'}
+                                     </button>
+                                  </div>
+                               </div>
+
+                               <div className="space-y-4">
+                                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] px-2">Affiliate ID / Link</label>
+                                  <input 
+                                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-bold shadow-inner"
+                                    placeholder="?tag=yourid-20"
+                                    value={affiliateLink}
+                                    onChange={e => setAffiliateLink(e.target.value)}
+                                  />
+                               </div>
                             </div>
-                            {productDetails && (
-                              <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl animate-in slide-in-from-top-2">
-                                 <p className="text-[10px] font-black text-emerald-600 uppercase mb-1">Detected Product</p>
-                                 <p className="text-xs font-bold text-slate-700">{productDetails.title}</p>
-                              </div>
-                            )}
+
+                            <div className="space-y-6">
+                               <div className="space-y-4">
+                                  <label className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.3em] px-2">SEO Keywords</label>
+                                  <textarea 
+                                    className="w-full p-5 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 rounded-[2rem] outline-none text-xs font-bold shadow-inner h-24 resize-none"
+                                    placeholder="Review, comparison, features, price..."
+                                    value={seoKeywords}
+                                    onChange={e => setSeoKeywords(e.target.value)}
+                                  />
+                               </div>
+
+                               <div className="space-y-4">
+                                  <label className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.3em] px-2">Target Locations</label>
+                                  <textarea 
+                                    className="w-full p-5 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 rounded-[2rem] outline-none text-xs font-bold shadow-inner h-24 resize-none"
+                                    placeholder="London, New York, Tokyo..."
+                                    value={targetLocations}
+                                    onChange={e => setTargetLocations(e.target.value)}
+                                  />
+                               </div>
+                            </div>
                          </div>
 
-                         <div className="space-y-4">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em] px-2">Affiliate ID / Link</label>
-                            <input 
-                              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-bold shadow-inner"
-                              placeholder="?tag=yourid-20"
-                              value={affiliateLink}
-                              onChange={e => setAffiliateLink(e.target.value)}
-                            />
+                         <div className="p-10 border-t border-slate-50 shrink-0 flex space-x-4">
+                            <button 
+                               onClick={handleGenerateOutline}
+                               disabled={isGeneratingOutline || !topic.trim()}
+                               className={`flex-1 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl transition-all transform active:scale-95 ${isGeneratingOutline ? 'bg-slate-800' : 'bg-slate-900 text-white hover:bg-black'}`}
+                            >
+                               {isGeneratingOutline ? 'Architecting Outline...' : 'Generate Neural Outline'}
+                            </button>
+                            <button 
+                               onClick={() => handleGenerate(selectedTool.id)}
+                               disabled={isGenerating || !topic.trim()}
+                               className={`flex-1 py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl transition-all transform active:scale-95 ${isGenerating ? 'bg-slate-800' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
+                            >
+                               Direct Synthesis
+                            </button>
                          </div>
-                      </div>
+                      </>
+                   ) : (
+                      <div className="space-y-8 animate-in slide-in-from-right-4">
+                         <div className="flex justify-between items-center px-2">
+                            <div>
+                               <h4 className="text-xl font-black text-slate-900 uppercase">Structural blueprint</h4>
+                               <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mt-1">Review and refine article headers</p>
+                            </div>
+                            <button onClick={() => setShowOutlineEditor(false)} className="text-[10px] font-black uppercase text-slate-400 hover:text-indigo-600 underline">Back to config</button>
+                         </div>
+                         
+                         <div className="space-y-3">
+                            {outline.map((header, idx) => (
+                               <div key={idx} className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 group">
+                                  <span className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black shadow-lg shrink-0">{idx + 1}</span>
+                                  <input 
+                                     className="flex-1 bg-transparent border-none outline-none font-bold text-slate-700 p-0 focus:ring-0"
+                                     value={header}
+                                     onChange={(e) => {
+                                        const next = [...outline];
+                                        next[idx] = e.target.value;
+                                        setOutline(next);
+                                     }}
+                                  />
+                                  <button onClick={() => setOutline(outline.filter((_, i) => i !== idx))} className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 transition-all">✕</button>
+                               </div>
+                            ))}
+                            <button 
+                               onClick={() => setOutline([...outline, 'New Section Header'])}
+                               className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase text-slate-400 hover:border-indigo-400 hover:text-indigo-600 transition-all"
+                            >
+                               + Add Section Beat
+                            </button>
+                         </div>
 
-                      <div className="space-y-6">
-                         <div className="space-y-4">
-                            <label className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.3em] px-2">SEO Multi-Keywords (Comma separated)</label>
-                            <textarea 
-                              className="w-full p-5 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 rounded-[2rem] outline-none text-xs font-bold shadow-inner h-24 resize-none"
-                              placeholder="Review, comparison, features, price, best budget..."
-                              value={seoKeywords}
-                              onChange={e => setSeoKeywords(e.target.value)}
-                            />
-                         </div>
-
-                         <div className="space-y-4">
-                            <label className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.3em] px-2">Target Locations (Bulk Mode)</label>
-                            <textarea 
-                              className="w-full p-5 bg-slate-50 border-2 border-transparent focus:bg-white focus:border-indigo-500 rounded-[2rem] outline-none text-xs font-bold shadow-inner h-24 resize-none"
-                              placeholder="London, New York, Tokyo, Berlin..."
-                              value={targetLocations}
-                              onChange={e => setTargetLocations(e.target.value)}
-                            />
-                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center">AI will build unique context for each city listed.</p>
+                         <div className="p-10 border-t border-slate-50 shrink-0">
+                            <button 
+                               onClick={() => handleGenerate(selectedTool.id)}
+                               disabled={isGenerating || outline.length === 0}
+                               className={`w-full py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl transition-all transform active:scale-95 ${isGenerating ? 'bg-slate-800' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
+                            >
+                               {isGenerating ? 'Expanding Narrative...' : 'Synthesize Full Manuscript'}
+                            </button>
                          </div>
                       </div>
-                   </div>
-
-                   <div className="grid grid-cols-2 gap-10 pt-10 border-t border-slate-50">
-                      <div className="space-y-4">
-                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">SEO Semantic Phrases</label>
-                        <input 
-                          className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-bold shadow-inner"
-                          placeholder="How to use neural portals for..."
-                          value={seoPhrases}
-                          onChange={e => setSeoPhrases(e.target.value)}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                         <div className="space-y-4">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">Author Info</label>
-                            <input 
-                              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-bold shadow-inner"
-                              placeholder="Sarah Chen, Lead Auditor"
-                              value={authorInfo}
-                              onChange={e => setAuthorInfo(e.target.value)}
-                            />
-                         </div>
-                         <div className="space-y-4">
-                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">Genre Type</label>
-                            <select value={genre} onChange={e => setGenre(e.target.value as WritingGenre)} className="w-full p-4 bg-slate-50 border-none rounded-xl font-bold text-slate-900 text-xs shadow-inner">
-                               {[
-                                 'Product Review', 'Amazon Affiliate', 'Listicle', 'How-To Guide', 
-                                 'Case Study', 'Whitepaper', 'Comparison', 'Location-Based SEO', 'Newsletter', 'Non-Fiction'
-                               ].map(g => <option key={g} value={g}>{g}</option>)}
-                            </select>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-
-                <div className="p-10 border-t border-slate-50 shrink-0">
-                  <button 
-                    onClick={() => handleGenerate(selectedTool.id)}
-                    disabled={isGenerating || !topic.trim()}
-                    className={`w-full py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs shadow-2xl transition-all transform active:scale-95 ${isGenerating ? 'bg-slate-800' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-900/40'}`}
-                  >
-                    {isGenerating ? (
-                      <div className="flex items-center justify-center space-x-3">
-                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                         <span>Synthesizing Strategy...</span>
-                      </div>
-                    ) : 'Generate Optimized Content Stream'}
-                  </button>
+                   )}
                 </div>
              </div>
           </div>
         )}
 
-        {/* Document Analysis Tab */}
+        {/* ... Analysis and Other Views ... */}
         {activeTab === 'analysis' && (
           <div className="max-w-4xl mx-auto p-12 space-y-10 animate-in fade-in">
              <div className="bg-white p-12 rounded-[4rem] shadow-2xl border border-slate-100 space-y-10 relative overflow-hidden">
@@ -564,7 +596,6 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
           </div>
         )}
 
-        {/* Specialized Assistants (Book/Script/Editor) */}
         {(activeTab === 'book' || activeTab === 'script' || activeTab === 'editor') && (
           <div className="max-w-5xl mx-auto p-12 space-y-12 animate-in fade-in">
              <div className="bg-white p-12 rounded-[4rem] shadow-2xl border border-slate-100 space-y-10 relative overflow-hidden">
@@ -578,17 +609,14 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mt-1">Neural Composition Engine</p>
                       </div>
                    </div>
-                   <div className="flex space-x-3">
-                      <span className="text-[10px] font-black bg-indigo-50 text-indigo-600 px-4 py-2 rounded-full uppercase border border-indigo-100 shadow-sm">Brand Voice: Link Active</span>
-                   </div>
                 </div>
 
                 <div className="space-y-4">
-                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">Project Directive / Keyword Pulse</label>
+                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">Project Directive</label>
                    <textarea 
                      value={topic}
                      onChange={e => setTopic(e.target.value)}
-                     placeholder={activeTab === 'script' ? "A sci-fi noir about a detective chasing an AI ghost in Neo-Tokyo..." : "The ultimate guide to autonomous enterprise agents..."}
+                     placeholder={activeTab === 'script' ? "A sci-fi noir about a detective..." : "The ultimate guide to autonomous enterprise agents..."}
                      className="w-full p-10 text-3xl font-black bg-slate-50 border-2 border-transparent rounded-[3rem] focus:bg-white focus:border-indigo-500 outline-none transition-all shadow-inner h-48 resize-none placeholder-slate-200"
                    />
                 </div>
