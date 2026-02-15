@@ -2,11 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Modality } from '@google/genai';
 
-const PROVIDER_INFO = [
-  { id: 'GEMINI', name: 'Gemini 3 Pro', icon: '🧠', color: 'text-indigo-400' },
-  { id: 'LITE', name: 'Gemini Flash', icon: '⚡', color: 'text-amber-400' },
-];
-
 const AIChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model' | 'system', text: string }[]>([]);
@@ -21,7 +16,7 @@ const AIChatbot: React.FC = () => {
     if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isThinking]);
 
-  // Setup STT
+  // Setup Speech to Text
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -96,18 +91,20 @@ const AIChatbot: React.FC = () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
-        contents: `Persona: Energetic, fun, positive, and authoritative AI OS assistant. 
-        Capability: You can perform tasks, set workflows, build websites, and write documents. 
-        Context: You are talking to the owner of the OmniPortal platform. 
-        Make a joke if appropriate. User input: ${textToSend}`,
+        contents: `Persona: You are the Ultra-Energetic OmniPortal Architect! You are fun, positive, authority-driven, and highly encouraging. 
+        You always use exclamation points and exciting language! 
+        Capability: You are SMARTER than any other bot. You can build workflows, design marketing campaigns, set appointments, write complex documents, and architect landing pages or funnels for the user. 
+        Current Task: Talk to the user. If they want you to build something, tell them you're on it and describe the plan in an exciting way! 
+        Make a funny joke related to their request. 
+        User Request: "${textToSend}"`,
         config: { thinkingConfig: { thinkingBudget: 2000 } }
       });
 
-      const reply = response.text || "Neural connection reset.";
+      const reply = response.text || "WOAH! My neural sensors just did a backflip! Let's try that again!";
       setMessages(prev => [...prev, { role: 'model', text: reply }]);
       speakText(reply);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'system', text: "Transmission Error." }]);
+      setMessages(prev => [...prev, { role: 'system', text: "BOOM! A small glitch in the matrix, but I'm still standing! Let's go again!" }]);
     } finally {
       setIsThinking(false);
     }
@@ -115,31 +112,45 @@ const AIChatbot: React.FC = () => {
 
   return (
     <>
-      <div className={`fixed bottom-8 right-8 z-[2000] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] transform origin-bottom-right ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-75 opacity-0 translate-y-12 pointer-events-none'}`}>
+      {/* Lifted the window bottom offset to avoid overlap with the toggle button */}
+      <div className={`fixed bottom-32 right-8 z-[2000] transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] transform origin-bottom-right ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-75 opacity-0 translate-y-12 pointer-events-none'}`}>
         <div className="w-[440px] h-[680px] bg-slate-900 border border-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.8)] rounded-[3.5rem] flex flex-col overflow-hidden relative">
           <div className="p-8 pb-4 flex justify-between items-center relative z-10 border-b border-white/5 bg-slate-900/50 backdrop-blur-xl">
             <div className="flex items-center space-x-4">
-               <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl">
-                  <span className="text-2xl">✨</span>
+               <div className="w-12 h-12 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl border border-white/10">
+                  <span className="text-2xl animate-bounce">⚡</span>
                </div>
                <div>
-                  <h3 className="text-lg font-black text-white">Neural Hub</h3>
+                  <h3 className="text-lg font-black text-white tracking-tight">Neural Architect</h3>
                   <div className="flex items-center space-x-2">
-                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Active Link</span>
+                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
+                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Quantum Link: Active</span>
                   </div>
                </div>
             </div>
             <div className="flex items-center space-x-2">
-               <button onClick={() => setIsVoiceActive(!isVoiceActive)} className={`p-2 rounded-xl transition-all ${isVoiceActive ? 'bg-indigo-600 text-white' : 'bg-white/5 text-slate-500'}`}>🔊</button>
-               <button onClick={() => setIsOpen(false)} className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center transition-all">✕</button>
+               <button onClick={() => setIsVoiceActive(!isVoiceActive)} className={`p-2.5 rounded-xl transition-all ${isVoiceActive ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white/5 text-slate-500 hover:text-slate-300'}`}>
+                 {isVoiceActive ? '🔊' : '🔇'}
+               </button>
+               <button onClick={() => setIsOpen(false)} className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center transition-all">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+               </button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide bg-gradient-to-b from-transparent to-indigo-900/10">
+            {messages.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center text-center space-y-6 opacity-40">
+                 <span className="text-7xl">👋</span>
+                 <div className="space-y-2 px-8">
+                    <p className="text-xl font-black text-white">READY FOR EXCELLENCE!</p>
+                    <p className="text-xs font-medium text-slate-400">Ask me to build a workflow, design a campaign, or even draft a website plan for you!</p>
+                 </div>
+              </div>
+            )}
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] p-6 rounded-[2rem] text-sm leading-relaxed ${m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white/5 border border-white/10 text-slate-200 backdrop-blur-md'}`}>
+              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2`}>
+                <div className={`max-w-[85%] p-6 rounded-[2rem] text-sm leading-relaxed ${m.role === 'user' ? 'bg-indigo-600 text-white shadow-xl rounded-tr-lg' : 'bg-white/5 border border-white/10 text-slate-100 backdrop-blur-md rounded-tl-lg'}`}>
                   <p className="whitespace-pre-wrap font-medium">{m.text}</p>
                 </div>
               </div>
@@ -156,24 +167,33 @@ const AIChatbot: React.FC = () => {
             <div ref={chatEndRef}></div>
           </div>
 
-          <div className="p-8 pt-0 z-10">
-            <div className="flex items-center space-x-3 bg-white/5 border border-white/10 p-2 rounded-[2.5rem] backdrop-blur-xl">
-              <button onClick={toggleListening} className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-rose-600 animate-pulse text-white' : 'bg-white/5 text-slate-400 hover:text-white'}`}>🎙️</button>
+          <div className="p-8 pt-4 z-10 bg-slate-900/80 backdrop-blur-md">
+            <div className="flex items-center space-x-3 bg-white/5 border border-white/10 p-2 rounded-[2.5rem] focus-within:border-indigo-500 transition-all shadow-inner">
+              <button onClick={toggleListening} className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-rose-600 animate-pulse text-white shadow-[0_0_20px_rgba(225,29,72,0.5)]' : 'bg-white/5 text-slate-400 hover:text-white'}`}>
+                {isListening ? '⏺️' : '🎙️'}
+              </button>
               <input 
                 className="flex-1 bg-transparent border-none outline-none text-sm text-white placeholder-slate-600 px-2 font-medium" 
-                placeholder="Talk to OmniPortal..." 
+                placeholder="Give an exciting command..." 
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
               />
-              <button onClick={() => handleSendMessage()} className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center hover:bg-indigo-700 shadow-xl">🚀</button>
+              <button onClick={() => handleSendMessage()} className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center hover:bg-indigo-700 shadow-xl active:scale-90 transition-all">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <button onClick={() => setIsOpen(!isOpen)} className={`fixed bottom-8 right-8 w-20 h-20 bg-slate-900 rounded-[2rem] shadow-2xl flex items-center justify-center text-white text-3xl hover:scale-110 transition-all z-[2001] border border-white/10 group ${isOpen ? 'rotate-90' : ''}`}>
-        {isOpen ? '✕' : '✨'}
+      {/* FAB Toggle Button */}
+      <button onClick={() => setIsOpen(!isOpen)} className={`fixed bottom-8 right-8 w-20 h-20 bg-slate-900 rounded-[2rem] shadow-2xl flex items-center justify-center text-white text-3xl hover:scale-110 transition-all z-[2001] border border-white/10 group ${isOpen ? 'rotate-90 bg-indigo-600 border-indigo-400 shadow-[0_0_40px_rgba(79,70,229,0.4)]' : ''}`}>
+        {isOpen ? (
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        ) : (
+          <span className="group-hover:animate-pulse">✨</span>
+        )}
       </button>
     </>
   );

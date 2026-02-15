@@ -15,45 +15,44 @@ interface NodeTemplate {
 }
 
 const ALL_MARKETPLACE_NODES: { [key: string]: NodeTemplate[] } = {
-  "Logic & Data": [
-    { id: 'if', label: 'If', icon: '💎', color: 'bg-purple-100 border-purple-300 text-purple-800', description: 'Conditional logic paths.', category: 'Logic', setupGuide: { steps: ['Define keys', 'Operator', 'Value'], link: '#', infoNeeded: 'Logic' } },
-    { id: 'function', label: 'Function', icon: '⚡', color: 'bg-amber-50 border-amber-200 text-amber-900', description: 'Execute custom JavaScript.', category: 'Logic', setupGuide: { steps: ['Write JS'], link: '#', infoNeeded: 'Script' } },
-    { id: 'set', label: 'Set', icon: '📍', color: 'bg-slate-100 border-slate-300 text-slate-800', description: 'Modify data in workflow.', category: 'Logic', setupGuide: { steps: ['Key', 'Value'], link: '#', infoNeeded: 'Variables' } },
-    { id: 'mysql', label: 'MySQL', icon: '💾', color: 'bg-blue-100 border-blue-300 text-blue-800', description: 'Interact with MySQL databases.', category: 'Data', setupGuide: { steps: ['Host', 'Credentials', 'Query'], link: '#', infoNeeded: 'DB Connection' } },
-    { id: 'command', label: 'Execute Command', icon: '🐚', color: 'bg-slate-800 border-slate-900 text-white', description: 'Run shell commands.', category: 'Dev', setupGuide: { steps: ['Script path'], link: '#', infoNeeded: 'Env' } },
-  ],
-  "Communication": [
-    { id: 'slack', label: 'Slack', icon: '💬', color: 'bg-emerald-100 border-emerald-300 text-emerald-800', description: 'Send messages to Slack.', category: 'Communication', setupGuide: { steps: ['Hook URL'], link: 'https://api.slack.com', infoNeeded: 'Webhook' } },
-    { id: 'email', label: 'Email', icon: '📧', color: 'bg-indigo-100 border-indigo-300 text-indigo-800', description: 'Send/receive through SMTP.', category: 'Communication', setupGuide: { steps: ['SMTP Host'], link: '#', infoNeeded: 'Credentials' } },
-    { id: 'gmail', label: 'Gmail', icon: '💌', color: 'bg-rose-100 border-rose-300 text-rose-800', description: 'Send/receive through Gmail.', category: 'Google', setupGuide: { steps: ['OAuth'], link: '#', infoNeeded: 'G-Token' } },
+  "Core Logic & Data": [
+    { id: 'if', label: 'If', icon: '💎', color: 'bg-purple-100 border-purple-300 text-purple-800', description: 'Conditional logic to control workflow paths.', category: 'Logic', setupGuide: { steps: ['Define logic key', 'Choose operator', 'Set value'], link: '#', infoNeeded: 'Logic Path' } },
+    { id: 'function', label: 'Function', icon: '⚡', color: 'bg-amber-50 border-amber-200 text-amber-900', description: 'Execute custom JavaScript code for advanced logic.', category: 'Logic', setupGuide: { steps: ['Open script editor', 'Write async main function', 'Return valid JSON'], link: '#', infoNeeded: 'JS Code' } },
+    { id: 'set', label: 'Set', icon: '📍', color: 'bg-slate-100 border-slate-300 text-slate-800', description: 'Set or modify data in the workflow.', category: 'Logic', setupGuide: { steps: ['Define variable key', 'Map value from input'], link: '#', infoNeeded: 'Variables' } },
+    { id: 'mysql', label: 'MySQL', icon: '💾', color: 'bg-blue-100 border-blue-300 text-blue-800', description: 'Interact with MySQL databases for data management.', category: 'Data', setupGuide: { steps: ['Connect host', 'Add SQL Query', 'Map results'], link: '#', infoNeeded: 'Credentials' } },
+    { id: 'command', label: 'Execute Command', icon: '🐚', color: 'bg-slate-800 border-slate-900 text-white', description: 'Run shell commands on the server.', category: 'Dev', setupGuide: { steps: ['Define script path', 'Set working dir'], link: '#', infoNeeded: 'Env Access' } },
+    { id: 'http', label: 'HTTP Request', icon: '🌐', color: 'bg-indigo-50 border-indigo-200 text-indigo-900', description: 'Make API calls to external services.', category: 'Utils', setupGuide: { steps: ['URL', 'Method', 'Headers'], link: '#', infoNeeded: 'Endpoint' } },
+    { id: 'webhook', label: 'Webhook', icon: '🔌', color: 'bg-amber-100 border-amber-300 text-amber-900', description: 'Receive data from external sources via webhooks.', category: 'Utils', setupGuide: { steps: ['Copy URL', 'Paste in provider'], link: '#', infoNeeded: 'JSON Schema' } },
   ],
   "Google Workspace": [
-    { id: 'sheets', label: 'Google Sheets', icon: '📊', color: 'bg-emerald-50 border-emerald-200 text-emerald-700', description: 'Read/write spreadsheet data.', category: 'Google', setupGuide: { steps: ['Sheet ID'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'calendar', label: 'Google Calendar', icon: '📅', color: 'bg-blue-100 border-blue-200 text-blue-800', description: 'Manage events.', category: 'Google', setupGuide: { steps: ['Calendar ID'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'drive', label: 'Google Drive', icon: '📁', color: 'bg-amber-100 border-amber-200 text-amber-800', description: 'Manage files.', category: 'Google', setupGuide: { steps: ['Folder ID'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'docs', label: 'Google Docs', icon: '📄', color: 'bg-blue-50 border-blue-200 text-blue-800', description: 'Edit documents.', category: 'Google', setupGuide: { steps: ['Doc ID'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'slides', label: 'Google Slides', icon: '📙', color: 'bg-orange-50 border-orange-200 text-orange-800', description: 'Manage slides.', category: 'Google', setupGuide: { steps: ['Slide ID'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'forms', label: 'Google Forms', icon: '📝', color: 'bg-purple-50 border-purple-200 text-purple-800', description: 'Collect responses.', category: 'Google', setupGuide: { steps: ['Form ID'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'contacts', label: 'Google Contacts', icon: '👥', color: 'bg-blue-100 border-blue-200 text-blue-900', description: 'Manage contacts.', category: 'Google', setupGuide: { steps: ['Contacts scope'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'analytics', label: 'Google Analytics', icon: '📈', color: 'bg-orange-100 border-orange-200 text-orange-900', description: 'Fetch traffic data.', category: 'Google', setupGuide: { steps: ['Property ID'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'ads', label: 'Google Ads', icon: '💰', color: 'bg-emerald-50 border-emerald-200 text-emerald-900', description: 'Manage campaigns.', category: 'Google', setupGuide: { steps: ['Account ID'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'maps', label: 'Google Maps', icon: '🗺️', color: 'bg-rose-50 border-rose-200 text-rose-800', description: 'Mapping services.', category: 'Google', setupGuide: { steps: ['API Key'], link: '#', infoNeeded: 'Key' } },
-    { id: 'tasks', label: 'Google Tasks', icon: '✅', color: 'bg-indigo-50 border-indigo-200 text-indigo-800', description: 'Manage to-do lists.', category: 'Google', setupGuide: { steps: ['Task List ID'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'storage', label: 'Google Cloud Storage', icon: '☁️', color: 'bg-sky-100 border-sky-200 text-sky-900', description: 'Object storage.', category: 'Google', setupGuide: { steps: ['Bucket'], link: '#', infoNeeded: 'Auth' } },
+    { id: 'sheets', label: 'Google Sheets', icon: '📊', color: 'bg-emerald-50 border-emerald-200 text-emerald-700', description: 'Read and write data to Google Sheets.', category: 'Google', setupGuide: { steps: ['Sheet ID', 'Tab name', 'Range'], link: '#', infoNeeded: 'OAuth' } },
+    { id: 'drive', label: 'Google Drive', icon: '📁', color: 'bg-amber-50 border-amber-200 text-amber-800', description: 'Manage files and folders in Google Drive.', category: 'Google', setupGuide: { steps: ['Folder ID'], link: '#', infoNeeded: 'OAuth' } },
+    { id: 'calendar', label: 'Google Calendar', icon: '📅', color: 'bg-blue-50 border-blue-200 text-blue-800', description: 'Create and manage calendar events.', category: 'Google', setupGuide: { steps: ['Calendar ID'], link: '#', infoNeeded: 'OAuth' } },
+    { id: 'gmail', label: 'Gmail', icon: '💌', color: 'bg-rose-50 border-rose-200 text-rose-800', description: 'Send and receive emails through Gmail.', category: 'Google', setupGuide: { steps: ['OAuth Link'], link: '#', infoNeeded: 'Scope' } },
+    { id: 'forms', label: 'Google Forms', icon: '📝', color: 'bg-purple-50 border-purple-200 text-purple-800', description: 'Collect responses through Google Forms.', category: 'Google', setupGuide: { steps: ['Form ID'], link: '#', infoNeeded: 'OAuth' } },
+    { id: 'docs', label: 'Google Docs', icon: '📄', color: 'bg-blue-100 border-blue-200 text-blue-900', description: 'Access and edit Google Documents.', category: 'Google', setupGuide: { steps: ['Doc ID'], link: '#', infoNeeded: 'OAuth' } },
+    { id: 'slides', label: 'Google Slides', icon: '📙', color: 'bg-orange-100 border-orange-200 text-orange-900', description: 'Automate slide generation.', category: 'Google', setupGuide: { steps: ['Presentation ID'], link: '#', infoNeeded: 'OAuth' } },
+    { id: 'contacts', label: 'Google Contacts', icon: '👥', color: 'bg-indigo-100 border-indigo-200 text-indigo-900', description: 'Manage contacts stored in Google.', category: 'Google', setupGuide: { steps: ['Contacts sync'], link: '#', infoNeeded: 'OAuth' } },
+    { id: 'analytics', label: 'Google Analytics', icon: '📈', color: 'bg-orange-50 border-orange-300 text-orange-800', description: 'Access and analyze website traffic data.', category: 'Google', setupGuide: { steps: ['Property ID'], link: '#', infoNeeded: 'Key' } },
+    { id: 'ads', label: 'Google Ads', icon: '💰', color: 'bg-emerald-100 border-emerald-300 text-emerald-900', description: 'Manage advertising campaigns on Google Ads.', category: 'Google', setupGuide: { steps: ['Account ID'], link: '#', infoNeeded: 'OAuth' } },
+    { id: 'maps', label: 'Google Maps', icon: '🗺️', color: 'bg-rose-100 border-rose-300 text-rose-900', description: 'Integrate mapping and location services.', category: 'Google', setupGuide: { steps: ['API Key'], link: '#', infoNeeded: 'Key' } },
+    { id: 'tasks', label: 'Google Tasks', icon: '✅', color: 'bg-sky-50 border-sky-200 text-sky-800', description: 'Manage tasks and to-do lists.', category: 'Google', setupGuide: { steps: ['List ID'], link: '#', infoNeeded: 'OAuth' } },
+    { id: 'storage', label: 'Google Cloud Storage', icon: '☁️', color: 'bg-blue-600 border-blue-400 text-white', description: 'Store and retrieve data in Google Cloud.', category: 'Google', setupGuide: { steps: ['Bucket name'], link: '#', infoNeeded: 'Auth' } },
   ],
-  "Third Party": [
-    { id: 'trello', label: 'Trello', icon: '📋', color: 'bg-blue-100 border-blue-300 text-blue-900', description: 'Manage boards/cards.', category: 'Apps', setupGuide: { steps: ['Board ID'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'salesforce', label: 'Salesforce', icon: '☁️', color: 'bg-sky-50 border-sky-300 text-sky-800', description: 'Leads/Contacts.', category: 'Apps', setupGuide: { steps: ['Instance'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'mailchimp', label: 'Mailchimp', icon: '🐒', color: 'bg-amber-100 border-amber-300 text-amber-900', description: 'Email marketing.', category: 'Apps', setupGuide: { steps: ['API Key'], link: '#', infoNeeded: 'Key' } },
-    { id: 'sendfox', label: 'Sendfox', icon: '🦊', color: 'bg-orange-100 border-orange-300 text-orange-900', description: 'Email marketing.', category: 'Apps', setupGuide: { steps: ['Access Token'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'shopify', label: 'Shopify', icon: '🛒', color: 'bg-emerald-100 border-emerald-300 text-emerald-900', description: 'Store orders/tasks.', category: 'Apps', setupGuide: { steps: ['Store URL'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'typeform', label: 'Typeform', icon: '📝', color: 'bg-slate-900 border-slate-700 text-white', description: 'Form data collection.', category: 'Apps', setupGuide: { steps: ['Personal Token'], link: '#', infoNeeded: 'Auth' } },
-    { id: 'formly', label: 'Formly', icon: '🔗', color: 'bg-indigo-50 border-indigo-200 text-indigo-800', description: ' getformly.app forms.', category: 'Apps', setupGuide: { steps: ['API ID'], link: 'https://getformly.app', infoNeeded: 'Auth' } },
-    { id: 'github', label: 'GitHub', icon: '🐙', color: 'bg-slate-50 border-slate-200 text-slate-800', description: 'Repos & Actions.', category: 'Apps', setupGuide: { steps: ['Repo name'], link: '#', infoNeeded: 'Auth' } },
+  "Marketing & Productivity": [
+    { id: 'slack', label: 'Slack', icon: '💬', color: 'bg-emerald-50 border-emerald-200 text-emerald-800', description: 'Send messages and notifications to Slack.', category: 'Comm', setupGuide: { steps: ['Webhook URL'], link: '#', infoNeeded: 'App Key' } },
+    { id: 'email_gen', label: 'Email', icon: '📧', color: 'bg-indigo-50 border-indigo-200 text-indigo-800', description: 'Send/receive through various providers.', category: 'Comm', setupGuide: { steps: ['SMTP Host'], link: '#', infoNeeded: 'Host' } },
+    { id: 'trello', label: 'Trello', icon: '📋', color: 'bg-blue-100 border-blue-200 text-blue-800', description: 'Create and manage Trello cards and boards.', category: 'Apps', setupGuide: { steps: ['Board Token'], link: '#', infoNeeded: 'Auth' } },
+    { id: 'salesforce', label: 'Salesforce', icon: '☁️', color: 'bg-sky-100 border-sky-200 text-sky-800', description: 'Manage leads and contacts in Salesforce.', category: 'Apps', setupGuide: { steps: ['Instance URL'], link: '#', infoNeeded: 'Auth' } },
+    { id: 'mailchimp', label: 'Mailchimp', icon: '🐒', color: 'bg-amber-100 border-amber-200 text-amber-900', description: 'Automate email campaigns with Mailchimp.', category: 'Apps', setupGuide: { steps: ['API Key'], link: '#', infoNeeded: 'Key' } },
+    { id: 'sendfox', label: 'Sendfox', icon: '🦊', color: 'bg-orange-100 border-orange-200 text-orange-900', description: 'Automate email marketing with Sendfox.', category: 'Apps', setupGuide: { steps: ['Token'], link: '#', infoNeeded: 'Key' } },
+    { id: 'shopify', label: 'Shopify', icon: '🛒', color: 'bg-emerald-100 border-emerald-200 text-emerald-900', description: 'Manage e-commerce tasks and orders.', category: 'Apps', setupGuide: { steps: ['Store URL'], link: '#', infoNeeded: 'Auth' } },
+    { id: 'typeform', label: 'Typeform', icon: '📝', color: 'bg-slate-900 border-slate-700 text-white', description: 'Collect responses and data from surveys.', category: 'Apps', setupGuide: { steps: ['Token'], link: '#', infoNeeded: 'Auth' } },
+    { id: 'formly', label: 'Formly', icon: '🔗', color: 'bg-indigo-600 border-indigo-400 text-white', description: 'Sync with getformly.app forms.', category: 'Apps', setupGuide: { steps: ['API ID'], link: 'https://getformly.app', infoNeeded: 'Auth' } },
+    { id: 'github', label: 'GitHub', icon: '🐙', color: 'bg-slate-50 border-slate-200 text-slate-800', description: 'Manage repos and automation.', category: 'Apps', setupGuide: { steps: ['Repo name'], link: '#', infoNeeded: 'Auth' } },
   ],
-  "Utilities": [
-    { id: 'http', label: 'HTTP Request', icon: '🌐', color: 'bg-slate-100 border-slate-300 text-slate-900', description: 'API calls.', category: 'Utils', setupGuide: { steps: ['URL', 'Method'], link: '#', infoNeeded: 'Endpoint' } },
-    { id: 'webhook', label: 'Webhook', icon: '🔌', color: 'bg-amber-50 border-amber-200 text-amber-800', description: 'Receive data via URL.', category: 'Utils', setupGuide: { steps: ['Copy URL'], link: '#', infoNeeded: 'Endpoint' } },
+  "AI Agents": [
+    { id: 'ai_assistant', label: 'AI Assistant', icon: '🧠', color: 'bg-indigo-600 border-indigo-400 text-white', description: 'Conversational agent to solve tasks and route data.', category: 'AI', setupGuide: { steps: ['Select identity', 'Set budget'], link: '#', infoNeeded: 'Key' } },
   ]
 };
 
@@ -71,11 +70,11 @@ const WORKFLOW_PRESETS: Workflow[] = [
   },
   {
     id: 'tp2',
-    name: 'Lead Extraction & CRM Sync',
+    name: 'Automated Lead Extraction',
     status: 'Draft',
     nodes: [
-      { id: 'le1', type: 'trigger', label: 'Webhook', icon: '🔌', color: 'bg-amber-100 border-amber-300 text-amber-800', description: 'Receive lead from Formly.', apiConnected: true, mcpEnabled: false, materials: [] },
-      { id: 'le2', type: 'action', label: 'AI Assistant', icon: '🧠', color: 'bg-indigo-600 border-indigo-400 text-white', description: 'Extract custom values and summarize lead.', apiConnected: true, mcpEnabled: false, materials: [] },
+      { id: 'le1', type: 'trigger', label: 'Webhook', icon: '🔌', color: 'bg-amber-100 border-amber-300 text-amber-800', description: 'Receive lead from Typeform.', apiConnected: true, mcpEnabled: false, materials: [] },
+      { id: 'le2', type: 'action', label: 'AI Assistant', icon: '🧠', color: 'bg-indigo-600 border-indigo-400 text-white', description: 'Analyze responses and extract custom values.', apiConnected: true, mcpEnabled: false, materials: [] },
       { id: 'le3', type: 'action', label: 'Salesforce', icon: '☁️', color: 'bg-sky-50 border-sky-300 text-sky-800', description: 'Sync lead to CRM.', apiConnected: true, mcpEnabled: false, materials: [] },
     ]
   }
@@ -88,7 +87,7 @@ const NodeEditorModal: React.FC<{
 }> = ({ node, onClose, onUpdate }) => {
   const [activeTab, setActiveTab] = useState<'config' | 'guide'>('config');
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl animate-in fade-in">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-xl animate-in fade-in">
       <div className="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
         <div className={`p-10 border-b border-slate-100 flex justify-between items-center ${node.color.split(' ')[0]} bg-opacity-10`}>
           <div className="flex items-center space-x-6">
@@ -152,14 +151,15 @@ const WorkflowBuilder: React.FC = () => {
     setIsGenerating(true);
     try {
       const data = await generateWorkflowFromPrompt(aiPrompt);
+      const id = `w-ai-${Date.now()}`;
       const newW: Workflow = {
-        id: `w-ai-${Date.now()}`,
+        id,
         name: data.name || 'AI Designed Flow',
         status: 'Draft',
         nodes: data.nodes.map((n: any, i: number) => ({ id: `n-${i}-${Date.now()}`, ...n, apiConnected: false, mcpEnabled: false, materials: [] }))
       };
       save([newW, ...workflows]);
-      setActiveId(newW.id);
+      setActiveId(id);
       setView('canvas');
       setAiPrompt('');
     } catch (e) { console.error(e); }
@@ -233,7 +233,7 @@ const WorkflowBuilder: React.FC = () => {
                <div className="max-w-2xl mx-auto space-y-12 pb-60">
                  {activeWorkflow.nodes.map((node, idx) => (
                    <React.Fragment key={node.id}>
-                     <div className={`relative p-10 rounded-[4rem] border-2 bg-white shadow-xl group transition-all transform hover:-translate-y-2 cursor-pointer ${node.color} ${showQuickConfig === node.id ? 'z-[200]' : 'z-10'}`} onClick={() => setSelectedNode(node)}>
+                     <div className={`relative p-10 rounded-[4rem] border-2 bg-white shadow-xl group transition-all transform hover:-translate-y-2 cursor-pointer ${node.color} ${showQuickConfig === node.id ? 'z-[300]' : 'z-10'}`} onClick={() => setSelectedNode(node)}>
                         <div className="flex items-center space-x-8">
                            <div className="w-24 h-24 rounded-[2rem] bg-white shadow-lg flex items-center justify-center text-5xl shrink-0">{node.icon}</div>
                            <div className="flex-1 min-w-0">
@@ -248,7 +248,7 @@ const WorkflowBuilder: React.FC = () => {
                            </div>
                         </div>
                         {showQuickConfig === node.id && (
-                          <div className="absolute top-full left-0 right-0 mt-4 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-[3rem] shadow-2xl z-[300] p-8 max-h-[400px] overflow-y-auto scrollbar-hide animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                          <div className="absolute top-full left-0 right-0 mt-4 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-[3rem] shadow-2xl z-[500] p-8 max-h-[400px] overflow-y-auto scrollbar-hide animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
                              {Object.entries(ALL_MARKETPLACE_NODES).map(([cat, items]) => (
                                <div key={cat} className="mb-6">
                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">{cat}</p>
@@ -304,10 +304,10 @@ const WorkflowBuilder: React.FC = () => {
                 <div className="flex justify-between items-end border-b border-slate-100 pb-10">
                    <div>
                       <h3 className="text-5xl font-black tracking-tighter">Node Marketplace</h3>
-                      <p className="text-slate-400 font-medium text-xl mt-2">Browse our extensive library of neural pathways and integrations.</p>
+                      <p className="text-slate-400 font-medium text-xl mt-2">Browse our extensive library of 30+ neural pathways and integrations.</p>
                    </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-40">
                    {Object.entries(ALL_MARKETPLACE_NODES).flatMap(([cat, items]) => items.map(tpl => (
                      <div key={tpl.id} className="bg-white border border-slate-100 rounded-[3rem] p-8 flex flex-col space-y-6 hover:shadow-2xl transition-all shadow-sm">
                         <div className="flex justify-between items-start">
@@ -318,7 +318,7 @@ const WorkflowBuilder: React.FC = () => {
                            <h5 className="text-xl font-black text-slate-900 tracking-tight">{tpl.label}</h5>
                            <p className="text-xs text-slate-500 font-medium leading-relaxed mt-2 line-clamp-3">"{tpl.description}"</p>
                         </div>
-                        <button onClick={() => addMarketNode(tpl)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-indigo-600">Connect to Canvas</button>
+                        <button onClick={() => addMarketNode(tpl)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase shadow-xl hover:bg-indigo-600 transition-colors">Connect to Canvas</button>
                      </div>
                    )))}
                 </div>
