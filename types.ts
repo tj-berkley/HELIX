@@ -10,6 +10,15 @@ export type LeadCategory =
   | 'Packages' | 'Auto Dealerships' | 'Realtor' | 'Lawyer' 
   | 'Contractor' | 'Financial' | 'Crypto' | 'Auto Repair';
 
+export interface ExternalSource {
+  id: string;
+  type: 'URL' | 'Sheet' | 'Doc' | 'PDF';
+  label: string;
+  url: string;
+  lastSynced: string;
+  status: 'Ready' | 'Syncing' | 'Error';
+}
+
 export interface BrandVoice {
   id: string;
   name: string;
@@ -19,6 +28,7 @@ export interface BrandVoice {
   keyPhrases: string[];
   language: string;
   personalityEmoji: string;
+  externalSources?: ExternalSource[];
 }
 
 export type PublishingDestination = 'WordPress' | 'Blogger' | 'Shopify' | 'Webhook';
@@ -98,6 +108,7 @@ export interface Integration {
   icon: string;
   connected: boolean;
   description: string;
+  envKey?: string;
 }
 
 export type Page = 
@@ -221,8 +232,21 @@ export interface Campaign {
   audienceMeta?: any;
 }
 
+export interface CustomFieldValue {
+  key: string;
+  value: string;
+}
+
 export interface Contact {
-  id: string; name: string; email: string; company: string; role: string; status: 'Lead' | 'Customer' | 'Lost' | 'Nurturing'; lastContacted: string; category?: LeadCategory;
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  role: string;
+  status: 'Lead' | 'Customer' | 'Lost' | 'Nurturing';
+  lastContacted: string;
+  category?: LeadCategory;
+  customFields?: CustomFieldValue[];
 }
 
 export interface Manuscript {

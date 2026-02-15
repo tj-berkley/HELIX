@@ -332,7 +332,8 @@ const App: React.FC = () => {
       case 'api-management': return <ApiManagement />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
       case 'connections': return <ConnectionsHub clonedVoices={clonedVoices} />;
-      case 'integrations': return <IntegrationsCenter />;
+      // Fix: Added missing onNavigate prop to IntegrationsCenter component
+      case 'integrations': return <IntegrationsCenter onNavigate={setActivePage} />;
       case 'workflows': return <WorkflowBuilder />;
       case 'campaigns': return <CampaignManager />;
       case 'contacts': return <ContactManager />;
