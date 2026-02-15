@@ -30,6 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
   ];
 
   const platformNav = [
+    { id: 'site-builder', label: 'Sites', icon: <span>🌐</span> },
     { id: 'blog', label: 'Blog & Writing', icon: <span>✍️</span> },
     { id: 'content-creator', label: 'Content Marketing', icon: <span>🎨</span> },
     { id: 'video-maker', label: 'Video Marketing', icon: <span>📹</span> },

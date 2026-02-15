@@ -117,7 +117,6 @@ const App: React.FC = () => {
   useEffect(() => {
     const elKey = localStorage.getItem('ELEVEN_LABS_KEY');
     if (elKey && clonedVoices.length === 0) {
-      // Simulate fetching professional voices from ElevenLabs if a key is present
       const elVoices: ClonedVoice[] = [
         { id: 'el-1', label: 'Rachel (Pro)', description: 'Classic professional American female.', emoji: '🎙️', provider: 'ElevenLabs', sourceType: 'audio' },
         { id: 'el-2', label: 'Josh (Narrator)', description: 'Deep, resonant storytelling voice.', emoji: '🎙️', provider: 'ElevenLabs', sourceType: 'audio' }
