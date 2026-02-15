@@ -14,8 +14,15 @@ const ApiManagement: React.FC = () => {
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
 
   const PROVIDERS = [
-    { id: 'GEMINI', name: 'Google Gemini', service: 'LLM & Multimodal AI', env: 'API_KEY' },
+    { id: 'GEMINI', name: 'Google Gemini', service: 'LLM & Multimodal AI (Core OS)', env: 'API_KEY' },
+    { id: 'ANTHROPIC', name: 'Anthropic Claude', service: 'Claude 3.5 Sonnet / Opus', env: 'ANTHROPIC_KEY' },
     { id: 'OPENAI', name: 'OpenAI', service: 'GPT-4o & DALL-E 3 Synthesis', env: 'OPENAI_KEY' },
+    { id: 'OPENROUTER', name: 'OpenRouter', service: 'Unified LLM Gateway & Aggregator', env: 'OPENROUTER_KEY' },
+    { id: 'FAL', name: 'Fal.ai', service: 'Ultra-Fast Media & Image Synthesis', env: 'FAL_KEY' },
+    { id: 'DEEPSEEK', name: 'DeepSeek', service: 'High-Efficiency Reasoning Models', env: 'DEEPSEEK_KEY' },
+    { id: 'GROQ', name: 'Groq', service: 'Ultra-Fast LPU Inference', env: 'GROQ_KEY' },
+    { id: 'MISTRAL', name: 'Mistral AI', service: 'European Open-Weight Models', env: 'MISTRAL_KEY' },
+    { id: 'PERPLEXITY', name: 'Perplexity', service: 'Real-time Search Grounded AI', env: 'PERPLEXITY_KEY' },
     { id: 'ELEVEN_LABS', name: 'ElevenLabs', service: 'Neural TTS & Voice Cloning', env: 'ELEVEN_LABS_KEY' },
     { id: 'TWILIO', name: 'Twilio', service: 'SMS & Voice Gateway', env: 'TWILIO_KEY' },
     { id: 'TELNYX', name: 'Telnyx', service: 'Global Telephony', env: 'TELNYX_KEY' },
@@ -81,7 +88,17 @@ const ApiManagement: React.FC = () => {
             <div key={key.id} className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm hover:shadow-xl transition-all group flex items-center justify-between overflow-hidden relative">
               <div className="flex items-center space-x-8 flex-1">
                 <div className={`w-20 h-20 rounded-3xl flex items-center justify-center text-4xl shadow-inner transition-all group-hover:scale-105 duration-500 ${key.status === 'Active' ? 'bg-indigo-50 border border-indigo-100' : 'bg-slate-50 border border-slate-100'}`}>
-                   {key.id === 'GEMINI' ? '🧠' : key.id === 'OPENAI' ? '🤖' : key.id === 'ELEVEN_LABS' ? '🗣️' : '📞'}
+                   {key.id === 'GEMINI' && '🧠'}
+                   {key.id === 'ANTHROPIC' && '🎭'}
+                   {key.id === 'OPENAI' && '🤖'}
+                   {key.id === 'OPENROUTER' && '🌐'}
+                   {key.id === 'FAL' && '🎆'}
+                   {key.id === 'DEEPSEEK' && '🐋'}
+                   {key.id === 'GROQ' && '⚡'}
+                   {key.id === 'MISTRAL' && '🌪️'}
+                   {key.id === 'PERPLEXITY' && '🔍'}
+                   {key.id === 'ELEVEN_LABS' && '🗣️'}
+                   {['TWILIO', 'TELNYX', 'VONAGE'].includes(key.id) && '📞'}
                 </div>
                 <div className="space-y-1 flex-1">
                   <div className="flex items-center space-x-4">

@@ -10,9 +10,6 @@ const VOICES = [
   { id: 'Fenrir', label: 'Fenrir (Deep)', emoji: '🐺' },
   { id: 'Charon', label: 'Charon (Wise)', emoji: '🛶' },
   { id: 'Zephyr', label: 'Zephyr (Smooth)', emoji: '🌬️' },
-  { id: 'Adrenaline', label: 'Yapper: Bold', emoji: '🎙️' },
-  { id: 'Whisper', label: 'Yapper: ASMR', emoji: '🤫' },
-  { id: 'Trailer', label: 'Eleven: Movie Voice', emoji: '📢' },
 ];
 
 interface MovieStudioProps {
@@ -514,11 +511,13 @@ const MovieStudio: React.FC<MovieStudioProps> = ({ initialContent, manuscriptLib
                                      }}
                                      className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-xs font-black text-indigo-400 outline-none appearance-none cursor-pointer group-hover/voice:border-indigo-500/50 transition-all"
                                   >
-                                     <optgroup label="Neural Clones" className="bg-slate-900 text-indigo-400">
-                                        {clonedVoices.map(v => (
-                                          <option key={v.id} value={v.id}>{v.emoji} {v.label}</option>
-                                        ))}
-                                     </optgroup>
+                                     {clonedVoices.length > 0 && (
+                                        <optgroup label="Neural Clones" className="bg-slate-900 text-indigo-400">
+                                           {clonedVoices.map(v => (
+                                              <option key={v.id} value={v.id}>{v.emoji} {v.label}</option>
+                                           ))}
+                                        </optgroup>
+                                     )}
                                      <optgroup label="System Registry" className="bg-slate-900 text-slate-500">
                                         {VOICES.map(v => (
                                           <option key={v.id} value={v.id}>{v.emoji} {v.label}</option>

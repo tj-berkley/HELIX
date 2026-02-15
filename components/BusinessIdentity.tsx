@@ -51,8 +51,29 @@ const BusinessIdentity: React.FC<BusinessIdentityProps> = ({ info, onUpdate }) =
                     <option>Solopreneur</option>
                     <option>Small Team (2-10)</option>
                     <option>Medium (11-50)</option>
-                    <option>Enterprise (50+)</option>
+                    <option>Large Enterprise (51-200)</option>
+                    <option>Global Scale (200+)</option>
                  </select>
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Company Website</label>
+                 <input 
+                    type="url" 
+                    placeholder="https://yourcompany.com"
+                    value={info.website}
+                    onChange={(e) => onUpdate({ ...info, website: e.target.value })}
+                    className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
+                 />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Contact Phone Number</label>
+                 <input 
+                    type="tel" 
+                    placeholder="+1 (555) 000-0000"
+                    value={info.assignedPhone || ''}
+                    onChange={(e) => onUpdate({ ...info, assignedPhone: e.target.value })}
+                    className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
+                 />
               </div>
            </div>
 
@@ -62,7 +83,7 @@ const BusinessIdentity: React.FC<BusinessIdentityProps> = ({ info, onUpdate }) =
                  <textarea 
                     value={info.mission}
                     onChange={(e) => onUpdate({ ...info, mission: e.target.value })}
-                    className="w-full h-[268px] px-6 py-4 bg-white border border-slate-200 rounded-[2rem] text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm resize-none leading-relaxed"
+                    className="w-full h-[452px] px-6 py-4 bg-white border border-slate-200 rounded-[2rem] text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm resize-none leading-relaxed"
                     placeholder="Describe your company's core purpose..."
                  />
               </div>

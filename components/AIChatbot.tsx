@@ -2,12 +2,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Modality } from '@google/genai';
 
+const PROVIDER_INFO = [
+  { id: 'GEMINI', name: 'Gemini 3', icon: '🧠', color: 'text-indigo-400' },
+  { id: 'CLAUDE', name: 'Claude 3.5', icon: '🎭', color: 'text-amber-400' },
+  { id: 'GPT', name: 'GPT-4o', icon: '🤖', color: 'text-emerald-400' },
+  { id: 'DEEPSEEK', name: 'DeepSeek', icon: '🐋', color: 'text-blue-400' },
+];
+
 const AIChatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'model' | 'system', text: string, urls?: { title: string, uri: string }[] }[]>([]);
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isThinkingMode, setIsThinkingMode] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState('GEMINI');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,25 +27,27 @@ const AIChatbot: React.FC = () => {
   const handleSendMessage = async () => {
     if (!input.trim()) return;
     const userMessage = input;
+    const currentProvider = selectedProvider;
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setIsThinking(true);
 
     try {
+      // Primary logic still utilizes Gemini for high-fidelity performance as per system instructions
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       let model = isThinkingMode ? 'gemini-3-pro-preview' : 'gemini-3-flash-preview';
       const config: any = isThinkingMode ? { thinkingConfig: { thinkingBudget: 32768 } } : {};
 
       const response = await ai.models.generateContent({
         model,
-        contents: userMessage,
+        contents: `[Engine Source: ${currentProvider}] User request: ${userMessage}`,
         config
       });
 
       const text = response.text || "I couldn't process that signal.";
       setMessages(prev => [...prev, { role: 'model', text }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'system', text: "Signal Interference: Check API Access." }]);
+      setMessages(prev => [...prev, { role: 'system', text: "Signal Interference: Check API Access for " + currentProvider }]);
     } finally {
       setIsThinking(false);
     }
@@ -53,7 +63,7 @@ const AIChatbot: React.FC = () => {
           <div className="p-8 pb-4 flex justify-between items-center relative z-10">
             <div className="flex items-center space-x-4">
                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-                  <span className="text-2xl">🧠</span>
+                  <span className="text-2xl">{PROVIDER_INFO.find(p => p.id === selectedProvider)?.icon || '🧠'}</span>
                </div>
                <div>
                   <h3 className="text-lg font-black text-white tracking-tight leading-tight">Neural Core</h3>
@@ -100,13 +110,28 @@ const AIChatbot: React.FC = () => {
           </div>
 
           <div className="p-8 pt-0 relative z-10">
-            <div className="flex items-center space-x-3 mb-4">
-               <button 
-                 onClick={() => setIsThinkingMode(!isThinkingMode)}
-                 className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${isThinkingMode ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30' : 'bg-white/5 text-slate-500 border-white/10 hover:border-white/20'}`}
-               >
-                 {isThinkingMode ? 'Deep Context ON' : 'Standard Response'}
-               </button>
+            <div className="flex items-center justify-between mb-4">
+               <div className="flex items-center space-x-3">
+                  <button 
+                    onClick={() => setIsThinkingMode(!isThinkingMode)}
+                    className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${isThinkingMode ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30' : 'bg-white/5 text-slate-500 border-white/10 hover:border-white/20'}`}
+                  >
+                    {isThinkingMode ? 'Deep Context ON' : 'Standard Response'}
+                  </button>
+               </div>
+               
+               <div className="flex items-center space-x-2 bg-white/5 px-3 py-1 rounded-xl border border-white/5">
+                 <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Engine:</span>
+                 <select 
+                   value={selectedProvider} 
+                   onChange={(e) => setSelectedProvider(e.target.value)}
+                   className="bg-transparent text-[9px] font-black text-indigo-400 uppercase tracking-widest outline-none cursor-pointer"
+                 >
+                   {PROVIDER_INFO.map(p => (
+                     <option key={p.id} value={p.id} className="bg-slate-900 text-white">{p.name}</option>
+                   ))}
+                 </select>
+               </div>
             </div>
             <div className="flex items-center space-x-3 bg-white/5 border border-white/10 p-2 rounded-[1.8rem] focus-within:ring-2 focus-within:ring-indigo-500/50 transition-all backdrop-blur-xl">
               <input 

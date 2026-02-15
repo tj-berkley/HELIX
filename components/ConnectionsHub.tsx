@@ -512,7 +512,7 @@ const OutboundView: React.FC<{
 };
 
 interface ConnectionsHubProps {
-  clonedVoices?: ClonedVoice[];
+  clonedVoices: ClonedVoice[];
 }
 
 const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) => {
@@ -559,6 +559,8 @@ const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) =>
     setConnectedChannels(new Set(CHANNELS.map(c => c.id)));
   };
 
+  const currentVoiceObj = availableVoices.find(v => v.id === selectedVoiceId);
+
   return (
     <div className="flex-1 flex flex-col h-full bg-slate-950 overflow-hidden text-white font-sans">
       {/* Header */}
@@ -604,7 +606,7 @@ const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) =>
                      <span className="font-mono text-lg text-white tracking-widest">{assignedNumber}</span>
                      <div className="flex -space-x-2">
                         {availableVoices.slice(0, 3).map(v => (
-                            <div key={v.id} className={`w-6 h-6 rounded-full border-2 border-slate-950 flex items-center justify-center text-[10px] ${selectedVoiceId === v.id ? 'bg-indigo-500 z-10' : 'bg-slate-800'}`}>{v.emoji}</div>
+                            <div key={v.id} className={`w-6 h-6 rounded-full border-2 border-slate-950 flex items-center justify-center text-[10px] ${selectedVoiceId === v.id ? 'bg-indigo-50 z-10' : 'bg-slate-800'}`}>{v.emoji}</div>
                         ))}
                      </div>
                    </div>
@@ -623,7 +625,6 @@ const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) =>
                   </button>
               </div>
               
-              {/* SIGNAL NODES GRID FIX: Switched from a scrolling row to a 5-column grid to prevent overlap and ensure visibility. */}
               <div className="grid grid-cols-5 gap-2 px-1 pb-4">
                  {CHANNELS.map(c => {
                    const isConnected = connectedChannels.has(c.id);
@@ -855,31 +856,52 @@ const ConnectionsHub: React.FC<ConnectionsHubProps> = ({ clonedVoices = [] }) =>
 
                 <div className="space-y-4">
                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest px-2">Select Target Voice</p>
-                   <div className="grid grid-cols-1 gap-3">
-                      {availableVoices.map(v => (
-                         <button 
-                            key={v.id} 
-                            onClick={() => setSelectedVoiceId(v.id)}
-                            className={`w-full text-left p-5 rounded-[2rem] border transition-all flex items-center space-x-5 ${selectedVoiceId === v.id ? 'bg-indigo-600 border-indigo-400 shadow-2xl' : 'bg-slate-900 border-white/5 hover:border-white/10'}`}
-                         >
-                            <span className="text-3xl">{v.emoji}</span>
-                            <div className="flex-1 min-w-0">
-                               <h4 className="font-black text-sm uppercase tracking-tight flex items-center">
-                                  {v.label}
-                                  {v.id.includes('cloned') && <span className="ml-2 text-[7px] bg-indigo-400 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">CLONE</span>}
-                               </h4>
-                               <p className="text-[10px] text-slate-400 truncate font-medium mt-0.5">{v.description}</p>
-                            </div>
-                            {selectedVoiceId === v.id && <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>}
-                         </button>
-                      ))}
+                   {/* DROP DOWN UI ENHANCEMENT */}
+                   <div className="relative group">
+                      <select 
+                         value={selectedVoiceId}
+                         onChange={(e) => setSelectedVoiceId(e.target.value)}
+                         className="w-full bg-slate-900 border-2 border-white/10 rounded-[2rem] p-6 text-sm font-black text-white outline-none focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-inner"
+                      >
+                         {clonedVoices.length > 0 && (
+                            <optgroup label="Neural Clones" className="bg-slate-900 text-indigo-400">
+                               {clonedVoices.map(v => (
+                                  <option key={v.id} value={v.id} className="p-4 bg-slate-900 text-white">
+                                     {v.emoji} {v.label} (Identity Clone)
+                                  </option>
+                               ))}
+                            </optgroup>
+                         )}
+                         <optgroup label="System Registry" className="bg-slate-900 text-slate-500">
+                            {DEFAULT_VOICES.map(v => (
+                               <option key={v.id} value={v.id} className="p-4 bg-slate-900 text-white">
+                                  {v.emoji} {v.label} - {v.description}
+                               </option>
+                            ))}
+                         </optgroup>
+                      </select>
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                      </div>
                    </div>
                 </div>
 
+                {currentVoiceObj && (
+                   <div className="p-8 bg-slate-900/50 rounded-[2.5rem] border border-white/5 space-y-4 animate-in slide-in-from-top-2">
+                      <div className="flex items-center space-x-4 mb-2">
+                         <span className="text-4xl">{currentVoiceObj.emoji}</span>
+                         <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{currentVoiceObj.label} Active</h4>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed font-medium italic">
+                         {currentVoiceObj.description}
+                      </p>
+                   </div>
+                )}
+
                 <div className="p-8 bg-slate-900/50 rounded-[2.5rem] border border-white/5 space-y-4">
-                   <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Voice Protocol</h4>
-                   <p className="text-[11px] text-slate-400 leading-relaxed font-medium italic">
-                      This voice will be used for both answering inbound telephony calls and for all real-time voice link sessions.
+                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Protocol Intelligence</h4>
+                   <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                      This selection synchronizes across your global telephony bridge and real-time voice sessions.
                    </p>
                 </div>
              </div>

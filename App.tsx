@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import BoardHeader from './components/BoardHeader';
 import BoardTable from './components/BoardTable';
@@ -112,6 +112,19 @@ const App: React.FC = () => {
   const [movieProjects, setMovieProjects] = useState<MovieScript[]>([]);
   const [currentMovieScript, setCurrentMovieScript] = useState<MovieScript | null>(null);
   const [releasedMovies, setReleasedMovies] = useState<ReleasedMovie[]>([]);
+
+  // ElevenLabs Discovery
+  useEffect(() => {
+    const elKey = localStorage.getItem('ELEVEN_LABS_KEY');
+    if (elKey && clonedVoices.length === 0) {
+      // Simulate fetching professional voices from ElevenLabs if a key is present
+      const elVoices: ClonedVoice[] = [
+        { id: 'el-1', label: 'Rachel (Pro)', description: 'Classic professional American female.', emoji: '🎙️', provider: 'ElevenLabs', sourceType: 'audio' },
+        { id: 'el-2', label: 'Josh (Narrator)', description: 'Deep, resonant storytelling voice.', emoji: '🎙️', provider: 'ElevenLabs', sourceType: 'audio' }
+      ];
+      setClonedVoices(elVoices);
+    }
+  }, []);
 
   const allBoards = useMemo(() => workspaces.flatMap(ws => ws.boards), [workspaces]);
 

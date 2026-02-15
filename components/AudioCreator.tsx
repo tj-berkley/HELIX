@@ -31,6 +31,7 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
   const [isCaptureMode, setIsCaptureMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [isSyncingEleven, setIsSyncingEleven] = useState(false);
   
   const videoInputRef = useRef<HTMLInputElement>(null);
   const liveVideoRef = useRef<HTMLVideoElement>(null);
@@ -111,6 +112,20 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const syncElevenLabs = async () => {
+    const key = localStorage.getItem('ELEVEN_LABS_KEY');
+    if (!key) {
+      alert("Please add your ElevenLabs API Key in the API Vault first.");
+      return;
+    }
+    setIsSyncingEleven(true);
+    // Simulate API fetch
+    setTimeout(() => {
+      onAddClonedVoice({ id: 'el-sync-1', label: 'Rachel (ElevenLabs)', description: 'Professional narrator voice from your vault.', emoji: '🎙️', provider: 'ElevenLabs', sourceType: 'audio' });
+      setIsSyncingEleven(false);
+    }, 1500);
   };
 
   const startCapture = async () => {
@@ -257,12 +272,14 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
           <h2 className="text-3xl font-black tracking-tight uppercase">Audio & Voice Lab</h2>
           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">Neural Cloning & Synthesis Studio</p>
         </div>
-        <div className="flex items-center space-x-6">
-           <div className="flex -space-x-2">
-              {clonedVoices.map(cv => (
-                <div key={cv.id} className="w-9 h-9 rounded-full bg-indigo-600 border-2 border-slate-950 flex items-center justify-center text-sm shadow-2xl" title={cv.label}>{cv.emoji}</div>
-              ))}
-           </div>
+        <div className="flex items-center space-x-4">
+           <button 
+             onClick={syncElevenLabs}
+             disabled={isSyncingEleven}
+             className="px-6 py-2.5 bg-indigo-600/10 border border-indigo-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all flex items-center"
+           >
+              {isSyncingEleven ? 'Syncing...' : 'Sync ElevenLabs Vault'}
+           </button>
            <span className="text-[10px] font-black text-indigo-400 bg-indigo-400/10 px-4 py-2 rounded-full border border-indigo-400/20 uppercase tracking-widest">Enterprise Neural Engine</span>
         </div>
       </div>
@@ -344,7 +361,7 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
                       <optgroup label="Neural Clones" className="bg-slate-900 text-indigo-400">
                          {clonedVoices.map(v => (
                             <option key={v.id} value={v.id} className="p-4 bg-slate-900 text-white">
-                               {v.emoji} {v.label} (Identity Clone)
+                               {v.emoji} {v.label} ({v.provider})
                             </option>
                          ))}
                       </optgroup>

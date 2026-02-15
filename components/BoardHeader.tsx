@@ -22,6 +22,8 @@ interface BoardHeaderProps {
   onFiltersChange: (filters: { status: Status[]; priority: Priority[] }) => void;
 }
 
+const STATUS_OPTIONS: Status[] = ['Not Started', 'Working on it', 'Stuck', 'Done', 'Critical'];
+
 const BoardHeader: React.FC<BoardHeaderProps> = ({ 
   board, 
   activeView, 
@@ -41,6 +43,18 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
   const [methodology, setMethodology] = useState('Agile');
   const [primaryGoal, setPrimaryGoal] = useState('Quality');
   const [showAIPrompt, setShowAIPrompt] = useState(false);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowFilterDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSubmitAI = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +63,18 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
       setPrompt('');
       setShowAIPrompt(false);
     }
+  };
+
+  const toggleStatusFilter = (status: Status) => {
+    const current = activeFilters.status;
+    const next = current.includes(status) 
+      ? current.filter(s => s !== status) 
+      : [...current, status];
+    onFiltersChange({ ...activeFilters, status: next });
+  };
+
+  const clearFilters = () => {
+    onFiltersChange({ ...activeFilters, status: [] });
   };
 
   const views: { id: BoardView; icon: string; label: string }[] = [
@@ -109,6 +135,61 @@ const BoardHeader: React.FC<BoardHeaderProps> = ({
           </button>
           
           <div className="h-4 w-px bg-slate-200 mx-1"></div>
+
+          <div className="flex items-center space-x-2 relative" ref={dropdownRef}>
+            <button 
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              className={`h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center transition-all border ${
+                activeFilters.status.length > 0 
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-600' 
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <Icons.Filter />
+              <span className="ml-2">Filter</span>
+              {activeFilters.status.length > 0 && (
+                <span className="ml-2 w-4 h-4 bg-indigo-600 text-white rounded-full flex items-center justify-center text-[8px]">
+                  {activeFilters.status.length}
+                </span>
+              )}
+            </button>
+
+            {showFilterDropdown && (
+              <div className="absolute top-full mt-2 right-0 w-64 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[50] py-4 animate-in slide-in-from-top-2 duration-200">
+                <div className="px-5 pb-3 border-b border-slate-100 flex justify-between items-center">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filter by Status</span>
+                  {activeFilters.status.length > 0 && (
+                    <button onClick={clearFilters} className="text-[9px] font-black text-indigo-600 uppercase hover:underline">Clear</button>
+                  )}
+                </div>
+                <div className="p-2 space-y-1">
+                  {STATUS_OPTIONS.map(status => (
+                    <button
+                      key={status}
+                      onClick={() => toggleStatusFilter(status)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors group text-left"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 rounded-full ${STATUS_COLORS[status]}`}></div>
+                        <span className="text-xs font-bold text-slate-700">{status}</span>
+                      </div>
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                        activeFilters.status.includes(status) 
+                          ? 'bg-indigo-600 border-indigo-600' 
+                          : 'bg-white border-slate-200 group-hover:border-indigo-300'
+                      }`}>
+                        {activeFilters.status.includes(status) && (
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="relative group">
              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">

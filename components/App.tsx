@@ -309,7 +309,8 @@ const App: React.FC = () => {
       case 'usage-dashboard': return <UsageDashboard />;
       case 'api-management': return <ApiManagement />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
-      case 'connections': return <ConnectionsHub />;
+      // Fix: Pass clonedVoices prop to ConnectionsHub component to fix TypeScript error.
+      case 'connections': return <ConnectionsHub clonedVoices={clonedVoices} />;
       case 'integrations': return <IntegrationsCenter />;
       case 'workflows': return <WorkflowBuilder />;
       case 'campaigns': return <CampaignManager />;

@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Manuscript, PublishingDestination } from '../types';
 import BlogPublishModal from './BlogPublishModal';
 import { Icons } from '../constants';
 
-type PlatformTab = 'toolbox' | 'book' | 'script' | 'editor' | 'library';
+type PlatformTab = 'toolbox' | 'book' | 'script' | 'editor' | 'library' | 'analysis';
 type WritingGenre = 'Fiction' | 'Non-Fiction' | 'Business' | 'Educational' | 'Sci-Fi' | 'Fantasy';
 type Tone = 'Professional' | 'Witty' | 'Bold' | 'Academic' | 'Empowering';
 
@@ -17,10 +17,10 @@ interface BlogPlatformProps {
 
 const TOOLS = [
   { id: 'bulk', label: 'Bulk Article Gen', icon: '📦', desc: 'Generate high-quality, SEO-optimized articles in batches.', color: 'from-blue-500 to-indigo-600' },
+  { id: 'doc-intel', label: 'Document Intelligence', icon: '🔍', desc: 'Analyze PDFs/Docs to extract summaries, takeaways, and action items.', color: 'from-emerald-600 to-teal-500' },
   { id: 'short', label: 'Short Info Article', icon: '⚡', desc: 'Quick snippets for newsletters or social insights.', color: 'from-amber-500 to-orange-600' },
   { id: 'outline', label: 'Outline to Article', icon: '📝', desc: 'Interactive: Approve the outline before full AI generation.', color: 'from-emerald-500 to-teal-600' },
   { id: 'amazon', label: 'Amazon Review', icon: '🛒', desc: 'AI-powered product reviews from keyword research.', color: 'from-sky-500 to-blue-600' },
-  { id: 'amazon-manual', label: 'Amazon Review (Manual)', icon: '⌨️', desc: 'Granular control over keywords and product IDs.', color: 'from-slate-700 to-slate-900' },
   { id: 'youtube', label: 'YouTube to Article', icon: '🎬', desc: 'Convert video transcriptions into structured blog posts.', color: 'from-rose-500 to-red-600' },
   { id: 'bio', label: 'Biography Article', icon: '👤', desc: 'Intelligent profile pieces with batch processing.', color: 'from-purple-500 to-indigo-600' },
   { id: 'product-link', label: 'Product Link to Blog', icon: '🔗', desc: 'Long-form affiliate content for high conversions.', color: 'from-pink-500 to-rose-600' },
@@ -36,10 +36,57 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
   const [generatedContent, setGeneratedContent] = useState('');
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
+  
+  // Document Analysis State
+  const [analysisFile, setAnalysisFile] = useState<{ name: string; data: string; mimeType: string } | null>(null);
+  const [analysisStep, setAnalysisStep] = useState<'upload' | 'options' | 'result'>('upload');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getBrandVoice = () => {
     const raw = localStorage.getItem('HOBBS_BRAND_VOICE');
     return raw ? JSON.parse(raw) : { audience: 'General', tone: 'Professional', keyPhrases: [], avoidKeywords: [] };
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAnalysisFile({
+        name: file.name,
+        data: (reader.result as string).split(',')[1],
+        mimeType: file.type || 'application/pdf'
+      });
+      setAnalysisStep('options');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const runDocumentAnalysis = async (instruction: string) => {
+    if (!analysisFile) return;
+    setIsGenerating(true);
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: [
+          { inlineData: { data: analysisFile.data, mimeType: analysisFile.mimeType } },
+          { text: `Analyze this document and perform the following task: ${instruction}. Be extremely precise, professional, and clear.` }
+        ]
+      });
+
+      const content = response.text || '';
+      setGeneratedContent(content);
+      setTopic(`Analysis: ${analysisFile.name}`);
+      setActiveTab('editor');
+    } catch (err) {
+      console.error("Analysis failed", err);
+      alert("Failed to analyze document. Please ensure it's a valid PDF or text-based file.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleGenerate = async (mode: PlatformTab | string) => {
@@ -95,7 +142,6 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
   };
 
   const handlePublish = (data: { title: string; description: string; destination: PublishingDestination }) => {
-    console.log(`Syncing to ${data.destination}:`, data);
     setIsPublishModalOpen(false);
     alert(`Success! "${data.title}" has been published to ${data.destination}.`);
   };
@@ -112,13 +158,13 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
         </div>
         <div className="flex items-center space-x-6">
           <div className="flex bg-slate-100 p-1.5 rounded-[1.8rem] shadow-inner">
-            {(['toolbox', 'book', 'script', 'editor', 'library'] as PlatformTab[]).map(tab => (
+            {(['toolbox', 'book', 'script', 'editor', 'library', 'analysis'] as PlatformTab[]).map(tab => (
               <button 
                 key={tab} 
                 onClick={() => setActiveTab(tab)} 
                 className={`px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all ${activeTab === tab ? 'bg-white text-slate-900 shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600'}`}
               >
-                {tab === 'toolbox' ? '🧰 Tools' : tab === 'book' ? '📖 Book' : tab === 'script' ? '🎞️ Script' : tab === 'editor' ? '✍️ Canvas' : '📚 Library'}
+                {tab === 'toolbox' ? '🧰 Tools' : tab === 'book' ? '📖 Book' : tab === 'script' ? '🎞️ Script' : tab === 'editor' ? '✍️ Canvas' : tab === 'library' ? '📚 Library' : '🔍 Analysis'}
               </button>
             ))}
           </div>
@@ -144,7 +190,17 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
                 {TOOLS.map(tool => (
                   <div 
                     key={tool.id} 
-                    onClick={() => { setSelectedToolId(tool.id); setActiveTab('editor'); setTopic(''); setGeneratedContent(''); }}
+                    onClick={() => {
+                      if (tool.id === 'doc-intel') {
+                        setActiveTab('analysis');
+                        setAnalysisStep('upload');
+                      } else {
+                        setSelectedToolId(tool.id);
+                        setActiveTab('editor');
+                        setTopic('');
+                        setGeneratedContent('');
+                      }
+                    }}
                     className="bg-white p-8 rounded-[3rem] border-2 border-transparent shadow-sm hover:shadow-2xl hover:border-indigo-100 transition-all cursor-pointer group flex flex-col items-start space-y-4 relative overflow-hidden"
                   >
                      <div className={`w-16 h-16 bg-gradient-to-tr ${tool.color} rounded-[1.5rem] flex items-center justify-center text-3xl shadow-xl shadow-indigo-100 group-hover:scale-110 transition-transform`}>
@@ -160,6 +216,83 @@ const BlogPlatform: React.FC<BlogPlatformProps> = ({ manuscriptLibrary, onConver
                   </div>
                 ))}
              </div>
+          </div>
+        )}
+
+        {/* Document Analysis Tab */}
+        {activeTab === 'analysis' && (
+          <div className="max-w-4xl mx-auto p-12 space-y-10 animate-in fade-in">
+             <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 space-y-10 relative overflow-hidden">
+                <div className="flex justify-between items-center">
+                   <div className="flex items-center space-x-4">
+                      <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center text-3xl shadow-lg text-white">
+                         🔍
+                      </div>
+                      <div>
+                         <h3 className="text-3xl font-black text-slate-900 tracking-tighter">Document Intelligence</h3>
+                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Neural Parsing Engine</p>
+                      </div>
+                   </div>
+                </div>
+
+                {analysisStep === 'upload' && (
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-4 border-dashed border-slate-100 rounded-[3rem] p-20 flex flex-col items-center justify-center space-y-6 text-slate-300 hover:border-emerald-400 hover:bg-emerald-50/30 transition-all cursor-pointer group"
+                  >
+                    <div className="w-24 h-24 rounded-full bg-slate-50 flex items-center justify-center text-5xl group-hover:scale-110 transition-transform shadow-inner">📄</div>
+                    <div className="text-center space-y-2">
+                       <p className="text-2xl font-black text-slate-900">Upload Intelligence Target</p>
+                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">PDF or DOCX (Max 20MB)</p>
+                    </div>
+                    <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.doc,.docx" onChange={handleFileUpload} />
+                  </div>
+                )}
+
+                {analysisStep === 'options' && analysisFile && (
+                  <div className="space-y-10 animate-in zoom-in-95">
+                    <div className="p-8 bg-slate-50 rounded-[2.5rem] flex items-center justify-between border border-slate-100">
+                       <div className="flex items-center space-x-6">
+                          <div className="text-4xl">📎</div>
+                          <div>
+                             <p className="text-lg font-black text-slate-900 tracking-tight">{analysisFile.name}</p>
+                             <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Target Ready for Synthesis</p>
+                          </div>
+                       </div>
+                       <button onClick={() => setAnalysisStep('upload')} className="px-6 py-2 text-[10px] font-black uppercase text-rose-500 hover:bg-rose-50 rounded-xl transition-all">Replace</button>
+                    </div>
+
+                    <div className="space-y-4">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Select Analysis Directive</label>
+                       <div className="grid grid-cols-2 gap-4">
+                          {[
+                            { label: 'Summarize Content', icon: '📝', task: 'Provide a concise executive summary of this document, highlighting the main objectives and conclusions.' },
+                            { label: 'Extract Key Takeaways', icon: '💎', task: 'Extract the 5 most critical takeaways from this document in a bulleted list.' },
+                            { label: 'Identify Action Items', icon: '✅', task: 'Identify all explicit or implicit action items, deadlines, and responsibilities mentioned in this document.' },
+                            { label: 'Draft Blog Post', icon: '✍️', task: 'Synthesize the information from this document into a compelling, SEO-optimized professional blog post draft.' },
+                          ].map(opt => (
+                            <button 
+                              key={opt.label}
+                              disabled={isGenerating}
+                              onClick={() => runDocumentAnalysis(opt.task)}
+                              className="p-8 bg-white border-2 border-slate-100 rounded-[2.5rem] flex flex-col items-start space-y-3 hover:border-emerald-500 hover:shadow-xl transition-all group active:scale-95 disabled:opacity-50"
+                            >
+                               <span className="text-3xl group-hover:scale-110 transition-transform">{opt.icon}</span>
+                               <span className="text-sm font-black text-slate-900 uppercase tracking-tighter">{opt.label}</span>
+                            </button>
+                          ))}
+                       </div>
+                    </div>
+                  </div>
+                )}
+             </div>
+
+             {isGenerating && (
+                <div className="flex flex-col items-center justify-center space-y-6 py-12 animate-pulse">
+                   <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                   <p className="text-xl font-black text-emerald-600 uppercase tracking-widest">Neural Distillation in Progress...</p>
+                </div>
+             )}
           </div>
         )}
 

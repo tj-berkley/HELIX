@@ -37,6 +37,11 @@ const PlatformIcons: Record<string, React.ReactNode> = {
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
     </svg>
   ),
+  reddit: (
+    <svg className="w-5 h-5" fill="#FF4500" viewBox="0 0 24 24">
+      <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.051l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.97 0 1.754.784 1.754 1.754 0 .716-.445 1.333-1.056 1.617.015.21.022.413.022.619 0 2.91-3.503 5.27-7.823 5.27-4.32 0-7.822-2.36-7.822-5.27 0-.193.006-.385.019-.576a1.73 1.73 0 0 1-1.067-1.58c0-.97.785-1.753 1.754-1.753.463 0 .875.182 1.185.477 1.187-.816 2.834-1.34 4.644-1.427l.886-4.143a.242.242 0 0 1 .192-.186l3.29-.692c.074-.015.15-.022.226-.022zM9.461 11.53c-.703 0-1.28.576-1.28 1.28a1.281 1.281 0 0 0 2.56 0c0-.704-.577-1.28-1.28-1.28zm5.078 0c-.703 0-1.28.576-1.28 1.28a1.281 1.281 0 0 0 2.561 0c0-.704-.578-1.28-1.281-1.28zM12 15.07c-1.31 0-2.458.358-3.238.922a.242.242 0 1 0 .284.39c.62-.446 1.608-.745 2.954-.745 1.346 0 2.335.3 2.955.745a.242.242 0 1 0 .283-.39c-.78-.564-1.928-.922-3.238-.922z" />
+    </svg>
+  ),
 };
 
 interface SocialPlatform {
@@ -56,7 +61,8 @@ const INITIAL_PLATFORMS: SocialPlatform[] = [
   { id: 'youtube', name: 'YouTube', emoji: '🎬', connected: false, connecting: false, followers: '0' },
   { id: 'tiktok', name: 'TikTok', emoji: '🎵', connected: false, connecting: false, followers: '0' },
   { id: 'x', name: 'X.com / Twitter', emoji: '✖️', connected: true, connecting: false, followers: '8.9k', handle: '@HobbsAI' },
-  { id: 'gmb', name: 'Google Business', emoji: '📍', connected: false, connecting: false, followers: '0' },
+  { id: 'gmb', name: 'Google Business Profile', emoji: '📍', connected: false, connecting: false, followers: '0' },
+  { id: 'reddit', name: 'Reddit', emoji: '🤖', connected: false, connecting: false, followers: '0' },
 ];
 
 const SocialConnector: React.FC = () => {
@@ -73,7 +79,7 @@ const SocialConnector: React.FC = () => {
         connecting: false, 
         connected: true, 
         followers: '1.2k',
-        handle: `@hobbs_${id}`
+        handle: id === 'reddit' ? `u/hobbs_studio` : `@hobbs_${id === 'gmb' ? 'google' : id}`
       } : p));
     }, 2500);
   }, []);
@@ -135,7 +141,7 @@ const SocialConnector: React.FC = () => {
               <div className="space-y-1">
                 <div className="flex items-center space-x-3">
                   <div className={`transition-all shrink-0 ${p.connected ? 'opacity-100' : 'opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110'}`}>
-                    {PlatformIcons[p.id]}
+                    {PlatformIcons[p.id === 'gmb' ? 'gmb' : p.id === 'x' ? 'x' : p.id]}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-xl font-black text-slate-900 flex flex-col">

@@ -97,10 +97,9 @@ const ItemDetailModal: React.FC<{
   };
 
   const doneSubtasks = (item.subtasks || []).filter(st => st.status === 'Done').length;
-  const subtaskProgress = item.subtasks?.length ? (doneSubtasks / item.subtasks.length) * 100 : 0;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-3xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
         <div className="p-10 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
           <div className="flex-1">
@@ -120,7 +119,6 @@ const ItemDetailModal: React.FC<{
         </div>
 
         <div className="flex-1 overflow-y-auto p-10 space-y-12">
-          {/* Main Attributes Grid */}
           <div className="grid grid-cols-3 gap-6">
             <div className="col-span-3 space-y-2 mb-4">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Objective Name</p>
@@ -133,15 +131,15 @@ const ItemDetailModal: React.FC<{
             </div>
             <div className="space-y-2">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Status</p>
-              <div className="relative">
-                <div className={`px-4 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white text-center shadow-lg shadow-inner ${STATUS_COLORS[item.status]}`}>{item.status}</div>
+              <div className="relative group/sel">
+                <div className={`px-4 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white text-center shadow-lg transition-transform group-active/sel:scale-95 ${STATUS_COLORS[item.status]}`}>{item.status}</div>
                 <select className="absolute inset-0 opacity-0 cursor-pointer" value={item.status} onChange={(e) => onUpdate({ status: e.target.value as Status })}>{Object.keys(STATUS_COLORS).map(s => <option key={s} value={s}>{s}</option>)}</select>
               </div>
             </div>
             <div className="space-y-2">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Priority</p>
-              <div className="relative">
-                <div className={`px-4 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white text-center shadow-lg shadow-inner ${PRIORITY_COLORS[item.priority]}`}>{item.priority}</div>
+              <div className="relative group/sel">
+                <div className={`px-4 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white text-center shadow-lg transition-transform group-active/sel:scale-95 ${PRIORITY_COLORS[item.priority]}`}>{item.priority}</div>
                 <select className="absolute inset-0 opacity-0 cursor-pointer" value={item.priority} onChange={(e) => onUpdate({ priority: e.target.value as Priority })}>{Object.keys(PRIORITY_COLORS).map(p => <option key={p} value={p}>{p}</option>)}</select>
               </div>
             </div>
@@ -226,13 +224,70 @@ const ItemDetailModal: React.FC<{
   );
 };
 
+const ItemRow: React.FC<{
+  item: Item;
+  group: Group;
+  onSelectItem: (item: Item, group: Group) => void;
+}> = ({ item, group, onSelectItem }) => {
+  const [flash, setFlash] = useState(false);
+  const prevTimestamp = useRef(item.lastUpdated);
+
+  useEffect(() => {
+    if (item.lastUpdated !== prevTimestamp.current) {
+      setFlash(true);
+      const timer = setTimeout(() => setFlash(false), 800);
+      prevTimestamp.current = item.lastUpdated;
+      return () => clearTimeout(timer);
+    }
+  }, [item.lastUpdated]);
+
+  return (
+    <tr 
+      className={`hover:bg-indigo-50/20 transition-all duration-300 group/row cursor-pointer border-l-4 animate-in fade-in slide-in-from-left-4 ${flash ? 'bg-indigo-100/50 shadow-inner' : ''}`}
+      style={{ borderLeftColor: group.color }}
+      onClick={() => onSelectItem(item, group)}
+    >
+      <td className="p-4 text-center"><input type="checkbox" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" onClick={e => e.stopPropagation()} /></td>
+      <td className="p-4 font-bold text-slate-800">
+        <div className="flex items-center space-x-3">
+           <span className="truncate tracking-tight">{item.name}</span>
+        </div>
+      </td>
+      <td className="p-4 text-center">
+         <div className={`w-9 h-9 rounded-xl border border-slate-100 flex items-center justify-center mx-auto transition-all ${item.comments?.length ? 'bg-indigo-600 text-white shadow-lg scale-110' : 'text-slate-300 hover:text-indigo-400'}`}>
+            <Icons.Message />
+         </div>
+      </td>
+      <td className="p-4 text-center flex justify-center">
+        <div className="hover:scale-110 transition-transform">
+          <OwnerAvatar ownerId={item.ownerId} />
+        </div>
+      </td>
+      <td className="p-2 relative">
+         <div className={`h-10 flex items-center justify-center rounded-xl font-black text-[9px] uppercase tracking-[0.15em] text-white shadow-sm transition-all group-hover/row:scale-105 ${STATUS_COLORS[item.status]}`}>{item.status}</div>
+      </td>
+      <td className="p-2 relative">
+         <div className={`h-10 flex items-center justify-center rounded-xl font-black text-[9px] uppercase tracking-[0.15em] text-white shadow-sm transition-all group-hover/row:scale-105 ${PRIORITY_COLORS[item.priority]}`}>{item.priority}</div>
+      </td>
+      <td className="p-4 text-center">
+         <div className="text-[10px] font-black text-slate-500 font-mono tracking-tighter bg-slate-100/50 py-1.5 rounded-lg border border-slate-200/50 group-hover/row:bg-white transition-colors">
+            {item.dueDate ? new Date(item.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' }) : 'No Expiry'}
+         </div>
+      </td>
+      <td className="p-4 text-center">
+         <button className="opacity-0 group-hover/row:opacity-100 text-slate-400 hover:text-indigo-600 p-1 transition-all">•••</button>
+      </td>
+    </tr>
+  );
+};
+
 const BoardTable: React.FC<BoardTableProps> = ({ groups, onUpdateItem, onAddItem, onDeleteGroup, onDeleteItem, onMoveItem }) => {
   const [selectedItem, setSelectedItem] = useState<{ item: Item; group: Group } | null>(null);
 
   return (
     <div className="flex-1 overflow-auto p-10 space-y-12 bg-white/50 backdrop-blur-sm">
       {groups.map(group => (
-        <div key={group.id} className="animate-in fade-in slide-in-from-left-4 duration-500">
+        <div key={group.id} className="animate-in fade-in slide-in-from-bottom-6 duration-700">
           <div className="flex items-center mb-6 space-x-3 px-2 group/title">
             <div className="w-1.5 h-6 rounded-full shadow-sm" style={{ backgroundColor: group.color }}></div>
             <h3 className="font-black text-xl tracking-tight" style={{ color: '#1e293b' }}>{group.name}</h3>
@@ -248,47 +303,20 @@ const BoardTable: React.FC<BoardTableProps> = ({ groups, onUpdateItem, onAddItem
                   <th className="p-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest w-[35%]">Objective Name</th>
                   <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest w-24">Nodes</th>
                   <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest w-28">Strategist</th>
-                  <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest w-36">Current Phase</th>
-                  <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest w-36">Level</th>
+                  <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest w-36">Status</th>
+                  <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest w-36">Priority</th>
                   <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest w-40">Timeline</th>
                   <th className="p-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest w-16"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {group.items.map(item => (
-                  <tr 
+                  <ItemRow 
                     key={item.id} 
-                    className="hover:bg-indigo-50/20 transition-all duration-300 group/row cursor-pointer"
-                    onClick={() => setSelectedItem({ item, group })}
-                  >
-                    <td className="p-4 text-center"><input type="checkbox" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" onClick={e => e.stopPropagation()} /></td>
-                    <td className="p-4 font-bold text-slate-800">
-                      <div className="flex items-center space-x-3">
-                         <div className="w-1 h-5 rounded-full opacity-50" style={{ backgroundColor: group.color }}></div>
-                         <span className="truncate tracking-tight">{item.name}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-center">
-                       <div className={`w-9 h-9 rounded-xl border border-slate-100 flex items-center justify-center mx-auto transition-all ${item.comments?.length ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-300 hover:text-indigo-400'}`}>
-                          <Icons.Message />
-                       </div>
-                    </td>
-                    <td className="p-4 text-center flex justify-center"><OwnerAvatar ownerId={item.ownerId} /></td>
-                    <td className="p-2 relative">
-                       <div className={`h-10 flex items-center justify-center rounded-xl font-black text-[9px] uppercase tracking-[0.15em] text-white shadow-sm transition-all group-hover/row:scale-105 ${STATUS_COLORS[item.status]}`}>{item.status}</div>
-                    </td>
-                    <td className="p-2 relative">
-                       <div className={`h-10 flex items-center justify-center rounded-xl font-black text-[9px] uppercase tracking-[0.15em] text-white shadow-sm transition-all group-hover/row:scale-105 ${PRIORITY_COLORS[item.priority]}`}>{item.priority}</div>
-                    </td>
-                    <td className="p-4 text-center">
-                       <div className="text-[10px] font-black text-slate-500 font-mono tracking-tighter bg-slate-100/50 py-1.5 rounded-lg border border-slate-200/50">
-                          {item.dueDate ? new Date(item.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' }) : 'No Expiry'}
-                       </div>
-                    </td>
-                    <td className="p-4 text-center">
-                       <button className="opacity-0 group-hover/row:opacity-100 text-slate-400 hover:text-indigo-600 p-1 transition-all">•••</button>
-                    </td>
-                  </tr>
+                    item={item} 
+                    group={group} 
+                    onSelectItem={(it, gr) => setSelectedItem({ item: it, group: gr })} 
+                  />
                 ))}
                 <tr>
                   <td className="p-4"></td>
