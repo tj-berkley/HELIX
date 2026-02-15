@@ -17,7 +17,6 @@ import GlobalTasks from './GlobalTasks';
 import SiteBuilder from './SiteBuilder';
 import BlogPlatform from './BlogPlatform';
 import BrandVoicePage from './BrandVoice';
-import SocialConnector from './SocialConnector';
 import SocialCalendar from './SocialCalendar';
 import ContentCreator from './ContentCreator';
 import AudioCreator from './AudioCreator';
@@ -30,7 +29,7 @@ import OwnerProfile from './OwnerProfile';
 import BusinessIdentity from './BusinessIdentity';
 import ProjectPortfolio from './ProjectPortfolio';
 import UsageDashboard from './UsageDashboard';
-import ApiManagement from './ApiManagement';
+import ConnectionVault from './ApiManagement';
 import AIChatbot from './AIChatbot';
 import { Icons } from '../constants';
 import { Workspace, Board, Group, Item, BoardView, Page, Status, Priority, ReleasedMovie, MovieScript, Manuscript, OwnerInfo, BusinessInfo, ClonedVoice } from '../types';
@@ -230,7 +229,6 @@ const App: React.FC = () => {
             if (group.id !== groupId) return group;
             return {
               ...group,
-              // Fix: Changed mapping logic to correctly append newItem to the items array
               items: [...group.items, newItem]
             };
           })
@@ -329,10 +327,9 @@ const App: React.FC = () => {
       case 'business-identity': return <BusinessIdentity info={businessInfo} onUpdate={setBusinessInfo} />;
       case 'brand-voice': return <BrandVoicePage />;
       case 'usage-dashboard': return <UsageDashboard />;
-      case 'api-management': return <ApiManagement />;
+      case 'vault': return <ConnectionVault />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
       case 'connections': return <ConnectionsHub clonedVoices={clonedVoices} />;
-      // Fix: Added missing onNavigate prop to IntegrationsCenter component
       case 'integrations': return <IntegrationsCenter onNavigate={setActivePage} />;
       case 'workflows': return <WorkflowBuilder />;
       case 'campaigns': return <CampaignManager />;
@@ -350,7 +347,6 @@ const App: React.FC = () => {
           }} 
         />
       );
-      case 'social': return <SocialConnector />;
       case 'social-calendar': return <SocialCalendar />;
       case 'content-creator': return <ContentCreator />;
       case 'audio-lab': return (

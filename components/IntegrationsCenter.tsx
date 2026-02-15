@@ -17,7 +17,9 @@ const INITIAL_INTEGRATIONS: Integration[] = [
   { id: 'elevenlabs', name: 'ElevenLabs', category: 'Marketing', icon: '🗣️', description: 'Neural TTS and high-fidelity voice cloning for video and audio content.', connected: false, envKey: 'ELEVEN_LABS_KEY' },
   { id: 'fal-ai', name: 'Fal.ai', category: 'Marketing', icon: '🎆', description: 'Ultra-fast image and media synthesis for cinematic production.', connected: false, envKey: 'FAL_KEY' },
   
-  // Telephony
+  // Telephony & Instant Chat
+  { id: 'whatsapp', name: 'WhatsApp Business', category: 'Telephony', icon: '💬', description: 'Neural automated responses and broadcast sequences for customer care.', connected: false, envKey: 'WHATSAPP_TOKEN' },
+  { id: 'telegram', name: 'Telegram Bot', category: 'Telephony', icon: '✈️', description: 'High-speed automated signals and dev-ops integration via bot tokens.', connected: false, envKey: 'TELEGRAM_TOKEN' },
   { id: 'twilio', name: 'Twilio', category: 'Telephony', icon: '📱', description: 'Programmable SMS and voice routing for global communications.', connected: false, envKey: 'TWILIO_KEY' },
   { id: 'telnyx', name: 'Telnyx', category: 'Telephony', icon: '📶', description: 'Enterprise SIP trunking and global mobile number provisioning.', connected: false, envKey: 'TELNYX_KEY' },
   { id: 'vonage', name: 'Vonage', category: 'Telephony', icon: '☎️', description: 'Unified communications and video API for customer engagement.', connected: false, envKey: 'VONAGE_KEY' },
@@ -100,7 +102,7 @@ const IntegrationsCenter: React.FC<IntegrationsCenterProps> = ({ onNavigate }) =
            </div>
            <p className="text-[10px] text-slate-400 font-medium leading-relaxed italic">OmniPortal automatically detects credentials from your API Vault.</p>
            <button 
-            onClick={() => onNavigate('api-management')}
+            onClick={() => onNavigate('vault')}
             className="text-[9px] font-black text-indigo-400 uppercase tracking-widest hover:underline"
            >
             Manage Vault Credentials →
@@ -141,7 +143,7 @@ const IntegrationsCenter: React.FC<IntegrationsCenterProps> = ({ onNavigate }) =
                      </div>
                      <div className="flex flex-col w-full space-y-2 pt-4">
                         <button 
-                          onClick={() => onNavigate('api-management')}
+                          onClick={() => onNavigate('vault')}
                           className="w-full py-3 bg-white text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-rose-50 transition-all"
                         >
                           Configure in Vault

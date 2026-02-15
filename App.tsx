@@ -328,7 +328,8 @@ const App: React.FC = () => {
       case 'business-identity': return <BusinessIdentity info={businessInfo} onUpdate={setBusinessInfo} />;
       case 'brand-voice': return <BrandVoicePage />;
       case 'usage-dashboard': return <UsageDashboard />;
-      case 'api-management': return <ApiManagement />;
+      // Fix: Changed 'api-management' to 'vault' to match the union type defined in types.ts
+      case 'vault': return <ApiManagement />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
       case 'connections': return <ConnectionsHub clonedVoices={clonedVoices} />;
       case 'integrations': return <IntegrationsCenter onNavigate={setActivePage} />;

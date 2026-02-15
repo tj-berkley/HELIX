@@ -37,14 +37,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
     { id: 'content-creator', label: 'Content Marketing', icon: <span>🎨</span> },
     { id: 'video-maker', label: 'Video Marketing', icon: <span>📹</span> },
     { id: 'audio-lab', label: 'Audio Lab', icon: <span>🔊</span> },
-    { id: 'social', label: 'Social Connect', icon: <span>🔗</span> },
     { id: 'movie-studio', label: 'Movie Studio', icon: <span>🎥</span> },
     { id: 'movie-maker', label: 'Movie Maker', icon: <span>🎬</span> },
     { id: 'box-office', label: 'Box Office', icon: <span>🍿</span> },
   ];
 
   const adminNav = [
-    { id: 'api-management', label: 'API Keys', icon: <span>🔑</span> },
+    { id: 'vault', label: 'Neural Vault', icon: <span>🔐</span> },
     { id: 'owner-profile', label: 'My Profile', icon: <span>👤</span> },
     { id: 'business-identity', label: 'Company ID', icon: <span>🏢</span> },
     { id: 'usage-dashboard', label: 'Usage', icon: <span>🏦</span> },
