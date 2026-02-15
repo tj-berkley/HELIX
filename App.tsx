@@ -29,7 +29,7 @@ import OwnerProfile from './components/OwnerProfile';
 import BusinessIdentity from './components/BusinessIdentity';
 import ProjectPortfolio from './components/ProjectPortfolio';
 import UsageDashboard from './components/UsageDashboard';
-import ApiManagement from './components/ApiManagement';
+import ConnectionVault from './components/ApiManagement';
 import EmailManager from './components/EmailManager';
 import AIChatbot from './components/AIChatbot';
 import { Icons } from './constants';
@@ -88,6 +88,20 @@ const App: React.FC = () => {
     priority: []
   });
 
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('OMNI_THEME');
+    return (saved as 'light' | 'dark') || 'light';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('OMNI_THEME', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   // Identity States
   const [ownerInfo, setOwnerInfo] = useState<OwnerInfo>(() => {
     const saved = localStorage.getItem('OMNI_OWNER_INFO');
@@ -103,7 +117,7 @@ const App: React.FC = () => {
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo>(() => {
     const saved = localStorage.getItem('OMNI_BUSINESS_INFO');
     return saved ? JSON.parse(saved) : { 
-      name: '', // Using empty string to trigger default display in components
+      name: '', 
       industry: 'Creative Technology', 
       mission: 'Empowering the next generation of creators with autonomous AI production environments.',
       website: 'https://hobbs.studio',
@@ -338,21 +352,21 @@ const App: React.FC = () => {
           onSelectBoard={(id) => { setActiveBoardId(id); setActivePage('board'); }}
         />
       );
-      case 'email': return <EmailManager />;
+      case 'email': return <EmailManager theme={theme} />;
       case 'analytics': return <Analytics boards={allBoards} />;
       case 'webinars': return <Webinars />;
       case 'owner-profile': return <OwnerProfile info={ownerInfo} onUpdate={setOwnerInfo} />;
       case 'business-identity': return <BusinessIdentity info={businessInfo} onUpdate={setBusinessInfo} />;
       case 'brand-voice': return <BrandVoicePage />;
       case 'usage-dashboard': return <UsageDashboard />;
-      case 'vault': return <ApiManagement />;
+      case 'vault': return <ConnectionVault />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
       case 'connections': return (
         <ConnectionsHub 
           clonedVoices={clonedVoices} 
+          businessInfo={businessInfo}
           onUpdateBusiness={setBusinessInfo}
           onUpdateOwner={setOwnerInfo}
-          businessInfo={businessInfo}
         />
       );
       case 'integrations': return <IntegrationsCenter onNavigate={setActivePage} />;
@@ -402,7 +416,7 @@ const App: React.FC = () => {
       );
       case 'box-office': return <BoxOffice movies={releasedMovies} />;
       case 'board':
-        if (!activeBoard) return <div className="flex-1 flex items-center justify-center text-slate-400 font-medium italic text-xl">🚀 Select a mission board to launch</div>;
+        if (!activeBoard) return <div className="flex-1 flex items-center justify-center text-slate-400 font-medium italic text-xl dark:text-slate-500">🚀 Select a mission board to launch</div>;
         return (
           <>
             <BoardHeader 
@@ -431,7 +445,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden font-sans text-slate-900 bg-[#0c0e12]">
+    <div className={`flex h-screen w-screen overflow-hidden font-sans text-slate-900 bg-[#0c0e12] dark-mode-transition ${theme === 'dark' ? 'dark' : ''}`}>
       <Sidebar 
         workspaces={workspaces} 
         activeBoardId={activeBoardId} 
@@ -462,6 +476,13 @@ const App: React.FC = () => {
               </div>
            </div>
            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                className="p-2 text-slate-400 hover:text-white transition-colors"
+                title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+              >
+                 {theme === 'light' ? <span>🌙</span> : <span>☀️</span>}
+              </button>
               <button className="p-2 text-slate-400 hover:text-white transition-colors relative">
                  <Icons.Message />
                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-[#0c0e12]"></span>
@@ -475,7 +496,7 @@ const App: React.FC = () => {
                 onClick={() => setActivePage('owner-profile')}
               >
                  {ownerInfo.avatarUrl ? (
-                   <img src={ownerInfo.avatarUrl} className="w-8 h-8 rounded-full border border-indigo-500 shadow-lg group-hover:scale-110 transition-transform object-cover" />
+                   <img src={ownerInfo.avatarUrl} className="w-8 h-8 rounded-full border border-indigo-500 shadow-lg group-hover:scale-110 transition-transform object-cover" alt="O" />
                  ) : (
                    <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shadow-lg group-hover:scale-110 transition-transform">
                      {ownerInfo.name[0]}
@@ -485,7 +506,7 @@ const App: React.FC = () => {
            </div>
         </header>
 
-        <main className="flex-1 flex flex-col min-w-0 bg-[#f9fafb] overflow-hidden relative shadow-2xl rounded-tl-[1.5rem] border-t border-l border-white/5">
+        <main className="flex-1 flex flex-col min-w-0 bg-[#f9fafb] dark:bg-[#0c0e12] overflow-hidden relative shadow-2xl rounded-tl-[1.5rem] border-t border-l border-white/5">
           {renderActiveModule()}
         </main>
       </div>

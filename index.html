@@ -6,6 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OmniPortal Work OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -13,17 +25,26 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
+        
+        .dark-mode-transition * {
+          transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: transparent;
         }
         ::-webkit-scrollbar-thumb {
             background: #ccc;
             border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #aaa;
@@ -68,7 +89,7 @@
 }
 </script>
 </head>
-<body class="bg-gray-50 text-slate-800">
+<body class="bg-gray-50 text-slate-800 dark:bg-[#0c0e12] dark:text-slate-100">
     <div id="root"></div>
 </body>
 </html>
