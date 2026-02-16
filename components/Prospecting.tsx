@@ -1,32 +1,25 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icons } from '../constants';
-
-type SearchPlatform = 'Google Business' | 'Google Maps' | 'Google Places' | 'Facebook' | 'LinkedIn' | 'Yellow Pages';
-
-interface ProspectResult {
-  id: string;
-  name: string;
-  platform: SearchPlatform;
-  address?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  rating?: number;
-  category?: string;
-  description?: string;
-}
+import { searchProspects, checkApiStatus, ProspectResult, SearchPlatform } from '../services/prospectingService';
 
 const Prospecting: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPlatforms, setSelectedPlatforms] = useState<SearchPlatform[]>(['Google Business', 'Google Maps', 'Google Places', 'Facebook', 'LinkedIn', 'Yellow Pages']);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<SearchPlatform[]>(['Google Places']);
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<ProspectResult[]>([]);
   const [selectedResults, setSelectedResults] = useState<string[]>([]);
+  const [apiStatus, setApiStatus] = useState<Record<string, boolean>>({});
+  const [showSetup, setShowSetup] = useState(false);
 
   const platforms: SearchPlatform[] = ['Google Business', 'Google Maps', 'Google Places', 'Facebook', 'LinkedIn', 'Yellow Pages'];
+
+  useEffect(() => {
+    const status = checkApiStatus();
+    setApiStatus(status);
+  }, []);
 
   const togglePlatform = (platform: SearchPlatform) => {
     setSelectedPlatforms(prev =>
@@ -41,87 +34,21 @@ const Prospecting: React.FC = () => {
 
     setIsSearching(true);
 
-    // Simulated search - in production, this would call actual APIs
-    setTimeout(() => {
-      const mockResults: ProspectResult[] = [
-        {
-          id: '1',
-          name: 'Acme Plumbing Services',
-          platform: 'Google Business',
-          address: '123 Main St, New York, NY 10001',
-          phone: '(555) 123-4567',
-          email: 'contact@acmeplumbing.com',
-          website: 'https://acmeplumbing.com',
-          rating: 4.8,
-          category: 'Plumbing',
-          description: 'Professional plumbing services available 24/7'
-        },
-        {
-          id: '2',
-          name: 'Smith & Associates Law Firm',
-          platform: 'LinkedIn',
-          address: '456 Park Ave, New York, NY 10022',
-          phone: '(555) 234-5678',
-          email: 'info@smithlaw.com',
-          website: 'https://smithlaw.com',
-          rating: 4.9,
-          category: 'Legal Services',
-          description: 'Expert legal counsel for business and personal matters'
-        },
-        {
-          id: '3',
-          name: 'Elite Real Estate Group',
-          platform: 'Facebook',
-          address: '789 Broadway, New York, NY 10003',
-          phone: '(555) 345-6789',
-          email: 'sales@eliterealestate.com',
-          website: 'https://eliterealestate.com',
-          rating: 4.7,
-          category: 'Real Estate',
-          description: 'Luxury residential and commercial properties'
-        },
-        {
-          id: '4',
-          name: 'Downtown Medical Center',
-          platform: 'Google Maps',
-          address: '321 5th Ave, New York, NY 10016',
-          phone: '(555) 456-7890',
-          email: 'appointments@downtownmedical.com',
-          website: 'https://downtownmedical.com',
-          rating: 4.6,
-          category: 'Healthcare',
-          description: 'Comprehensive medical care for the whole family'
-        },
-        {
-          id: '5',
-          name: 'Professional Insurance Solutions',
-          platform: 'Yellow Pages',
-          address: '654 Madison Ave, New York, NY 10065',
-          phone: '(555) 567-8901',
-          email: 'quotes@proinsurance.com',
-          website: 'https://proinsurance.com',
-          rating: 4.5,
-          category: 'Insurance',
-          description: 'Affordable insurance plans for individuals and businesses'
-        },
-        {
-          id: '6',
-          name: 'TechStart Consulting',
-          platform: 'LinkedIn',
-          address: '987 Lexington Ave, New York, NY 10021',
-          phone: '(555) 678-9012',
-          email: 'hello@techstart.com',
-          website: 'https://techstart.com',
-          rating: 4.9,
-          category: 'Technology Consulting',
-          description: 'Digital transformation and IT consulting services'
-        }
-      ];
+    try {
+      const searchResults = await searchProspects({
+        query: searchQuery,
+        location: location,
+        category: category,
+        platforms: selectedPlatforms
+      });
 
-      const filtered = mockResults.filter(r => selectedPlatforms.includes(r.platform));
-      setResults(filtered);
+      setResults(searchResults);
+    } catch (error) {
+      console.error('Search error:', error);
+      alert('Search failed. Please check your API configuration.');
+    } finally {
       setIsSearching(false);
-    }, 1500);
+    }
   };
 
   const toggleSelectResult = (id: string) => {
@@ -148,6 +75,8 @@ const Prospecting: React.FC = () => {
     return colors[platform];
   };
 
+  const hasAnyApiKey = Object.values(apiStatus).some(status => status);
+
   return (
     <div className="flex-1 overflow-auto bg-slate-50 dark:bg-[#0c0e12]">
       <div className="max-w-7xl mx-auto p-8 space-y-6">
@@ -166,25 +95,89 @@ const Prospecting: React.FC = () => {
           )}
         </div>
 
+        {!hasAnyApiKey && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-6">
+            <div className="flex items-start space-x-4">
+              <div className="text-3xl">⚠️</div>
+              <div className="flex-1">
+                <h3 className="font-bold text-yellow-900 dark:text-yellow-100 mb-2">API Keys Required</h3>
+                <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-4">
+                  To search across platforms, you need to configure API keys. Add these to your .env file:
+                </p>
+                <div className="bg-slate-900 dark:bg-black/50 rounded-lg p-4 font-mono text-xs text-green-400 space-y-1">
+                  <div>VITE_GOOGLE_PLACES_API_KEY=your_key_here</div>
+                  <div>VITE_GOOGLE_MAPS_API_KEY=your_key_here</div>
+                </div>
+                <button
+                  onClick={() => setShowSetup(!showSetup)}
+                  className="mt-4 text-sm font-bold text-yellow-700 dark:text-yellow-300 hover:underline"
+                >
+                  {showSetup ? 'Hide' : 'Show'} Setup Instructions
+                </button>
+                {showSetup && (
+                  <div className="mt-4 space-y-3 text-sm text-yellow-800 dark:text-yellow-200">
+                    <div>
+                      <strong>1. Google Places API:</strong>
+                      <ul className="ml-4 mt-1 list-disc">
+                        <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="underline">Google Cloud Console</a></li>
+                        <li>Enable "Places API" and "Maps JavaScript API"</li>
+                        <li>Create an API key under Credentials</li>
+                        <li>Add to .env: VITE_GOOGLE_PLACES_API_KEY=your_key</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <strong>2. Facebook Graph API:</strong>
+                      <ul className="ml-4 mt-1 list-disc">
+                        <li>Create app at <a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer" className="underline">Facebook Developers</a></li>
+                        <li>Get access token with business_management permissions</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <strong>3. LinkedIn API:</strong>
+                      <ul className="ml-4 mt-1 list-disc">
+                        <li>Create app at <a href="https://www.linkedin.com/developers/" target="_blank" rel="noopener noreferrer" className="underline">LinkedIn Developers</a></li>
+                        <li>Requires company verification and OAuth flow</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-white/10 p-6 space-y-6 shadow-sm">
           <div>
             <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
               Select Platforms
             </label>
             <div className="flex flex-wrap gap-2">
-              {platforms.map(platform => (
-                <button
-                  key={platform}
-                  onClick={() => togglePlatform(platform)}
-                  className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${
-                    selectedPlatforms.includes(platform)
-                      ? 'bg-indigo-600 text-white shadow-md'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {platform}
-                </button>
-              ))}
+              {platforms.map(platform => {
+                const isPlatformConfigured =
+                  (platform.includes('Google') && apiStatus.googlePlaces) ||
+                  (platform === 'Facebook' && apiStatus.facebook) ||
+                  (platform === 'LinkedIn' && apiStatus.linkedin) ||
+                  (platform === 'Yellow Pages' && apiStatus.yellowPages);
+
+                return (
+                  <button
+                    key={platform}
+                    onClick={() => togglePlatform(platform)}
+                    disabled={!isPlatformConfigured}
+                    className={`px-4 py-2 rounded-lg font-bold text-xs transition-all relative ${
+                      selectedPlatforms.includes(platform)
+                        ? 'bg-indigo-600 text-white shadow-md'
+                        : isPlatformConfigured
+                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    {platform}
+                    {isPlatformConfigured && <span className="ml-1">✓</span>}
+                    {!isPlatformConfigured && <span className="ml-1">🔒</span>}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
