@@ -25,22 +25,30 @@ interface SearchParams {
   platforms: SearchPlatform[];
 }
 
-const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 export const searchGooglePlaces = async (query: string, location: string): Promise<ProspectResult[]> => {
-  if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY === 'your_google_places_api_key_here') {
-    throw new Error('Google Places API key not configured. Please add VITE_GOOGLE_PLACES_API_KEY to your .env file.');
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Supabase configuration missing. Please check your .env file.');
   }
 
   try {
-    const searchQuery = location ? `${query} in ${location}` : query;
+    const params = new URLSearchParams({
+      action: 'search',
+      query: query,
+    });
+
+    if (location) {
+      params.append('location', location);
+    }
 
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchQuery)}&key=${GOOGLE_PLACES_API_KEY}`,
+      `${SUPABASE_URL}/functions/v1/google-places-search?${params.toString()}`,
       {
         method: 'GET',
         headers: {
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Accept': 'application/json',
         }
       }
@@ -87,13 +95,25 @@ export const searchGooglePlaces = async (query: string, location: string): Promi
 };
 
 export const getPlaceDetails = async (placeId: string): Promise<Partial<ProspectResult>> => {
-  if (!GOOGLE_PLACES_API_KEY) {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     return {};
   }
 
   try {
+    const params = new URLSearchParams({
+      action: 'details',
+      placeId: placeId,
+    });
+
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_phone_number,website,opening_hours,business_status&key=${GOOGLE_PLACES_API_KEY}`
+      `${SUPABASE_URL}/functions/v1/google-places-search?${params.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Accept': 'application/json',
+        }
+      }
     );
 
     const data = await response.json();
@@ -120,7 +140,7 @@ export const searchProspects = async (params: SearchParams): Promise<ProspectRes
       case 'Google Places':
       case 'Google Maps':
       case 'Google Business':
-        if (GOOGLE_PLACES_API_KEY) {
+        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
           const googleResults = await searchGooglePlaces(params.query, params.location || '');
 
           const detailedResults = await Promise.all(
@@ -156,8 +176,8 @@ export const searchProspects = async (params: SearchParams): Promise<ProspectRes
 
 export const checkApiStatus = () => {
   return {
-    googlePlaces: !!GOOGLE_PLACES_API_KEY,
-    googleMaps: !!GOOGLE_MAPS_API_KEY,
+    googlePlaces: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
+    googleMaps: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
     facebook: false,
     linkedin: false,
     yellowPages: false,
