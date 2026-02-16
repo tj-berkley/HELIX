@@ -34,7 +34,7 @@ import AIChatbot from './components/AIChatbot';
 import NotebookLM from './components/NotebookLM';
 import MedicalHub from './components/MedicalHub';
 import { Icons } from './constants';
-import { Workspace, Board, Group, Item, BoardView, Page, Status, Priority, ReleasedMovie, MovieScript, Manuscript, OwnerInfo, BusinessInfo, ClonedVoice } from './types';
+import { Workspace, Board, Group, Item, BoardView, Page, Status, Priority, ReleasedMovie, MovieScript, Manuscript, OwnerInfo, BusinessInfo, ClonedVoice, NotebookNote, NotebookProject } from './types';
 import { generateBoardFromPrompt, BoardGenerationOptions } from './services/geminiService';
 
 const MOCK_WORKSPACE: Workspace = {
@@ -120,10 +120,19 @@ const App: React.FC = () => {
 
   const [manuscriptLibrary, setManuscriptLibrary] = useState<Manuscript[]>([]);
   const [clonedVoices, setClonedVoices] = useState<ClonedVoice[]>([]);
+  const [notebookProjects, setNotebookProjects] = useState<NotebookProject[]>(() => {
+    const saved = localStorage.getItem('OMNI_NOTEBOOKS_V1');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
   const [pendingMovieContent, setPendingMovieContent] = useState<{title: string, content: string} | undefined>();
   const [movieProjects, setMovieProjects] = useState<MovieScript[]>([]);
   const [currentMovieScript, setCurrentMovieScript] = useState<MovieScript | null>(null);
   const [releasedMovies, setReleasedMovies] = useState<ReleasedMovie[]>([]);
+
+  useEffect(() => {
+    localStorage.setItem('OMNI_NOTEBOOKS_V1', JSON.stringify(notebookProjects));
+  }, [notebookProjects]);
 
   const allBoards = useMemo(() => workspaces.flatMap(ws => ws.boards), [workspaces]);
 
@@ -264,13 +273,34 @@ const App: React.FC = () => {
       case 'tasks': return <GlobalTasks activeViewInitial="List" />;
       case 'calendar': return <GlobalTasks activeViewInitial="Calendar" />;
       case 'site-builder': return <SiteBuilder />;
-      case 'blog': return <BlogPlatform manuscriptLibrary={manuscriptLibrary} onSaveManuscript={(m) => setManuscriptLibrary(prev => [m, ...prev])} onConvertToMovie={(title, content) => { setPendingMovieContent({ title, content }); setActivePage('movie-studio'); }} />;
+      case 'blog': return (
+        <BlogPlatform 
+          manuscriptLibrary={manuscriptLibrary}
+          notebookNotes={notebookProjects.flatMap(p => p.notes)}
+          onSaveManuscript={(m) => setManuscriptLibrary(prev => [m, ...prev])}
+          onConvertToMovie={(title, content) => {
+            setPendingMovieContent({ title, content });
+            setActivePage('movie-studio');
+          }} 
+        />
+      );
       case 'social-calendar': return <SocialCalendar />;
       case 'content-creator': return <ContentCreator />;
-      case 'notebook-lm': return <NotebookLM manuscriptLibrary={manuscriptLibrary} />;
+      case 'notebook-lm': return (
+        <NotebookLM 
+          manuscriptLibrary={manuscriptLibrary} 
+          notebookProjects={notebookProjects}
+          onUpdateProjects={setNotebookProjects}
+        />
+      );
       case 'medical-hub': return <MedicalHub />;
-      // Fix: Removed unused manuscriptLibrary prop from AudioCreator component to resolve TypeScript assignment error.
-      case 'audio-lab': return <AudioCreator onAddClonedVoice={(v) => setClonedVoices(prev => [v, ...prev])} clonedVoices={clonedVoices} />;
+      case 'audio-lab': return (
+        <AudioCreator 
+          onAddClonedVoice={(v) => setClonedVoices(prev => [v, ...prev])}
+          clonedVoices={clonedVoices}
+          manuscriptLibrary={manuscriptLibrary}
+        />
+      );
       case 'video-maker': return <VideoMaker clonedVoices={clonedVoices} />;
       case 'movie-studio': return <MovieStudio initialContent={pendingMovieContent} manuscriptLibrary={manuscriptLibrary} clonedVoices={clonedVoices} script={currentMovieScript} onUpdateScript={(s) => { setCurrentMovieScript(s); setMovieProjects(prev => prev.find(p => p.id === s.id) ? prev.map(p => p.id === s.id ? s : p) : [s, ...prev]); }} onMoveToProduction={() => setActivePage('movie-maker')} />;
       case 'movie-maker': return <MovieMaker savedProjects={movieProjects} onRelease={(m) => { setReleasedMovies(prev => [m, ...prev]); setActivePage('box-office'); }} />;
