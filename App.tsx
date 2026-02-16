@@ -31,6 +31,8 @@ import UsageDashboard from './components/UsageDashboard';
 import ConnectionVault from './components/ApiManagement';
 import EmailManager from './components/EmailManager';
 import AIChatbot from './components/AIChatbot';
+import NotebookLM from './components/NotebookLM';
+import MedicalHub from './components/MedicalHub';
 import { Icons } from './constants';
 import { Workspace, Board, Group, Item, BoardView, Page, Status, Priority, ReleasedMovie, MovieScript, Manuscript, OwnerInfo, BusinessInfo, ClonedVoice } from './types';
 import { generateBoardFromPrompt, BoardGenerationOptions } from './services/geminiService';
@@ -265,6 +267,9 @@ const App: React.FC = () => {
       case 'blog': return <BlogPlatform manuscriptLibrary={manuscriptLibrary} onSaveManuscript={(m) => setManuscriptLibrary(prev => [m, ...prev])} onConvertToMovie={(title, content) => { setPendingMovieContent({ title, content }); setActivePage('movie-studio'); }} />;
       case 'social-calendar': return <SocialCalendar />;
       case 'content-creator': return <ContentCreator />;
+      case 'notebook-lm': return <NotebookLM manuscriptLibrary={manuscriptLibrary} />;
+      case 'medical-hub': return <MedicalHub />;
+      // Fix: Removed unused manuscriptLibrary prop from AudioCreator component to resolve TypeScript assignment error.
       case 'audio-lab': return <AudioCreator onAddClonedVoice={(v) => setClonedVoices(prev => [v, ...prev])} clonedVoices={clonedVoices} />;
       case 'video-maker': return <VideoMaker clonedVoices={clonedVoices} />;
       case 'movie-studio': return <MovieStudio initialContent={pendingMovieContent} manuscriptLibrary={manuscriptLibrary} clonedVoices={clonedVoices} script={currentMovieScript} onUpdateScript={(s) => { setCurrentMovieScript(s); setMovieProjects(prev => prev.find(p => p.id === s.id) ? prev.map(p => p.id === s.id ? s : p) : [s, ...prev]); }} onMoveToProduction={() => setActivePage('movie-maker')} />;

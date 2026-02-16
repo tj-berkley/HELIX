@@ -17,6 +17,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
   const [isAdminExpanded, setIsAdminExpanded] = useState(true);
   const [isMainExpanded, setIsMainExpanded] = useState(true);
   const [isCreativeExpanded, setIsCreativeExpanded] = useState(true);
+  const [isMedicalExpanded, setIsMedicalExpanded] = useState(true);
 
   const mainNav = [
     { id: 'dashboard', label: 'Dashboard', icon: <Icons.Home /> },
@@ -33,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
   ];
 
   const platformNav = [
+    { id: 'notebook-lm', label: 'NotebookLM', icon: <span>📓</span> },
     { id: 'webinars', label: 'Webinar Center', icon: <span>📡</span> },
     { id: 'site-builder', label: 'Sites', icon: <span>🌐</span> },
     { id: 'blog', label: 'Blog & Writing', icon: <span>✍️</span> },
@@ -42,6 +44,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
     { id: 'movie-studio', label: 'Movie Studio', icon: <span>🎥</span> },
     { id: 'movie-maker', label: 'Movie Maker', icon: <span>🎬</span> },
     { id: 'box-office', label: 'Box Office', icon: <span>🍿</span> },
+  ];
+
+  const medicalNav = [
+    { id: 'medical-hub', label: 'Medical Hub', icon: <span>🏥</span> },
   ];
 
   const adminNav = [
@@ -56,7 +62,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
 
   return (
     <aside className="w-[240px] h-screen bg-[#1e222d] text-slate-400 flex flex-col border-r border-slate-200 dark:bg-[#0c0e12] dark:border-white/5 select-none overflow-hidden shrink-0 transition-colors duration-300">
-      {/* Persisted Brand Identity */}
       <div className="h-20 flex items-center px-6 border-b border-white/5 shrink-0 bg-black/10">
         <div className="flex items-center space-x-4 group cursor-pointer overflow-hidden" onClick={() => onSelectPage('dashboard')}>
           <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-[0_8px_20px_rgba(79,70,229,0.4)] group-hover:rotate-6 transition-transform overflow-hidden shrink-0 border border-white/10">
@@ -104,6 +109,24 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
                   {activePage === item.id && <div className="absolute left-0 w-1 h-5 bg-purple-500 rounded-r-full shadow-[0_0_10px_rgba(168,85,247,1)]"></div>}
                   <span className="w-5 h-5 flex items-center justify-center opacity-80">{item.icon}</span>
                   <span className="truncate">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <button onClick={() => setIsMedicalExpanded(!isMedicalExpanded)} className="px-3 pb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center justify-between w-full hover:text-white group">
+            <span>Health & Medical</span>
+            <span className={`transition-transform duration-300 ${isMedicalExpanded ? 'rotate-180 text-rose-400' : ''}`}><Icons.ChevronDown /></span>
+          </button>
+          {isMedicalExpanded && (
+            <div className="space-y-1 animate-in slide-in-from-top-2 duration-300">
+              {medicalNav.map(item => (
+                <button key={item.id} onClick={() => onSelectPage(item.id as Page)} className={`flex items-center space-x-3 w-full px-3 py-2.5 rounded-2xl transition-all text-xs font-bold ${activePage === item.id ? 'bg-white/10 text-white shadow-lg relative' : 'hover:bg-white/5 hover:text-slate-200'}`}>
+                  {activePage === item.id && <div className="absolute left-0 w-1 h-5 bg-rose-500 rounded-r-full shadow-[0_0_10px_rgba(244,63,94,1)]"></div>}
+                  <span className="w-5 h-5 flex items-center justify-center opacity-80">{item.icon}</span>
+                  <span>{item.label}</span>
                 </button>
               ))}
             </div>

@@ -174,6 +174,8 @@ export type Page =
   | 'owner-profile'
   | 'business-identity'
   | 'usage-dashboard'
+  | 'notebook-lm'
+  | 'medical-hub'
   | 'email';
 
 export interface PageDesign {
@@ -358,4 +360,13 @@ export interface SocialPost {
   scheduledTime: string;
   platforms: string[];
   status: Status;
+}
+
+export interface PatientRecord {
+  id: string;
+  name: string;
+  type: string;
+  vitals: string;
+  status: Status;
+  owner: string;
 }
