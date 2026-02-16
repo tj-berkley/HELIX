@@ -29,26 +29,45 @@ const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 export const searchGooglePlaces = async (query: string, location: string): Promise<ProspectResult[]> => {
-  if (!GOOGLE_PLACES_API_KEY) {
-    console.warn('Google Places API key not configured');
-    return [];
+  if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY === 'your_google_places_api_key_here') {
+    throw new Error('Google Places API key not configured. Please add VITE_GOOGLE_PLACES_API_KEY to your .env file.');
   }
 
   try {
     const searchQuery = location ? `${query} in ${location}` : query;
 
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchQuery)}&key=${GOOGLE_PLACES_API_KEY}`
+      `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchQuery)}&key=${GOOGLE_PLACES_API_KEY}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
+      }
     );
 
     if (!response.ok) {
-      throw new Error('Google Places API request failed');
+      const errorText = await response.text();
+      console.error('API Response Error:', errorText);
+      throw new Error(`Google Places API request failed: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
 
+    if (data.status === 'REQUEST_DENIED') {
+      throw new Error(`Google Places API: ${data.error_message || 'Request denied. Check API key and billing.'}`);
+    }
+
+    if (data.status === 'INVALID_REQUEST') {
+      throw new Error('Invalid request. Please check your search parameters.');
+    }
+
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      throw new Error(`Google Places API error: ${data.status}`);
+      throw new Error(`Google Places API error: ${data.status} - ${data.error_message || 'Unknown error'}`);
+    }
+
+    if (data.status === 'ZERO_RESULTS') {
+      return [];
     }
 
     return (data.results || []).map((place: any) => ({
@@ -63,7 +82,7 @@ export const searchGooglePlaces = async (query: string, location: string): Promi
     }));
   } catch (error) {
     console.error('Error searching Google Places:', error);
-    return [];
+    throw error;
   }
 };
 

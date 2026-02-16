@@ -43,9 +43,14 @@ const Prospecting: React.FC = () => {
       });
 
       setResults(searchResults);
-    } catch (error) {
+
+      if (searchResults.length === 0) {
+        alert('No results found. Try adjusting your search query or location.');
+      }
+    } catch (error: any) {
       console.error('Search error:', error);
-      alert('Search failed. Please check your API configuration.');
+      const errorMessage = error?.message || 'Search failed. Please check your API configuration.';
+      alert(errorMessage);
     } finally {
       setIsSearching(false);
     }
