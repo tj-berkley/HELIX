@@ -69,46 +69,7 @@ const SocialConnector: React.FC = () => {
   const [platforms, setPlatforms] = useState<SocialPlatform[]>(INITIAL_PLATFORMS);
   const [activeSettings, setActiveSettings] = useState<string | null>(null);
 
-  const connectFacebook = async (id: string) => {
-    setPlatforms(prev => prev.map(p => p.id === id ? { ...p, connecting: true } : p));
-
-    try {
-      const accessToken = import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN;
-
-      if (!accessToken) {
-        console.error('Facebook access token not configured');
-        setPlatforms(prev => prev.map(p => p.id === id ? { ...p, connecting: false } : p));
-        return;
-      }
-
-      const response = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,name,followers_count&access_token=${accessToken}`);
-      const data = await response.json();
-
-      if (data.error) {
-        console.error('Facebook API error:', data.error);
-        setPlatforms(prev => prev.map(p => p.id === id ? { ...p, connecting: false } : p));
-        return;
-      }
-
-      setPlatforms(prev => prev.map(p => p.id === id ? {
-        ...p,
-        connecting: false,
-        connected: true,
-        followers: data.followers_count ? `${(data.followers_count / 1000).toFixed(1)}k` : '12.4k',
-        handle: `@${data.name?.replace(/\s+/g, '_').toLowerCase() || 'hobbs_studio'}`
-      } : p));
-    } catch (error) {
-      console.error('Error connecting to Facebook:', error);
-      setPlatforms(prev => prev.map(p => p.id === id ? { ...p, connecting: false } : p));
-    }
-  };
-
   const simulateConnection = useCallback((id: string) => {
-    if (id === 'facebook') {
-      connectFacebook(id);
-      return;
-    }
-
     setPlatforms(prev => prev.map(p => p.id === id ? { ...p, connecting: true } : p));
 
     setTimeout(() => {

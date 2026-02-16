@@ -7,6 +7,7 @@ export interface ProspectResult {
   email?: string;
   website?: string;
   rating?: number;
+  totalRatings?: number;
   category?: string;
   description?: string;
   placeId?: string;
@@ -27,6 +28,7 @@ interface SearchParams {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const FACEBOOK_ACCESS_TOKEN = import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN || '';
 
 export const searchGooglePlaces = async (query: string, location: string): Promise<ProspectResult[]> => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -132,6 +134,63 @@ export const getPlaceDetails = async (placeId: string): Promise<Partial<Prospect
   }
 };
 
+export const searchFacebookPlaces = async (query: string, location: string): Promise<ProspectResult[]> => {
+  if (!FACEBOOK_ACCESS_TOKEN) {
+    throw new Error('Facebook access token not configured');
+  }
+
+  try {
+    const searchQuery = location ? `${query} ${location}` : query;
+    const params = new URLSearchParams({
+      q: searchQuery,
+      type: 'page',
+      fields: 'id,name,location,phone,website,emails,rating_count,overall_star_rating,category,about',
+      access_token: FACEBOOK_ACCESS_TOKEN,
+      limit: '20'
+    });
+
+    const response = await fetch(
+      `https://graph.facebook.com/v19.0/search?${params.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Facebook API error: ${errorData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    return (data.data || []).map((page: any) => ({
+      id: page.id,
+      name: page.name,
+      platform: 'Facebook' as SearchPlatform,
+      address: page.location ?
+        `${page.location.street || ''} ${page.location.city || ''}, ${page.location.state || ''} ${page.location.zip || ''}`.trim()
+        : undefined,
+      phone: page.phone,
+      email: page.emails?.[0],
+      website: page.website,
+      rating: page.overall_star_rating,
+      totalRatings: page.rating_count,
+      category: page.category,
+      description: page.about,
+      coordinates: page.location ? {
+        lat: page.location.latitude,
+        lng: page.location.longitude
+      } : undefined
+    }));
+  } catch (error) {
+    console.error('Error searching Facebook Places:', error);
+    throw error;
+  }
+};
+
 export const searchProspects = async (params: SearchParams): Promise<ProspectResult[]> => {
   const results: ProspectResult[] = [];
 
@@ -158,7 +217,12 @@ export const searchProspects = async (params: SearchParams): Promise<ProspectRes
         break;
 
       case 'Facebook':
-        console.warn('Facebook Graph API integration requires setup');
+        if (FACEBOOK_ACCESS_TOKEN) {
+          const facebookResults = await searchFacebookPlaces(params.query, params.location || '');
+          results.push(...facebookResults);
+        } else {
+          console.warn('Facebook access token not configured');
+        }
         break;
 
       case 'LinkedIn':
@@ -178,7 +242,7 @@ export const checkApiStatus = () => {
   return {
     googlePlaces: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
     googleMaps: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
-    facebook: false,
+    facebook: !!FACEBOOK_ACCESS_TOKEN,
     linkedin: false,
     yellowPages: false,
   };
