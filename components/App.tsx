@@ -86,6 +86,20 @@ const App: React.FC = () => {
     priority: []
   });
 
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('OMNI_THEME');
+    return (saved as 'light' | 'dark') || 'light';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('OMNI_THEME', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   const [ownerInfo, setOwnerInfo] = useState<OwnerInfo>({ 
     name: 'Senior Engineer', 
     role: 'Full-stack Architect', 
@@ -334,7 +348,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden font-sans text-slate-900 bg-[#0c0e12]">
+    <div className={`flex h-screen w-screen overflow-hidden font-sans text-slate-900 bg-[#f9fafb] dark:bg-[#0c0e12] transition-colors duration-300 ${theme === 'dark' ? 'dark' : ''}`}>
       <Sidebar 
         workspaces={workspaces} 
         activeBoardId={activeBoardId} 
@@ -345,33 +359,40 @@ const App: React.FC = () => {
         businessInfo={businessInfo} 
       />
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <header className="h-14 border-b border-white/5 bg-[#0c0e12]/80 backdrop-blur-md flex items-center justify-between px-8 shrink-0 z-40">
+        <header className="h-14 border-b border-slate-200 bg-white/80 dark:bg-[#0c0e12]/80 backdrop-blur-md dark:border-white/5 flex items-center justify-between px-8 shrink-0 z-40 transition-colors duration-300">
            <div className="flex items-center space-x-6 flex-1">
-              <div className="flex items-center space-x-2 text-slate-400">
+              <div className="flex items-center space-x-2 text-slate-400 dark:text-slate-500">
                  <span className="text-xs font-black uppercase tracking-[0.2em]">{activePage.replace('-', ' ')}</span>
                  <Icons.ChevronRight />
-                 <span className="text-xs font-black text-slate-100">{activeBoard?.name || (activePage === 'dashboard' ? 'Overview' : activePage.charAt(0).toUpperCase() + activePage.slice(1))}</span>
+                 <span className="text-xs font-black text-slate-100 dark:text-slate-200">{activeBoard?.name || (activePage === 'dashboard' ? 'Overview' : activePage.charAt(0).toUpperCase() + activePage.slice(1))}</span>
               </div>
               <div className="relative max-w-md w-full">
-                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
                     <Icons.Search />
                  </div>
                  <input 
                    type="text" 
-                   placeholder="Command + K to Search Everywhere" 
-                   className="w-full bg-white/5 border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-xs text-slate-300 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:bg-white/10 transition-all"
+                   placeholder="Search Everywhere..." 
+                   className="w-full bg-slate-100 dark:bg-white/5 border border-transparent dark:border-white/10 rounded-full py-1.5 pl-10 pr-4 text-xs text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:bg-white/10 transition-all"
                  />
               </div>
            </div>
            <div className="flex items-center space-x-4">
-              <button className="p-2 text-slate-400 hover:text-white transition-colors relative">
-                 <Icons.Message />
-                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-[#0c0e12]"></span>
+              <button 
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors"
+                title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+              >
+                {theme === 'light' ? <span>🌙</span> : <span>☀️</span>}
               </button>
-              <button className="p-2 text-slate-400 hover:text-white transition-colors">
+              <button className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors relative">
+                 <Icons.Message />
+                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white dark:border-[#0c0e12]"></span>
+              </button>
+              <button className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors">
                  <Icons.Settings />
               </button>
-              <div className="h-6 w-px bg-white/10 mx-2"></div>
+              <div className="h-6 w-px bg-slate-200 dark:bg-white/10 mx-2 transition-colors"></div>
               <div 
                 className="flex items-center space-x-2 cursor-pointer group"
                 onClick={() => setActivePage('owner-profile')}
@@ -383,7 +404,7 @@ const App: React.FC = () => {
            </div>
         </header>
 
-        <main className="flex-1 flex flex-col min-w-0 bg-[#f9fafb] overflow-hidden relative shadow-2xl rounded-tl-[1.5rem] border-t border-l border-white/5">
+        <main className="flex-1 flex flex-col min-w-0 bg-[#f8faff] dark:bg-[#0c0e12] overflow-hidden relative shadow-2xl rounded-tl-[1.5rem] border-t border-l border-slate-200 dark:border-white/5 transition-colors duration-300">
           {renderActiveModule()}
         </main>
       </div>

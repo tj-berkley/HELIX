@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
 
   return (
     <aside className="w-[240px] h-screen bg-slate-50 text-slate-600 flex flex-col border-r border-slate-200 dark:bg-[#0c0e12] dark:text-slate-400 dark:border-white/5 select-none overflow-hidden shrink-0 transition-colors duration-300">
-      <div className="h-20 flex items-center px-6 border-b border-slate-200 dark:border-white/5 shrink-0 bg-white/50 dark:bg-black/10">
+      <div className="h-20 flex items-center px-6 border-b border-slate-200 dark:border-white/5 shrink-0 bg-white dark:bg-black/20">
         <div className="flex items-center space-x-4 group cursor-pointer overflow-hidden" onClick={() => onSelectPage('dashboard')}>
           <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-[0_8px_20px_rgba(79,70,229,0.4)] group-hover:rotate-6 transition-transform overflow-hidden shrink-0 border border-white/10">
             {businessInfo.logoUrl ? (
@@ -151,7 +151,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
         </div>
       </nav>
 
-      <div className="p-4 bg-slate-200/50 dark:bg-black/10 border-t border-slate-200 dark:border-white/5 flex items-center space-x-3 shrink-0 cursor-pointer hover:bg-slate-200 dark:hover:bg-white/5 transition-all" onClick={() => onSelectPage('owner-profile')}>
+      <div className="p-4 bg-slate-200/50 dark:bg-black/20 border-t border-slate-200 dark:border-white/5 flex items-center space-x-3 shrink-0 cursor-pointer hover:bg-slate-200 dark:hover:bg-white/5 transition-all" onClick={() => onSelectPage('owner-profile')}>
         {ownerInfo.avatarUrl ? (
           <img src={ownerInfo.avatarUrl} className="w-10 h-10 rounded-2xl object-cover shadow-lg border border-white/10 dark:border-white/5" alt="Avatar" />
         ) : (

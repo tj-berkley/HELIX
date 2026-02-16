@@ -25,9 +25,14 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
+            background-color: #f9fafb;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         
+        .dark body {
+            background-color: #0c0e12;
+        }
+
         .dark-mode-transition * {
           transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
         }
@@ -77,6 +82,13 @@
           background-image: radial-gradient(#1e293b 1px, transparent 1px);
           background-size: 32px 32px;
         }
+        
+        .glow-indigo {
+          box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+        .dark .glow-indigo {
+          box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+        }
     </style>
 <script type="importmap">
 {
@@ -88,9 +100,10 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-gray-50 text-slate-800 dark:bg-[#0c0e12] dark:text-slate-100">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>

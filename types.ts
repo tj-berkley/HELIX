@@ -231,7 +231,67 @@ export interface PatientRecord {
   owner: string;
 }
 
-// Fixed missing types used across application components
+export interface MedicalDocument {
+  id: string;
+  name: string;
+  type: string;
+  url: string;
+  date: string;
+  isEncrypted: boolean;
+}
+
+export interface MedicalMember {
+  id: string;
+  name: string;
+  relationship: string;
+  email: string;
+  phone: string;
+  birthDate: string;
+  healthRecords: string;
+  avatarUrl?: string;
+  type: 'Family' | 'Relative';
+  documents?: MedicalDocument[];
+}
+
+export interface MedicalDoctor {
+  id: string;
+  name: string;
+  specialty: string;
+  clinic: string;
+  phone: string;
+  email: string;
+  avatarUrl?: string;
+  calendarUrl?: string;
+  assignedMemberId?: string;
+}
+
+export interface VitalLog {
+  id: string;
+  memberId: string;
+  timestamp: string;
+  heartRate: number;
+  bloodPressure: string;
+  glucose: number;
+  weight: number;
+  height: number;
+  temperature: number;
+  respiratoryRate: number;
+  hrv: number;
+  spo2: number;
+  bodyFat?: number;
+  muscleMass?: number;
+  boneMass?: number;
+  bodyWater?: number;
+  visceralFat?: number;
+  caloricIntake?: number;
+  proteinIntake?: number;
+  carbIntake?: number;
+  fatIntake?: number;
+  bmr?: number;
+  strengthLevel?: number;
+  enduranceLevel?: number;
+}
+
 export interface Contact {
   id: string;
   name: string;
