@@ -33,6 +33,7 @@ import EmailManager from './components/EmailManager';
 import AIChatbot from './components/AIChatbot';
 import NotebookLM from './components/NotebookLM';
 import MedicalHub from './components/MedicalHub';
+import Prospecting from './components/Prospecting';
 import { Icons } from './constants';
 import { Workspace, Board, Group, Item, BoardView, Page, Status, Priority, ReleasedMovie, MovieScript, Manuscript, OwnerInfo, BusinessInfo, ClonedVoice, NotebookNote, NotebookProject } from './types';
 import { generateBoardFromPrompt, BoardGenerationOptions } from './services/geminiService';
@@ -257,6 +258,7 @@ const App: React.FC = () => {
   const renderActiveModule = () => {
     switch (activePage) {
       case 'dashboard': return <Dashboard ownerInfo={ownerInfo} businessInfo={businessInfo} boards={allBoards} onSelectPage={setActivePage} onSelectBoard={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
+      case 'prospecting': return <Prospecting />;
       case 'email': return <EmailManager theme={theme} />;
       case 'analytics': return <Analytics boards={allBoards} />;
       case 'webinars': return <Webinars />;

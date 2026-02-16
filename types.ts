@@ -126,13 +126,13 @@ export interface Integration {
   envKey?: string;
 }
 
-export type Page = 
+export type Page =
   | 'dashboard'
-  | 'board' 
+  | 'board'
   | 'portfolio'
-  | 'integrations' 
-  | 'automation' 
-  | 'contacts' 
+  | 'integrations'
+  | 'automation'
+  | 'contacts'
   | 'analytics'
   | 'webinars'
   | 'tasks'
@@ -155,7 +155,8 @@ export type Page =
   | 'usage-dashboard'
   | 'notebook-lm'
   | 'medical-hub'
-  | 'email';
+  | 'email'
+  | 'prospecting';
 
 export interface Manuscript {
   id: string;

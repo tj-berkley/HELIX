@@ -21,6 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
 
   const mainNav = [
     { id: 'dashboard', label: 'Dashboard', icon: <Icons.Home /> },
+    { id: 'prospecting', label: 'Prospecting', icon: <span>🔍</span> },
     { id: 'email', label: 'Email Center', icon: <span>✉️</span> },
     { id: 'analytics', label: 'Analytics Pulse', icon: <span>📈</span> },
     { id: 'portfolio', label: 'Portfolios', icon: <span>📊</span> },
