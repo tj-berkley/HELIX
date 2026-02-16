@@ -279,8 +279,8 @@ export const generateEmailReply = async (emailContent: string, intent: string, b
     INBOUND EMAIL: "${emailContent}"
     USER INTENT: "${intent}"
     BRAND VOICE: ${brandVoice.tone}
-    
-    Draft a professional, effective reply. 
+
+    Draft a professional, effective reply.
     Return as JSON: { "subject": "Suggested Subject", "body": "Suggested Body" }`,
     config: {
       responseMimeType: "application/json",
@@ -294,4 +294,15 @@ export const generateEmailReply = async (emailContent: string, intent: string, b
     }
   });
   return JSON.parse(response.text);
+};
+
+/**
+ * Generate a general AI response for any prompt
+ */
+export const generateAIResponse = async (prompt: string): Promise<string> => {
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: prompt
+  });
+  return response.text;
 };

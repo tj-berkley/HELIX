@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Icons } from '../constants';
 import { searchProspects, checkApiStatus, ProspectResult, SearchPlatform } from '../services/prospectingService';
 
 const Prospecting: React.FC = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<SearchPlatform[]>(['Google Places']);
   const [location, setLocation] = useState('');
@@ -66,6 +68,48 @@ const Prospecting: React.FC = () => {
     if (selectedResults.length === 0) return;
     alert(`Adding ${selectedResults.length} prospects to your contacts...`);
     setSelectedResults([]);
+  };
+
+  const handleViewProspect = async (result: ProspectResult, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/prospects-api/prospects`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          place_id: result.id,
+          business_name: result.name,
+          address: result.address,
+          phone: result.phone,
+          website: result.website,
+          rating: result.rating,
+          total_ratings: result.totalRatings,
+          types: result.category ? [result.category] : []
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        if (data.prospect_id) {
+          navigate(`/prospects/${data.prospect_id}`);
+          return;
+        }
+        throw new Error('Failed to save prospect');
+      }
+
+      const data = await response.json();
+      navigate(`/prospects/${data.id}`);
+    } catch (error) {
+      console.error('Error saving prospect:', error);
+      alert('Failed to save prospect. Please try again.');
+    }
   };
 
   const getPlatformColor = (platform: SearchPlatform): string => {
@@ -316,7 +360,7 @@ const Prospecting: React.FC = () => {
                         <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{result.description}</p>
                       )}
 
-                      <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="grid grid-cols-2 gap-3 text-xs mb-3">
                         {result.address && (
                           <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400">
                             <span>📍</span>
@@ -338,12 +382,19 @@ const Prospecting: React.FC = () => {
                         {result.website && (
                           <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400">
                             <span>🌐</span>
-                            <a href={result.website} target="_blank" rel="noopener noreferrer" className="truncate hover:text-indigo-600 dark:hover:text-indigo-400">
+                            <a href={result.website} target="_blank" rel="noopener noreferrer" className="truncate hover:text-indigo-600 dark:hover:text-indigo-400" onClick={(e) => e.stopPropagation()}>
                               {result.website.replace('https://', '')}
                             </a>
                           </div>
                         )}
                       </div>
+
+                      <button
+                        onClick={(e) => handleViewProspect(result, e)}
+                        className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition-colors"
+                      >
+                        View Full Profile & Generate Reports
+                      </button>
                     </div>
                   </div>
                 </div>
