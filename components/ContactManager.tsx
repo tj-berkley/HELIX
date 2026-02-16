@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Contact, LeadCategory, CustomFieldValue } from '../types';
+// Fix: Removed unused and missing CustomFieldValue import
+import { Contact, LeadCategory } from '../types';
 
 const INITIAL_MOCK_CONTACTS: Contact[] = [
   { id: '1', name: 'Alice Thompson', email: 'alice@cloudscale.io', company: 'CloudScale', role: 'CTO', status: 'Lead', lastContacted: '2025-02-14', category: 'Legal Help', customFields: [] },

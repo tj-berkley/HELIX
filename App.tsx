@@ -8,8 +8,7 @@ import TimelineView from './components/TimelineView';
 import CalendarView from './components/CalendarView';
 import Dashboard from './components/Dashboard';
 import IntegrationsCenter from './components/IntegrationsCenter';
-import WorkflowBuilder from './components/WorkflowBuilder';
-import CampaignManager from './components/CampaignManager';
+import AutomationStudio from './components/AutomationStudio';
 import ContactManager from './components/ContactManager';
 import Analytics from './components/Analytics';
 import Webinars from './components/Webinars';
@@ -102,48 +101,27 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
-  // Identity States
-  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo>(() => {
-    const saved = localStorage.getItem('OMNI_OWNER_INFO');
-    return saved ? JSON.parse(saved) : { 
-      name: 'Senior Engineer', 
-      role: 'Full-stack Architect', 
-      email: 'engineer@hobbs.studio',
-      bio: 'Lead architect at Hobbs Studio. Specialized in autonomous agent orchestration and high-fidelity portal development.',
-      socialLinks: {}
-    };
+  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo>({ 
+    name: 'Senior Engineer', 
+    role: 'Full-stack Architect', 
+    email: 'engineer@hobbs.studio',
+    bio: 'Lead architect at Hobbs Studio.' 
   });
   
-  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>(() => {
-    const saved = localStorage.getItem('OMNI_BUSINESS_INFO');
-    return saved ? JSON.parse(saved) : { 
-      name: '', 
-      industry: 'Creative Technology', 
-      mission: 'Empowering the next generation of creators with autonomous AI production environments.',
-      website: 'https://hobbs.studio',
-      size: 'Medium (11-50)',
-      assignedPhone: '',
-      logoUrl: ''
-    };
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({ 
+    name: 'Hobbs Studio', 
+    industry: 'Creative Technology', 
+    mission: 'Empowering creators.',
+    website: 'https://hobbs.studio',
+    size: 'Medium (11-50)'
   });
 
-  // Library & Shared states
   const [manuscriptLibrary, setManuscriptLibrary] = useState<Manuscript[]>([]);
   const [clonedVoices, setClonedVoices] = useState<ClonedVoice[]>([]);
   const [pendingMovieContent, setPendingMovieContent] = useState<{title: string, content: string} | undefined>();
-  
-  // Cinematic Registry
   const [movieProjects, setMovieProjects] = useState<MovieScript[]>([]);
   const [currentMovieScript, setCurrentMovieScript] = useState<MovieScript | null>(null);
   const [releasedMovies, setReleasedMovies] = useState<ReleasedMovie[]>([]);
-
-  useEffect(() => {
-    localStorage.setItem('OMNI_OWNER_INFO', JSON.stringify(ownerInfo));
-  }, [ownerInfo]);
-
-  useEffect(() => {
-    localStorage.setItem('OMNI_BUSINESS_INFO', JSON.stringify(businessInfo));
-  }, [businessInfo]);
 
   const allBoards = useMemo(() => workspaces.flatMap(ws => ws.boards), [workspaces]);
 
@@ -190,52 +168,6 @@ const App: React.FC = () => {
     })));
   }, [activeBoardId]);
 
-  const handleMoveItem = useCallback((sourceGroupId: string, targetGroupId: string, itemId: string) => {
-    setWorkspaces(prev => prev.map(ws => ({
-      ...ws,
-      boards: ws.boards.map(board => {
-        if (board.id !== activeBoardId) return board;
-        let itemToMove: Item | undefined;
-        const updatedGroups = board.groups.map(group => {
-          if (group.id === sourceGroupId) {
-            itemToMove = group.items.find(i => i.id === itemId);
-            return { ...group, items: group.items.filter(i => i.id !== itemId) };
-          }
-          return group;
-        });
-
-        if (itemToMove) {
-          return {
-            ...board,
-            groups: updatedGroups.map(group => {
-              if (group.id === targetGroupId) {
-                return { ...group, items: [...group.items, itemToMove!] };
-              }
-              return group;
-            })
-          };
-        }
-        return board;
-      })
-    })));
-  }, [activeBoardId]);
-
-  const handleDeleteItem = useCallback((groupId: string, itemId: string) => {
-    setWorkspaces(prev => prev.map(ws => ({
-      ...ws,
-      boards: ws.boards.map(board => {
-        if (board.id !== activeBoardId) return board;
-        return {
-          ...board,
-          groups: board.groups.map(group => {
-            if (group.id !== groupId) return group;
-            return { ...group, items: group.items.filter(i => i.id !== itemId) };
-          })
-        };
-      })
-    })));
-  }, [activeBoardId]);
-
   const handleAddItem = useCallback((groupId: string) => {
     const newItem: Item = {
       id: `i-${Date.now()}`,
@@ -268,29 +200,6 @@ const App: React.FC = () => {
     })));
   }, [activeBoardId]);
 
-  const handleDeleteGroup = useCallback((groupId: string) => {
-    setWorkspaces(prev => prev.map(ws => ({
-        ...ws,
-        boards: ws.boards.map(board => {
-            if (board.id !== activeBoardId) return board;
-            return {
-                ...board,
-                groups: board.groups.filter(g => g.id !== groupId)
-            };
-        })
-    })));
-  }, [activeBoardId]);
-
-  const handleAddBoard = useCallback((newBoard: Board) => {
-    setWorkspaces(prev => prev.map(ws => {
-      if (ws.id === 'ws-1') return { ...ws, boards: [newBoard, ...ws.boards] };
-      return ws;
-    }));
-    setActiveBoardId(newBoard.id);
-    setActiveView('Table');
-    setActivePage('board');
-  }, []);
-
   const handleAIGenerate = async (prompt: string, options?: BoardGenerationOptions) => {
     setIsGenerating(true);
     try {
@@ -319,7 +228,13 @@ const App: React.FC = () => {
             }))
           }))
         };
-        handleAddBoard(newBoard);
+        setWorkspaces(prev => prev.map(ws => {
+          if (ws.id === 'ws-1') return { ...ws, boards: [newBoard, ...ws.boards] };
+          return ws;
+        }));
+        setActiveBoardId(newBoard.id);
+        setActiveView('Table');
+        setActivePage('board');
       }
     } catch (err) {
       console.error(err);
@@ -328,30 +243,9 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveMovieProject = (script: MovieScript) => {
-    setMovieProjects(prev => {
-      const exists = prev.find(p => p.id === script.id);
-      if (exists) return prev.map(p => p.id === script.id ? script : p);
-      return [script, ...prev];
-    });
-  };
-
-  const handleReleaseMovie = (movie: ReleasedMovie) => {
-    setReleasedMovies(prev => [movie, ...prev]);
-    setActivePage('box-office');
-  };
-
   const renderActiveModule = () => {
     switch (activePage) {
-      case 'dashboard': return (
-        <Dashboard 
-          ownerInfo={ownerInfo} 
-          businessInfo={businessInfo} 
-          boards={allBoards} 
-          onSelectPage={setActivePage} 
-          onSelectBoard={(id) => { setActiveBoardId(id); setActivePage('board'); }}
-        />
-      );
+      case 'dashboard': return <Dashboard ownerInfo={ownerInfo} businessInfo={businessInfo} boards={allBoards} onSelectPage={setActivePage} onSelectBoard={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
       case 'email': return <EmailManager theme={theme} />;
       case 'analytics': return <Analytics boards={allBoards} />;
       case 'webinars': return <Webinars />;
@@ -360,81 +254,28 @@ const App: React.FC = () => {
       case 'brand-voice': return <BrandVoicePage />;
       case 'usage-dashboard': return <UsageDashboard />;
       case 'vault': return <ConnectionVault />;
-      case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
-      case 'connections': return (
-        <ConnectionsHub 
-          clonedVoices={clonedVoices} 
-          businessInfo={businessInfo}
-          onUpdateBusiness={setBusinessInfo}
-          onUpdateOwner={setOwnerInfo}
-        />
-      );
+      case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={(b) => setWorkspaces(prev => prev.map(ws => ws.id === 'ws-1' ? {...ws, boards: [b, ...ws.boards]} : ws))} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
+      case 'connections': return <ConnectionsHub clonedVoices={clonedVoices} businessInfo={businessInfo} onUpdateBusiness={setBusinessInfo} onUpdateOwner={setOwnerInfo} />;
       case 'integrations': return <IntegrationsCenter onNavigate={setActivePage} />;
-      case 'workflows': return <WorkflowBuilder />;
-      case 'campaigns': return <CampaignManager />;
+      case 'automation': return <AutomationStudio />;
       case 'contacts': return <ContactManager />;
       case 'tasks': return <GlobalTasks activeViewInitial="List" />;
       case 'calendar': return <GlobalTasks activeViewInitial="Calendar" />;
       case 'site-builder': return <SiteBuilder />;
-      case 'blog': return (
-        <BlogPlatform 
-          manuscriptLibrary={manuscriptLibrary}
-          onSaveManuscript={(m) => setManuscriptLibrary(prev => [m, ...prev])}
-          onConvertToMovie={(title, content) => {
-            setPendingMovieContent({ title, content });
-            setActivePage('movie-studio');
-          }} 
-        />
-      );
+      case 'blog': return <BlogPlatform manuscriptLibrary={manuscriptLibrary} onSaveManuscript={(m) => setManuscriptLibrary(prev => [m, ...prev])} onConvertToMovie={(title, content) => { setPendingMovieContent({ title, content }); setActivePage('movie-studio'); }} />;
       case 'social-calendar': return <SocialCalendar />;
       case 'content-creator': return <ContentCreator />;
-      case 'audio-lab': return (
-        <AudioCreator 
-          onAddClonedVoice={(v) => setClonedVoices(prev => [v, ...prev])}
-          clonedVoices={clonedVoices}
-        />
-      );
+      case 'audio-lab': return <AudioCreator onAddClonedVoice={(v) => setClonedVoices(prev => [v, ...prev])} clonedVoices={clonedVoices} />;
       case 'video-maker': return <VideoMaker clonedVoices={clonedVoices} />;
-      case 'movie-studio': return (
-        <MovieStudio 
-          initialContent={pendingMovieContent} 
-          manuscriptLibrary={manuscriptLibrary}
-          clonedVoices={clonedVoices}
-          script={currentMovieScript}
-          onUpdateScript={(s) => {
-            setCurrentMovieScript(s);
-            handleSaveMovieProject(s);
-          }}
-          onMoveToProduction={() => setActivePage('movie-maker')}
-        />
-      );
-      case 'movie-maker': return (
-        <MovieMaker 
-          savedProjects={movieProjects}
-          onRelease={handleReleaseMovie}
-        />
-      );
+      case 'movie-studio': return <MovieStudio initialContent={pendingMovieContent} manuscriptLibrary={manuscriptLibrary} clonedVoices={clonedVoices} script={currentMovieScript} onUpdateScript={(s) => { setCurrentMovieScript(s); setMovieProjects(prev => prev.find(p => p.id === s.id) ? prev.map(p => p.id === s.id ? s : p) : [s, ...prev]); }} onMoveToProduction={() => setActivePage('movie-maker')} />;
+      case 'movie-maker': return <MovieMaker savedProjects={movieProjects} onRelease={(m) => { setReleasedMovies(prev => [m, ...prev]); setActivePage('box-office'); }} />;
       case 'box-office': return <BoxOffice movies={releasedMovies} />;
       case 'board':
         if (!activeBoard) return <div className="flex-1 flex items-center justify-center text-slate-400 font-medium italic text-xl dark:text-slate-500">🚀 Select a mission board to launch</div>;
         return (
           <>
-            <BoardHeader 
-              board={activeBoard} activeView={activeView} onViewChange={setActiveView}
-              onGenerateAI={handleAIGenerate} isGenerating={isGenerating} 
-              searchQuery={searchQuery} onSearchChange={setSearchQuery}
-              activeFilters={activeFilters} onFiltersChange={setActiveFilters}
-            />
-            {activeView === 'Table' && (
-              <BoardTable 
-                groups={filteredGroups} 
-                onUpdateItem={handleUpdateItem} 
-                onAddItem={handleAddItem} 
-                onDeleteGroup={handleDeleteGroup}
-                onDeleteItem={handleDeleteItem}
-                onMoveItem={handleMoveItem}
-              />
-            )}
+            <BoardHeader board={activeBoard} activeView={activeView} onViewChange={setActiveView} onGenerateAI={handleAIGenerate} isGenerating={isGenerating} searchQuery={searchQuery} onSearchChange={setSearchQuery} activeFilters={activeFilters} onFiltersChange={setActiveFilters} />
+            {activeView === 'Table' && <BoardTable groups={filteredGroups} onUpdateItem={handleUpdateItem} onAddItem={handleAddItem} onDeleteGroup={(id) => setWorkspaces(prev => prev.map(ws => ({...ws, boards: ws.boards.map(b => b.id === activeBoardId ? {...b, groups: b.groups.filter(g => g.id !== id)} : b)})))} />}
             {activeView === 'Kanban' && <KanbanView groups={filteredGroups} />}
             {activeView === 'Timeline' && <TimelineView groups={filteredGroups} />}
             {activeView === 'Calendar' && <CalendarView groups={filteredGroups} />}
@@ -445,68 +286,52 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden font-sans text-slate-900 bg-[#0c0e12] dark-mode-transition ${theme === 'dark' ? 'dark' : ''}`}>
-      <Sidebar 
-        workspaces={workspaces} 
-        activeBoardId={activeBoardId} 
-        onSelectBoard={setActiveBoardId} 
-        activePage={activePage} 
-        onSelectPage={setActivePage} 
-        ownerInfo={ownerInfo} 
-        businessInfo={businessInfo} 
-      />
+    <div className={`flex h-screen w-screen overflow-hidden font-sans bg-gray-50 text-slate-900 transition-colors duration-300 dark:bg-[#0c0e12] dark:text-slate-100 ${theme === 'dark' ? 'dark' : ''}`}>
+      <Sidebar workspaces={workspaces} activeBoardId={activeBoardId} onSelectBoard={setActiveBoardId} activePage={activePage} onSelectPage={setActivePage} ownerInfo={ownerInfo} businessInfo={businessInfo} />
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Global Modern Top Bar */}
-        <header className="h-14 border-b border-white/5 bg-[#0c0e12]/80 backdrop-blur-md flex items-center justify-between px-8 shrink-0 z-40">
+        <header className="h-14 border-b border-slate-200 bg-white/80 backdrop-blur-md dark:bg-[#0c0e12]/80 dark:border-white/5 flex items-center justify-between px-8 shrink-0 z-40 transition-colors duration-300">
            <div className="flex items-center space-x-6 flex-1">
-              <div className="flex items-center space-x-2 text-slate-400">
-                 <span className="text-xs font-black uppercase tracking-[0.2em]">{activePage.replace('-', ' ')}</span>
+              <div className="flex items-center space-x-2 text-slate-400 dark:text-slate-500">
+                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">{activePage.replace('-', ' ')}</span>
                  <Icons.ChevronRight />
-                 <span className="text-xs font-black text-slate-100">{activeBoard?.name || (activePage === 'dashboard' ? 'Overview' : activePage.charAt(0).toUpperCase() + activePage.slice(1))}</span>
+                 <span className="text-[10px] font-black text-slate-800 dark:text-slate-100">{activeBoard?.name || (activePage === 'dashboard' ? 'Overview' : activePage.charAt(0).toUpperCase() + activePage.slice(1))}</span>
               </div>
               <div className="relative max-w-md w-full">
-                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                     <Icons.Search />
                  </div>
                  <input 
                    type="text" 
-                   placeholder="Command + K to Search Everywhere" 
-                   className="w-full bg-white/5 border border-white/10 rounded-full py-1.5 pl-10 pr-4 text-xs text-slate-300 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:bg-white/10 transition-all"
+                   placeholder="Search Universe..." 
+                   className="w-full bg-slate-100 border border-transparent dark:bg-white/5 dark:border-white/10 rounded-full py-1.5 pl-10 pr-4 text-xs text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
                  />
               </div>
            </div>
            <div className="flex items-center space-x-4">
               <button 
                 onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-                className="p-2 text-slate-400 hover:text-white transition-colors"
+                className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors"
                 title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
               >
                  {theme === 'light' ? <span>🌙</span> : <span>☀️</span>}
               </button>
-              <button className="p-2 text-slate-400 hover:text-white transition-colors relative">
+              <button className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors relative">
                  <Icons.Message />
-                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-[#0c0e12]"></span>
+                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white dark:border-[#0c0e12]"></span>
               </button>
-              <button className="p-2 text-slate-400 hover:text-white transition-colors">
+              <button className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors">
                  <Icons.Settings />
               </button>
-              <div className="h-6 w-px bg-white/10 mx-2"></div>
-              <div 
-                className="flex items-center space-x-2 cursor-pointer group"
-                onClick={() => setActivePage('owner-profile')}
-              >
-                 {ownerInfo.avatarUrl ? (
-                   <img src={ownerInfo.avatarUrl} className="w-8 h-8 rounded-full border border-indigo-500 shadow-lg group-hover:scale-110 transition-transform object-cover" alt="O" />
-                 ) : (
-                   <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shadow-lg group-hover:scale-110 transition-transform">
-                     {ownerInfo.name[0]}
-                   </div>
-                 )}
+              <div className="h-6 w-px bg-slate-200 dark:bg-white/10 mx-2"></div>
+              <div className="flex items-center space-x-2 cursor-pointer group" onClick={() => setActivePage('owner-profile')}>
+                 <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-black text-white shadow-lg group-hover:scale-110 transition-transform">
+                   {ownerInfo.name[0]}
+                 </div>
               </div>
            </div>
         </header>
 
-        <main className="flex-1 flex flex-col min-w-0 bg-[#f9fafb] dark:bg-[#0c0e12] overflow-hidden relative shadow-2xl rounded-tl-[1.5rem] border-t border-l border-white/5">
+        <main className="flex-1 flex flex-col min-w-0 bg-[#f9fafb] dark:bg-[#0c0e12] overflow-hidden relative transition-colors duration-300">
           {renderActiveModule()}
         </main>
       </div>

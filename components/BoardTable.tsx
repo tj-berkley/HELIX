@@ -29,14 +29,9 @@ const OwnerAvatar: React.FC<{ ownerId: string; size?: 'sm' | 'md'; onClick?: () 
     return (
       <div 
         onClick={onClick}
-        className={`${sizeClasses} rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 border-dashed flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all cursor-pointer group/avatar`}
+        className={`${sizeClasses} rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 border-dashed flex items-center justify-center text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all cursor-pointer group/avatar`}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width={size === 'sm' ? "12" : "16"} height={size === 'sm' ? "12" : "16"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <line x1="19" y1="8" x2="19" y2="14"/>
-          <line x1="16" y1="11" x2="22" y2="11"/>
-        </svg>
+        <Icons.Plus className="w-3 h-3" />
       </div>
     );
   }
@@ -118,7 +113,7 @@ const ItemDetailModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-[#1e293b] w-full max-w-3xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white dark:bg-[#1e293b] w-full max-w-3xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 transition-colors" onClick={(e) => e.stopPropagation()}>
         <div className="p-10 border-b border-slate-100 dark:border-white/5 flex justify-between items-start bg-slate-50/50 dark:bg-slate-900/20">
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-2">
@@ -262,18 +257,6 @@ const ItemRow: React.FC<{
     }
   }, [item.lastUpdated]);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setShowUserPicker(false);
-      }
-    };
-    if (showUserPicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showUserPicker]);
-
   return (
     <tr 
       className={`hover:bg-indigo-50/20 dark:hover:bg-indigo-500/5 transition-all duration-300 group/row cursor-pointer border-l-4 animate-in fade-in slide-in-from-left-4 ${flash ? 'bg-indigo-100/50 dark:bg-indigo-900/20 shadow-inner' : ''}`}
@@ -295,15 +278,13 @@ const ItemRow: React.FC<{
         <div className="flex justify-center">
           <OwnerAvatar 
             ownerId={item.ownerId} 
-            onClick={() => {
-              setShowUserPicker(!showUserPicker);
-            }} 
+            onClick={() => setShowUserPicker(!showUserPicker)} 
           />
         </div>
         {showUserPicker && (
           <div 
             ref={pickerRef}
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl z-[60] p-2 animate-in zoom-in-95 duration-200"
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl z-[60] p-2 animate-in zoom-in-95 duration-200 transition-colors"
             onClick={e => e.stopPropagation()}
           >
             <p className="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest px-3 py-2 border-b border-slate-50 dark:border-white/5 mb-1">Assign Owner</p>
@@ -321,16 +302,6 @@ const ItemRow: React.FC<{
                   <span className="text-xs font-bold truncate">{user.name}</span>
                 </button>
               ))}
-              <button 
-                onClick={() => {
-                  onUpdateItem(group.id, item.id, { ownerId: '' });
-                  setShowUserPicker(false);
-                }}
-                className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 transition-all border-t border-slate-50 dark:border-white/5 mt-1"
-              >
-                <div className="w-6 h-6 rounded-full bg-rose-50 dark:bg-rose-950/50 flex items-center justify-center text-[10px]">✕</div>
-                <span className="text-xs font-bold">Unassign</span>
-              </button>
             </div>
           </div>
         )}
@@ -357,7 +328,7 @@ const BoardTable: React.FC<BoardTableProps> = ({ groups, onUpdateItem, onAddItem
   const [selectedItem, setSelectedItem] = useState<{ item: Item; group: Group } | null>(null);
 
   return (
-    <div className="flex-1 overflow-auto p-10 space-y-12 bg-white/50 dark:bg-[#0c0e12] backdrop-blur-sm transition-colors">
+    <div className="flex-1 overflow-auto p-10 space-y-12 bg-white/50 dark:bg-[#0c0e12] backdrop-blur-sm transition-colors duration-300">
       {groups.map(group => (
         <div key={group.id} className="animate-in fade-in slide-in-from-bottom-6 duration-700">
           <div className="flex items-center mb-6 space-x-3 px-2 group/title">
@@ -367,9 +338,9 @@ const BoardTable: React.FC<BoardTableProps> = ({ groups, onUpdateItem, onAddItem
             <button onClick={() => onDeleteGroup(group.id)} className="opacity-0 group-hover/title:opacity-100 text-[10px] font-black text-rose-400 hover:text-rose-600 transition-all uppercase tracking-widest ml-auto">Dissolve Group</button>
           </div>
 
-          <div className="overflow-hidden rounded-[2rem] border border-slate-200/60 dark:border-white/5 shadow-xl bg-white/80 dark:bg-slate-900/20 backdrop-blur-md transition-colors">
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200/60 dark:border-white/5 shadow-xl bg-white/80 dark:bg-slate-900/20 backdrop-blur-md transition-colors duration-300">
             <table className="w-full border-collapse text-sm table-fixed min-w-[1100px]">
-              <thead className="bg-slate-50/50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5">
+              <thead className="bg-slate-50/50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5 transition-colors">
                 <tr>
                   <th className="w-12"></th>
                   <th className="p-4 text-left text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest w-[35%]">Objective Name</th>
@@ -381,7 +352,7 @@ const BoardTable: React.FC<BoardTableProps> = ({ groups, onUpdateItem, onAddItem
                   <th className="p-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest w-16"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5 transition-colors">
                 {group.items.map(item => (
                   <ItemRow 
                     key={item.id} 

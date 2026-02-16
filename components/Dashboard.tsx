@@ -15,10 +15,10 @@ const Dashboard: React.FC<DashboardProps> = ({ ownerInfo, businessInfo, boards, 
   const recentBoards = boards.slice(0, 3);
   
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0c0e12] p-12 animate-in fade-in duration-700">
+    <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0c0e12] p-12 animate-in fade-in duration-700 transition-colors duration-300">
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Welcome Section */}
-        <div className="flex justify-between items-end bg-white dark:bg-slate-900/50 rounded-[3.5rem] p-16 shadow-2xl relative overflow-hidden border border-slate-100 dark:border-white/5 group">
+        <div className="flex justify-between items-end bg-white dark:bg-slate-900/50 rounded-[3.5rem] p-16 shadow-xl dark:shadow-2xl relative overflow-hidden border border-slate-100 dark:border-white/5 group transition-all duration-300">
           <div className="absolute -right-20 -top-20 w-80 h-80 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-indigo-500/10 transition-all duration-1000"></div>
           <div className="space-y-6 relative z-10 max-w-2xl">
             <div className="inline-flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-full border border-indigo-100 dark:border-indigo-500/20 mb-2">
@@ -63,7 +63,7 @@ const Dashboard: React.FC<DashboardProps> = ({ ownerInfo, businessInfo, boards, 
         <div className="grid grid-cols-12 gap-8">
            {/* Left Column: Recent Projects & Quick Launch */}
            <div className="col-span-12 lg:col-span-8 space-y-8">
-              <div className="bg-white dark:bg-slate-900/40 rounded-[3rem] p-10 shadow-sm border border-slate-100 dark:border-white/5 space-y-8">
+              <div className="bg-white dark:bg-slate-900/40 rounded-[3rem] p-10 shadow-sm border border-slate-100 dark:border-white/5 space-y-8 transition-colors duration-300">
                  <div className="flex justify-between items-center px-2">
                     <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Recent Mission Streams</h3>
                     <button onClick={() => onSelectPage('portfolio')} className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:underline">View Portfolio →</button>
@@ -88,13 +88,13 @@ const Dashboard: React.FC<DashboardProps> = ({ ownerInfo, businessInfo, boards, 
                  </div>
               </div>
 
-              <div className="bg-slate-900 dark:bg-slate-800/50 rounded-[3rem] p-10 shadow-2xl text-white space-y-8 relative overflow-hidden">
+              <div className="bg-slate-900 dark:bg-slate-800/80 rounded-[3rem] p-10 shadow-2xl text-white space-y-8 relative overflow-hidden transition-colors duration-300">
                  <div className="absolute top-0 right-0 p-12 opacity-5">
                     <span className="text-[120px]">⚡</span>
                  </div>
                  <div className="relative z-10 px-2">
-                    <h3 className="text-xl font-black tracking-tight">Neural Accelerator</h3>
-                    <p className="text-slate-400 text-sm font-medium mt-1">Instant production triggers.</p>
+                    <h3 className="text-xl font-black tracking-tight uppercase">Neural Accelerator</h3>
+                    <p className="text-slate-400 text-sm font-medium mt-1 italic">Instant production triggers.</p>
                  </div>
                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
                     {[
@@ -106,7 +106,7 @@ const Dashboard: React.FC<DashboardProps> = ({ ownerInfo, businessInfo, boards, 
                        <button 
                         key={action.id} 
                         onClick={() => onSelectPage(action.id as any)}
-                        className="bg-white/5 border border-white/10 p-6 rounded-[2rem] hover:bg-white/10 transition-all flex flex-col items-center space-y-3 group/act"
+                        className="bg-white/5 border border-white/10 p-6 rounded-[2rem] hover:bg-white/10 transition-all flex flex-col items-center space-y-3 group/act shadow-sm"
                        >
                           <span className="text-3xl group-hover/act:scale-125 transition-transform duration-500">{action.icon}</span>
                           <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 group-hover/act:text-white">{action.label}</span>
@@ -118,10 +118,10 @@ const Dashboard: React.FC<DashboardProps> = ({ ownerInfo, businessInfo, boards, 
 
            {/* Right Column: Signal Pulse & Roadmap */}
            <div className="col-span-12 lg:col-span-4 space-y-8">
-              <div className="bg-white dark:bg-slate-900/40 rounded-[3rem] p-10 shadow-sm border border-slate-100 dark:border-white/5 space-y-8 h-full flex flex-col">
+              <div className="bg-white dark:bg-slate-900/40 rounded-[3rem] p-10 shadow-sm border border-slate-100 dark:border-white/5 space-y-8 h-full flex flex-col transition-colors duration-300">
                  <div className="flex justify-between items-center px-2 shrink-0">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Neural Pulse</h3>
-                    <span className="text-[10px] font-black bg-rose-50 dark:bg-rose-950/30 text-rose-500 px-3 py-1 rounded-full uppercase border border-rose-100 dark:border-rose-500/20">Live</span>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">Neural Pulse</h3>
+                    <span className="text-[10px] font-black bg-rose-50 dark:bg-rose-950/30 text-rose-500 px-3 py-1 rounded-full uppercase border border-rose-100 dark:border-rose-500/20">Live Sync</span>
                  </div>
                  
                  <div className="space-y-6 flex-1">
@@ -147,7 +147,7 @@ const Dashboard: React.FC<DashboardProps> = ({ ownerInfo, businessInfo, boards, 
                  </div>
 
                  <div className="pt-8 border-t border-slate-50 dark:border-white/5 mt-auto">
-                    <button onClick={() => onSelectPage('connections')} className="w-full py-5 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition-all">Clear Signals</button>
+                    <button onClick={() => onSelectPage('connections')} className="w-full py-5 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 transition-all">Clear Pulse Cache</button>
                  </div>
               </div>
            </div>

@@ -104,9 +104,9 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
   };
 
   return (
-    <div className="flex-1 flex overflow-hidden bg-white dark:bg-[#0c0e12] animate-in fade-in h-full transition-colors">
+    <div className="flex-1 flex overflow-hidden bg-white dark:bg-[#0c0e12] animate-in fade-in h-full transition-colors duration-300">
       {/* Folder Sidebar */}
-      <div className="w-64 border-r border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5 flex flex-col shrink-0 p-8 space-y-8">
+      <div className="w-64 border-r border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5 flex flex-col shrink-0 p-8 space-y-8 transition-colors duration-300">
         <div className="space-y-1">
           <h3 className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest px-2">Folders</h3>
           <p className="text-xs font-bold text-slate-900 dark:text-white px-2 tracking-tight">Active Transmissions</p>
@@ -122,7 +122,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
           ].map(folder => (
             <button 
               key={folder.id} 
-              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-black transition-all ${folder.id === 'inbox' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white hover:shadow-sm'}`}
+              className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-black transition-all ${folder.id === 'inbox' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 dark:shadow-none' : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white hover:shadow-sm'}`}
             >
               <span className="flex items-center space-x-3">
                 <span>{folder.icon}</span>
@@ -143,10 +143,10 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
       </div>
 
       {/* Email List Pane */}
-      <div className="w-96 border-r border-slate-100 dark:border-white/5 bg-white dark:bg-[#0c0e12] flex flex-col shrink-0 overflow-y-auto scrollbar-hide">
+      <div className="w-96 border-r border-slate-100 dark:border-white/5 bg-white dark:bg-[#0c0e12] flex flex-col shrink-0 overflow-y-auto scrollbar-hide transition-colors duration-300">
         <div className="p-6 border-b border-slate-50 dark:border-white/5 sticky top-0 bg-white/80 dark:bg-[#0c0e12]/80 backdrop-blur-md z-10 flex flex-col space-y-4">
            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Inbox</h3>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">Inbox</h3>
               <button 
                 onClick={() => { setDraftContent(''); setIsComposing(true); }}
                 className="w-10 h-10 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-black dark:hover:bg-slate-200 transition-all shadow-lg active:scale-95"
@@ -189,10 +189,10 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
       </div>
 
       {/* Reading Pane */}
-      <div className="flex-1 bg-white dark:bg-[#0c0e12] flex flex-col overflow-hidden relative transition-colors">
+      <div className="flex-1 bg-white dark:bg-[#0c0e12] flex flex-col overflow-hidden relative transition-colors duration-300">
         {selectedEmail ? (
           <div className="flex-1 flex flex-col overflow-hidden animate-in slide-in-from-right-4 duration-500">
-             <div className="p-10 border-b border-slate-100 dark:border-white/5 flex justify-between items-center shrink-0 bg-white dark:bg-[#0c0e12]">
+             <div className="p-10 border-b border-slate-100 dark:border-white/5 flex justify-between items-center shrink-0 bg-white dark:bg-[#0c0e12] transition-colors duration-300">
                 <div className="space-y-1">
                    <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none">{selectedEmail.subject}</h2>
                    <div className="flex items-center space-x-3 text-slate-400 dark:text-slate-500">
@@ -213,11 +213,11 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
              <div className="flex-1 overflow-y-auto p-12 space-y-12 scrollbar-hide">
                 <div className="prose dark:prose-invert max-w-none">
                    <div className="flex items-center space-x-4 mb-10">
-                      <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border-2 border-white dark:border-slate-700 shadow-lg">
+                      <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border-2 border-white dark:border-slate-700 shadow-lg transition-colors">
                         {selectedEmail.avatar ? <img src={selectedEmail.avatar} alt="A" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-black text-slate-400 dark:text-slate-600">{selectedEmail.from[0]}</div>}
                       </div>
                       <div>
-                         <p className="font-black text-slate-900 dark:text-white leading-none">{selectedEmail.from}</p>
+                         <p className="font-black text-slate-900 dark:text-white leading-none uppercase">{selectedEmail.from}</p>
                          <p className="text-[10px] text-slate-400 dark:text-slate-600 font-bold uppercase tracking-widest mt-1">To: Me &lt;engineer@hobbs.studio&gt;</p>
                       </div>
                    </div>
@@ -236,7 +236,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
                          </div>
                       </div>
                    </div>
-                   <div className="bg-white dark:bg-white/5 rounded-[3rem] p-10 space-y-8 shadow-2xl border border-slate-100 dark:border-white/5 group">
+                   <div className="bg-white dark:bg-white/5 rounded-[3rem] p-10 space-y-8 shadow-xl border border-slate-100 dark:border-white/5 group transition-colors">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest px-2">Reply Objective</label>
                         <textarea 
@@ -280,7 +280,7 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
 
         {/* Neural Compose HUD */}
         {isComposing && (
-          <div className="absolute bottom-10 right-10 w-[640px] bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-white/10 rounded-[4rem] shadow-[0_60px_150px_rgba(0,0,0,0.15)] flex flex-col animate-in slide-in-from-bottom-12 duration-700 overflow-hidden z-[100]">
+          <div className="absolute bottom-10 right-10 w-[640px] bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-white/10 rounded-[4rem] shadow-[0_60px_150px_rgba(0,0,0,0.15)] flex flex-col animate-in slide-in-from-bottom-12 duration-700 overflow-hidden z-[100] transition-colors">
              <div className="p-8 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md flex justify-between items-center">
                 <div className="flex items-center space-x-3">
                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-lg shadow-lg">✉️</div>

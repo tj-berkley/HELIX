@@ -30,7 +30,8 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
   const [cloningStatus, setCloningStatus] = useState<string | null>(null);
   const [isCaptureMode, setIsCaptureMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  // Fix: Explicitly use globalThis.Blob to resolve naming conflict with GenAI SDK Blob interface
+  const [recordedBlob, setRecordedBlob] = useState<globalThis.Blob | null>(null);
   const [isSyncingEleven, setIsSyncingEleven] = useState(false);
   
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -67,7 +68,7 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
     setIsGenerating(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const voiceToUse = selectedVoice.includes(':') ? 'Kore' : selectedVoice;
       
       const response = await ai.models.generateContent({
@@ -89,7 +90,8 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
         const decodedBytes = decode(base64Audio);
         const audioBuffer = await decodeAudioData(decodedBytes, audioCtx, 24000, 1);
         
-        const wavBlob = new Blob([decodedBytes], { type: 'audio/wav' });
+        // Fix: Use globalThis.Blob for browser Blob constructor
+        const wavBlob = new globalThis.Blob([decodedBytes], { type: 'audio/wav' });
         const url = URL.createObjectURL(wavBlob);
 
         const newClip: AudioClip = {
@@ -151,7 +153,8 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
       mediaRecorderRef.current = recorder;
       recorder.ondataavailable = (e) => chunks.push(e.data);
       recorder.onstop = () => {
-        const finalBlob = new Blob(chunks, { type: 'video/webm' });
+        // Fix: Use globalThis.Blob
+        const finalBlob = new globalThis.Blob(chunks, { type: 'video/webm' });
         setRecordedBlob(finalBlob);
       };
       recorder.start();
@@ -166,17 +169,21 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
 
     try {
       const reader = new FileReader();
-      reader.readAsDataURL(recordedBlob);
+      // Fix: Cast to globalThis.Blob to satisfy FileReader's expected browser Blob type
+      reader.readAsDataURL(recordedBlob as globalThis.Blob);
       reader.onloadend = async () => {
         const base64Data = (reader.result as string).split(',')[1];
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
         
         const response = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
-          contents: [
-            { inlineData: { data: base64Data, mimeType: 'video/webm' } },
-            { text: "Analyze the user's voice in this live recording. Identify their unique vocal signature and tone. Provide a name for this clone (e.g., 'User Prime') and a description of their voice style." }
-          ]
+          contents: {
+            parts: [
+              // Fix: Cast inlineData object to any to resolve SDK/browser naming conflict
+              { inlineData: { data: base64Data, mimeType: 'video/webm' } as any },
+              { text: "Analyze the user's voice in this live recording. Identify their unique vocal signature and tone. Provide a name for this clone (e.g., 'User Prime') and a description of their voice style." }
+            ]
+          }
         });
 
         setCloningStatus("Synthesizing neural identity...");
@@ -226,13 +233,16 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
     setCloningStatus("Analyzing vocal frequencies...");
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: [
-          { inlineData: { data: cloningSource.split(',')[1], mimeType: 'video/mp4' } },
-          { text: "Analyze the person's voice in this video. Describe their tone, pitch, and energy. Then, provide a short professional label and a matching emoji for this persona." }
-        ]
+        contents: {
+          parts: [
+            // Fix: Cast inlineData object to any
+            { inlineData: { data: cloningSource.split(',')[1], mimeType: 'video/mp4' } as any },
+            { text: "Analyze the person's voice in this video. Describe their tone, pitch, and energy. Then, provide a short professional label and a matching emoji for this persona." }
+          ]
+        }
       });
       
       setCloningStatus("Synthesizing neural tone mapping...");
@@ -438,7 +448,7 @@ const AudioCreator: React.FC<AudioCreatorProps> = ({ onAddClonedVoice, clonedVoi
                            </div>
                            <div>
                               <h4 className="font-black text-indigo-400 uppercase text-sm tracking-[0.2em]">{clip.voice.split(':')[0]} Synthetic Layer</h4>
-                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">{clip.timestamp}</p>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{clip.timestamp}</p>
                            </div>
                         </div>
                         <div className="flex space-x-3">

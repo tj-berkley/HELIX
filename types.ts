@@ -10,6 +10,34 @@ export type LeadCategory =
   | 'Packages' | 'Auto Dealerships' | 'Realtor' | 'Lawyer' 
   | 'Contractor' | 'Financial' | 'Crypto' | 'Auto Repair';
 
+export type HobbsPersona = 
+  | 'Emergency Responder' | 'Health Coach' | 'Business Mentor' 
+  | 'Home Manager' | 'Travel Agent' | 'Financial Advisor' 
+  | 'Medical Assistant' | 'Career Coach' | 'Fitness Trainer' 
+  | 'Local Guide' | 'Life Coach' | 'Personal Assistant';
+
+export interface CampaignStep {
+  id: string;
+  type: 'Email' | 'SMS' | 'DM' | 'Call' | 'Wait';
+  title: string;
+  subject?: string;
+  body: string;
+  delayDays: number;
+  status: Status;
+}
+
+export interface Campaign {
+  id: string;
+  name: string;
+  channel: string;
+  status: Status;
+  reach: number;
+  conversion: number;
+  startDate: string;
+  summary: string;
+  steps: CampaignStep[];
+}
+
 export interface ExternalSource {
   id: string;
   type: 'URL' | 'Sheet' | 'Doc' | 'PDF';
@@ -124,8 +152,7 @@ export type Page =
   | 'board' 
   | 'portfolio'
   | 'integrations' 
-  | 'workflows' 
-  | 'campaigns' 
+  | 'automation' 
   | 'contacts' 
   | 'analytics'
   | 'webinars'
@@ -189,64 +216,30 @@ export interface WorkflowMaterial {
   type: string;
 }
 
-export interface WorkflowNode {
+export interface AutomationNode {
   id: string;
-  type: 'trigger' | 'action' | 'condition';
+  type: 'trigger' | 'action' | 'logic' | 'communication' | 'creative';
   label: string;
   icon: string;
+  imageUrl?: string;
   color: string;
   description: string;
-  apiConnected?: boolean;
-  mcpEnabled?: boolean;
   materials?: WorkflowMaterial[];
+  config?: any; 
 }
 
-export interface Workflow {
+export interface AutomationFlow {
   id: string;
   name: string;
   status: Status;
-  nodes: WorkflowNode[];
+  nodes: AutomationNode[];
+  audienceType?: 'CRM_Segment' | 'CSV_Import';
+  audienceMeta?: { fileName: string; count: number };
 }
 
 export type CampaignTriggerSource = 
   | 'Form' | 'LinkClick' | 'PaperworkSigned' | 'IncomingCall' 
   | 'IncomingSMS' | 'WebinarJoin' | 'LandingPageVisit' | 'Manual';
-
-export interface CampaignTrigger {
-  id: string;
-  source: CampaignTriggerSource;
-  label: string;
-}
-
-export interface CampaignStep {
-  id: string;
-  type: 'Email' | 'SMS' | 'DM' | 'Call' | 'Wait';
-  title: string;
-  subject?: string;
-  body: string;
-  delayDays: number;
-  status: Status;
-}
-
-export interface Campaign {
-  id: string;
-  name: string;
-  channel: string;
-  status: Status;
-  reach: number;
-  conversion: number;
-  startDate: string;
-  summary?: string;
-  steps?: CampaignStep[];
-  trigger?: CampaignTrigger;
-  audienceType?: 'CRM_Segment' | 'CSV_Import';
-  audienceMeta?: { fileName: string; count: number };
-}
-
-export interface CustomFieldValue {
-  key: string;
-  value: string;
-}
 
 export interface Contact {
   id: string;
@@ -257,7 +250,7 @@ export interface Contact {
   status: 'Lead' | 'Customer' | 'Nurturing' | 'Lost';
   lastContacted: string;
   category: LeadCategory;
-  customFields: CustomFieldValue[];
+  customFields: { key: string; value: string }[];
 }
 
 export interface Manuscript {
@@ -355,12 +348,6 @@ export interface MemoryNode {
   timestamp: string;
   category: string;
 }
-
-export type HobbsPersona = 
-  | 'Emergency Responder' | 'Health Coach' | 'Business Mentor' 
-  | 'Home Manager' | 'Travel Agent' | 'Financial Advisor' 
-  | 'Medical Assistant' | 'Career Coach' | 'Fitness Trainer' 
-  | 'Local Guide' | 'Life Coach' | 'Personal Assistant';
 
 export interface SocialPost {
   id: string;

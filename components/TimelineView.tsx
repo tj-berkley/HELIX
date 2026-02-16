@@ -1,6 +1,5 @@
 
 import React from 'react';
-// Correctly split imports: Group from types, STATUS_COLORS from constants
 import { Group } from '../types';
 import { STATUS_COLORS } from '../constants';
 
@@ -12,39 +11,38 @@ const TimelineView: React.FC<TimelineViewProps> = ({ groups }) => {
   const allItems = groups.flatMap(g => g.items.map(item => ({ ...item, groupName: g.name, groupColor: g.color })));
 
   return (
-    <div className="flex-1 overflow-auto bg-white">
-      <div className="min-w-[1200px]">
+    <div className="flex-1 overflow-auto bg-white dark:bg-[#0c0e12] transition-colors duration-300">
+      <div className="min-w-[1400px]">
         {/* Simple Monthly Header for mock scale */}
-        <div className="flex border-b border-slate-200 sticky top-0 bg-slate-50 z-10">
-          <div className="w-64 p-4 font-bold text-slate-500 border-r border-slate-200">Tasks</div>
+        <div className="flex border-b border-slate-200 dark:border-white/5 sticky top-0 bg-slate-50 dark:bg-slate-900 z-10 transition-colors duration-300">
+          <div className="w-80 p-5 font-black text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 border-r border-slate-200 dark:border-white/5">Mission Objective</div>
           <div className="flex-1 flex">
             {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map(month => (
-              <div key={month} className="flex-1 p-4 text-center text-xs font-bold text-slate-400 border-r border-slate-100 last:border-r-0">
+              <div key={month} className="flex-1 p-5 text-center text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-600 border-r border-slate-100 dark:border-white/5 last:border-r-0">
                 {month}
               </div>
             ))}
           </div>
         </div>
 
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-slate-100 dark:divide-white/5">
           {allItems.map(item => {
-            // Very basic mock positioning for visualization
             const startMonth = item.dueDate ? new Date(item.dueDate).getMonth() : Math.floor(Math.random() * 11);
-            const duration = 1; 
+            const duration = 1.2; 
 
             return (
-              <div key={item.id} className="flex hover:bg-slate-50 group">
-                <div className="w-64 p-4 border-r border-slate-200 flex items-center space-x-2">
+              <div key={item.id} className="flex hover:bg-slate-50 dark:hover:bg-white/5 group transition-colors">
+                <div className="w-80 p-5 border-r border-slate-200 dark:border-white/5 flex items-center space-x-3">
                   <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.groupColor }}></div>
-                  <span className="text-sm font-medium text-slate-700 truncate">{item.name}</span>
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate tracking-tight">{item.name}</span>
                 </div>
-                <div className="flex-1 flex relative h-14 items-center px-4">
+                <div className="flex-1 flex relative h-16 items-center px-4">
                     <div 
-                        className={`absolute h-8 rounded-full shadow-sm flex items-center justify-center text-[10px] font-bold text-white transition-all group-hover:shadow-md ${STATUS_COLORS[item.status]}`}
+                        className={`absolute h-9 rounded-full shadow-lg flex items-center justify-center text-[9px] font-black uppercase tracking-widest text-white transition-all transform hover:scale-[1.02] active:scale-95 group-hover:shadow-xl ${STATUS_COLORS[item.status]}`}
                         style={{ 
                             left: `${(startMonth / 12) * 100}%`, 
                             width: `${(duration / 12) * 100}%`,
-                            minWidth: '80px'
+                            minWidth: '100px'
                         }}
                     >
                         {item.status}
@@ -56,7 +54,10 @@ const TimelineView: React.FC<TimelineViewProps> = ({ groups }) => {
         </div>
       </div>
       {allItems.length === 0 && (
-        <div className="p-20 text-center text-slate-400 italic">No tasks with dates to display.</div>
+        <div className="p-40 text-center space-y-4 opacity-20">
+           <span className="text-6xl">📊</span>
+           <p className="text-xl font-black uppercase tracking-[0.4em] text-slate-400">Timeline Sector Vacuum</p>
+        </div>
       )}
     </div>
   );

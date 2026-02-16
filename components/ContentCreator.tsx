@@ -1,6 +1,6 @@
-
 import React, { useState, useRef } from 'react';
-import { GoogleGenAI, Modality } from "@google/genai";
+// Fix: Renamed Blob to GenAIBlob to avoid naming collision with browser's global Blob
+import { GoogleGenAI, Modality, Blob as GenAIBlob } from "@google/genai";
 import BlogPublishModal from './BlogPublishModal';
 import { PublishingDestination } from '../types';
 
@@ -40,7 +40,7 @@ const COMBINE_PRESETS = [
   { id: 'showcase', label: 'Product Showcase', icon: '💎', description: 'Premium lighting for items.', prompt: 'Create a high-end product showcase by seamlessly merging these images into a cohesive, professionally lit studio scene. Focus on premium lighting and sharp focus.' },
   { id: 'skincare', label: 'Skincare Ad', icon: '🧴', description: 'Serene natural vibes.', prompt: 'Generate a clean, aesthetic skincare advertisement. Blend the products into a serene environment with soft lighting, water ripples, and natural textures.' },
   { id: 'tryon', label: 'Virtual Try-On', icon: '👕', description: 'Wear items on people.', prompt: 'Perform a realistic virtual try-on. Take the clothing or accessory from one image and realistically composite it onto the person in the other image, ensuring perfect fit and lighting matching.' },
-  { id: 'composite', label: 'Creative Mix', icon: '🎨', description: 'Surreal artistic blends.', prompt: 'Create a surreal and artistic creative composition by blending these disparate images into a single, unified masterpiece with artistic flair.' },
+  { id: 'composite', label: 'Creative Mix', icon: '🎨', description: 'Serreal artistic blends.', prompt: 'Create a surreal and artistic creative composition by blending these disparate images into a single, unified masterpiece with artistic flair.' },
 ];
 
 const EDIT_PRESETS = [
@@ -95,6 +95,37 @@ const ELEMENT_CATEGORIES = {
     { id: 'desktop', label: 'Desktop UI', icon: '🖥️' },
   ]
 };
+
+// Fix: Helper for decoding base64 audio string to bytes (renamed to avoid naming collisions)
+const decodeBase64 = (base64: string): Uint8Array => {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+};
+
+// Fix: Helper for decoding raw PCM data to AudioBuffer (renamed to avoid collisions with native AudioContext methods)
+async function decodeRawAudio(
+  data: Uint8Array,
+  ctx: AudioContext,
+  sampleRate: number,
+  numChannels: number,
+): Promise<AudioBuffer> {
+  const dataInt16 = new Int16Array(data.buffer);
+  const frameCount = dataInt16.length / numChannels;
+  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+
+  for (let channel = 0; channel < numChannels; channel++) {
+    const channelData = buffer.getChannelData(channel);
+    for (let i = 0; i < frameCount; i++) {
+      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+    }
+  }
+  return buffer;
+}
 
 const ContentCreator: React.FC = () => {
   const [activeShelf, setActiveShelf] = useState<ShelfType>('ai');
@@ -166,9 +197,12 @@ const ContentCreator: React.FC = () => {
   const speakText = async (text: string) => {
     if (!text) return;
     try {
+      // Use direct process.env.API_KEY when initializing client
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash-preview-tts",
+        // Fix: Use array of Content objects to match expected SDK types and improve compatibility
         contents: [{ parts: [{ text }] }],
         config: {
           responseModalities: [Modality.AUDIO],
@@ -179,22 +213,21 @@ const ContentCreator: React.FC = () => {
           },
         },
       });
+      
+      // Use safe direct property access on candidates part as per documentation
       const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      
       if (base64Audio) {
-        const audioBytes = atob(base64Audio);
-        const arrayBuffer = new ArrayBuffer(audioBytes.length);
-        const uint8Array = new Uint8Array(arrayBuffer);
-        for (let i = 0; i < audioBytes.length; i++) uint8Array[i] = audioBytes.charCodeAt(i);
-        
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-        const int16 = new Int16Array(uint8Array.buffer);
-        const float32 = new Float32Array(int16.length);
-        for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768.0;
-        
-        const buffer = audioContext.createBuffer(1, float32.length, 24000);
-        buffer.getChannelData(0).set(float32);
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
+        const decodedBytes = decodeBase64(base64Audio);
+        const audioBuffer = await decodeRawAudio(
+          decodedBytes,
+          audioContext,
+          24000,
+          1,
+        );
         const source = audioContext.createBufferSource();
-        source.buffer = buffer;
+        source.buffer = audioBuffer;
         source.connect(audioContext.destination);
         source.start();
       }
@@ -205,15 +238,30 @@ const ContentCreator: React.FC = () => {
     const isSpecialMode = ['Headshots', 'Upscale', 'Extract', 'Analyze'].includes(activeAIMode);
     if (!prompt.trim() && !isSpecialMode && !selectedEnv && !selectedCombinePreset && !selectedEditPreset && !selectedHeadshotStyle) return;
     
+    // Check for user-selected API key if using gemini-3 high-quality image models
+    if (activeAIMode === 'Generate' || activeAIMode === 'Headshots') {
+        const hasKey = await (window as any).aistudio.hasSelectedApiKey();
+        if (!hasKey) {
+            await (window as any).aistudio.openSelectKey();
+            return;
+        }
+    }
+
     setIsGenerating(true);
 
     try {
+      // Initialize fresh client to ensure updated API key usage
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const parts: any[] = [];
       let finalPrompt = prompt;
       let model = 'gemini-3-pro-image-preview';
-      let config: any = { imageConfig: { aspectRatio, imageSize } };
+      let config: any = { 
+        imageConfig: { 
+          aspectRatio: aspectRatio as any, 
+          imageSize: imageSize as any 
+        }
+      };
 
       if (isThinkingMode) {
         config.thinkingConfig = { thinkingBudget: 32768 };
@@ -247,18 +295,32 @@ const ContentCreator: React.FC = () => {
       
       parts.push({ text: finalPrompt });
       sourceImages.forEach(img => {
-        parts.push({ inlineData: { data: img.split(',')[1], mimeType: img.split(',')[0].split(':')[1].split(';')[0] } });
+        // Fix: Explicitly defining GenAIBlob properties to match SDK interface and resolve global name conflicts
+        const imageData: GenAIBlob = { 
+          data: img.split(',')[1], 
+          mimeType: img.split(',')[0].split(':')[1].split(';')[0] 
+        };
+        parts.push({ inlineData: imageData });
       });
 
-      const response = await ai.models.generateContent({ model, contents: { parts }, config });
+      const response = await ai.models.generateContent({ 
+        model, 
+        contents: { parts }, 
+        config: config 
+      });
 
       if (activeAIMode === 'Extract' || activeAIMode === 'Analyze') {
         setPrompt(response.text || "");
       } else {
-        for (const part of response.candidates[0].content.parts) {
-          if (part.inlineData) {
-            setGeneratedImages(prev => [`data:${part.inlineData.mimeType};base64,${part.inlineData.data}`, ...prev]);
-            break;
+        const partsList = response.candidates?.[0]?.content?.parts;
+        if (partsList) {
+          for (const part of partsList) {
+            // Find and extract image parts iterating through multi-part responses as per guidelines
+            if (part.inlineData) {
+              const base64EncodeString: string = part.inlineData.data;
+              setGeneratedImages(prev => [`data:image/png;base64,${base64EncodeString}`, ...prev]);
+              break;
+            }
           }
         }
       }
@@ -407,7 +469,7 @@ const ContentCreator: React.FC = () => {
                         <button 
                           key={preset.id} 
                           onClick={() => setSelectedCombinePreset(preset.id)}
-                          className={`p-3 rounded-2xl border-2 text-left transition-all flex flex-col items-start space-y-1 ${selectedCombinePreset === preset.id ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-50'}`}
+                          className={`p-3 rounded-2xl border-2 text-left transition-all flex flex-col items-start space-y-1 ${selectedCombinePreset === preset.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-50'}`}
                         >
                           <span className="text-xl">{preset.icon}</span>
                           <span className="text-[9px] font-black uppercase tracking-tight">{preset.label}</span>
@@ -578,6 +640,7 @@ const ContentCreator: React.FC = () => {
           )}
         </div>
 
+        {/* Canvas Area */}
         <div className="flex-1 p-12 bg-slate-800 overflow-auto flex items-center justify-center pattern-grid-dark relative">
            <div className="bg-white w-[640px] h-[640px] shadow-[0_60px_120px_rgba(0,0,0,0.5)] relative overflow-hidden rounded-[2.5rem] border-[12px] border-slate-950">
               {elements.map(el => (

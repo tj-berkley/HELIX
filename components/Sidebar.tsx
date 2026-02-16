@@ -26,8 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
     { id: 'connections', label: 'Connections Hub', icon: <span>💬</span> },
     { id: 'tasks', label: 'My Tasks', icon: <span>✅</span> },
     { id: 'calendar', label: 'Calendar', icon: <Icons.Calendar /> },
-    { id: 'workflows', label: 'Workflows', icon: <span>⚡</span> },
-    { id: 'campaigns', label: 'Campaigns', icon: <span>📢</span> },
+    { id: 'automation', label: 'Automation Studio', icon: <span>⚡</span> },
     { id: 'contacts', label: 'Contact Center', icon: <span>👥</span> },
     { id: 'brand-voice', label: 'Brand Voice', icon: <span>✨</span> },
     { id: 'integrations', label: 'Integrations', icon: <span>🔌</span> },
@@ -53,44 +52,39 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
   ];
 
   const initials = ownerInfo.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  const brandName = businessInfo.name || 'Business Identity';
+  const brandName = businessInfo.name || 'OmniPortal';
 
   return (
-    <aside className="w-[240px] h-screen bg-[#0c0e12] text-slate-400 flex flex-col border-r border-white/5 select-none overflow-hidden shrink-0">
-      {/* White-labeled Brand Header */}
-      <div className="h-14 flex items-center px-6 border-b border-white/5 shrink-0">
-        <div className="flex items-center space-x-3 group cursor-pointer overflow-hidden" onClick={() => onSelectPage('dashboard')}>
-          <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-black text-xs shadow-lg shadow-indigo-500/20 group-hover:rotate-6 transition-transform overflow-hidden shrink-0">
+    <aside className="w-[240px] h-screen bg-[#1e222d] text-slate-400 flex flex-col border-r border-slate-200 dark:bg-[#0c0e12] dark:border-white/5 select-none overflow-hidden shrink-0 transition-colors duration-300">
+      {/* Persisted Brand Identity */}
+      <div className="h-20 flex items-center px-6 border-b border-white/5 shrink-0 bg-black/10">
+        <div className="flex items-center space-x-4 group cursor-pointer overflow-hidden" onClick={() => onSelectPage('dashboard')}>
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-[0_8px_20px_rgba(79,70,229,0.4)] group-hover:rotate-6 transition-transform overflow-hidden shrink-0 border border-white/10">
             {businessInfo.logoUrl ? (
               <img src={businessInfo.logoUrl} className="w-full h-full object-cover" alt="L" />
             ) : (
-              brandName[0].toUpperCase()
+              <span>✨</span>
             )}
           </div>
-          <span className="font-black text-white text-sm tracking-tight truncate uppercase">{brandName}</span>
+          <div className="flex flex-col min-w-0">
+             <span className="font-black text-white text-xs tracking-tighter truncate uppercase leading-none">{brandName}</span>
+             <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest mt-1 opacity-60">Architect v4.5</span>
+          </div>
         </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-4 space-y-8 scrollbar-hide">
-        {/* Main Navigation Section */}
         <div>
-          <button 
-            onClick={() => setIsMainExpanded(!isMainExpanded)}
-            className="px-3 pb-3 text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] flex items-center justify-between w-full hover:text-slate-400 group"
-          >
-            <span>Global Hub</span>
+          <button onClick={() => setIsMainExpanded(!isMainExpanded)} className="px-3 pb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center justify-between w-full hover:text-white group">
+            <span>Core Hub</span>
             <span className={`transition-transform duration-300 ${isMainExpanded ? 'rotate-180 text-indigo-400' : ''}`}><Icons.ChevronDown /></span>
           </button>
           {isMainExpanded && (
             <div className="space-y-1 animate-in slide-in-from-top-2 duration-300">
               {mainNav.map(item => (
-                <button 
-                  key={item.id}
-                  onClick={() => onSelectPage(item.id as Page)}
-                  className={`flex items-center space-x-3 w-full px-3 py-2 rounded-xl transition-all text-xs font-bold ${activePage === item.id ? 'bg-white/10 text-white shadow-inner relative' : 'hover:bg-white/5 hover:text-slate-200'}`}
-                >
-                  {activePage === item.id && <div className="absolute left-0 w-1 h-4 bg-indigo-500 rounded-r-full shadow-[0_0_8px_rgba(99,102,241,1)]"></div>}
-                  <span className="w-4 h-4 flex items-center justify-center opacity-80">{item.icon}</span>
+                <button key={item.id} onClick={() => onSelectPage(item.id as Page)} className={`flex items-center space-x-3 w-full px-3 py-2.5 rounded-2xl transition-all text-xs font-bold ${activePage === item.id ? 'bg-white/10 text-white shadow-lg relative' : 'hover:bg-white/5 hover:text-slate-200'}`}>
+                  {activePage === item.id && <div className="absolute left-0 w-1 h-5 bg-indigo-500 rounded-r-full shadow-[0_0_10px_rgba(99,102,241,1)]"></div>}
+                  <span className="w-5 h-5 flex items-center justify-center opacity-80">{item.icon}</span>
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -98,25 +92,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
           )}
         </div>
 
-        {/* Creative Suite Section */}
         <div>
-          <button 
-            onClick={() => setIsCreativeExpanded(!isCreativeExpanded)}
-            className="px-3 pb-3 text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] flex items-center justify-between w-full hover:text-slate-400 group"
-          >
+          <button onClick={() => setIsCreativeExpanded(!isCreativeExpanded)} className="px-3 pb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center justify-between w-full hover:text-white group">
             <span>Creative Suite</span>
             <span className={`transition-transform duration-300 ${isCreativeExpanded ? 'rotate-180 text-purple-400' : ''}`}><Icons.ChevronDown /></span>
           </button>
           {isCreativeExpanded && (
             <div className="space-y-1 animate-in slide-in-from-top-2 duration-300">
               {platformNav.map(item => (
-                <button 
-                  key={item.id}
-                  onClick={() => onSelectPage(item.id as Page)}
-                  className={`flex items-center space-x-3 w-full px-3 py-2 rounded-xl transition-all text-xs font-bold ${activePage === item.id ? 'bg-white/10 text-white shadow-inner relative' : 'hover:bg-white/5 hover:text-slate-200'}`}
-                >
-                  {activePage === item.id && <div className="absolute left-0 w-1 h-4 bg-purple-500 rounded-r-full shadow-[0_0_8px_rgba(168,85,247,1)]"></div>}
-                  <span className="w-4 h-4 flex items-center justify-center opacity-80">{item.icon}</span>
+                <button key={item.id} onClick={() => onSelectPage(item.id as Page)} className={`flex items-center space-x-3 w-full px-3 py-2.5 rounded-2xl transition-all text-xs font-bold ${activePage === item.id ? 'bg-white/10 text-white shadow-lg relative' : 'hover:bg-white/5 hover:text-slate-200'}`}>
+                  {activePage === item.id && <div className="absolute left-0 w-1 h-5 bg-purple-500 rounded-r-full shadow-[0_0_10px_rgba(168,85,247,1)]"></div>}
+                  <span className="w-5 h-5 flex items-center justify-center opacity-80">{item.icon}</span>
                   <span className="truncate">{item.label}</span>
                 </button>
               ))}
@@ -124,25 +110,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
           )}
         </div>
 
-        {/* Administration Section */}
         <div>
-          <button 
-            onClick={() => setIsAdminExpanded(!isAdminExpanded)}
-            className="px-3 pb-3 text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] flex items-center justify-between w-full hover:text-slate-400 group"
-          >
-            <span>Administration</span>
+          <button onClick={() => setIsAdminExpanded(!isAdminExpanded)} className="px-3 pb-3 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center justify-between w-full hover:text-white group">
+            <span>Compliance</span>
             <span className={`transition-transform duration-300 ${isAdminExpanded ? 'rotate-180 text-emerald-400' : ''}`}><Icons.ChevronDown /></span>
           </button>
           {isAdminExpanded && (
             <div className="space-y-1 animate-in slide-in-from-top-2 duration-300">
               {adminNav.map(item => (
-                <button 
-                  key={item.id}
-                  onClick={() => onSelectPage(item.id as Page)}
-                  className={`flex items-center space-x-3 w-full px-3 py-2 rounded-xl transition-all text-xs font-bold ${activePage === item.id ? 'bg-white/10 text-white relative' : 'hover:bg-white/5 hover:text-slate-200'}`}
-                >
-                  {activePage === item.id && <div className="absolute left-0 w-1 h-4 bg-emerald-400 rounded-r-full"></div>}
-                  <span className="w-4 h-4 flex items-center justify-center opacity-80">{item.icon}</span>
+                <button key={item.id} onClick={() => onSelectPage(item.id as Page)} className={`flex items-center space-x-3 w-full px-3 py-2.5 rounded-2xl transition-all text-xs font-bold ${activePage === item.id ? 'bg-white/10 text-white relative' : 'hover:bg-white/5 hover:text-slate-200'}`}>
+                  {activePage === item.id && <div className="absolute left-0 w-1 h-5 bg-emerald-400 rounded-r-full"></div>}
+                  <span className="w-5 h-5 flex items-center justify-center opacity-80">{item.icon}</span>
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -151,17 +129,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
         </div>
       </nav>
 
-      <div className="p-4 bg-white/5 border-t border-white/5 flex items-center space-x-3 shrink-0 cursor-pointer hover:bg-white/10 transition-all" onClick={() => onSelectPage('owner-profile')}>
+      <div className="p-4 bg-black/10 border-t border-white/5 flex items-center space-x-3 shrink-0 cursor-pointer hover:bg-white/5 transition-all" onClick={() => onSelectPage('owner-profile')}>
         {ownerInfo.avatarUrl ? (
-          <img src={ownerInfo.avatarUrl} className="w-8 h-8 rounded-xl object-cover shadow-lg border border-white/10" alt="Avatar" />
+          <img src={ownerInfo.avatarUrl} className="w-10 h-10 rounded-2xl object-cover shadow-lg border border-white/10" alt="Avatar" />
         ) : (
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-800 flex items-center justify-center text-[10px] font-black text-white shadow-lg border border-white/10">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-slate-700 to-slate-800 flex items-center justify-center text-xs font-black text-white shadow-lg border border-white/10">
             {initials}
           </div>
         )}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-w-0">
           <p className="text-[11px] font-black text-white truncate leading-none mb-1">{ownerInfo.name}</p>
-          <p className="text-[9px] text-slate-500 font-bold truncate uppercase tracking-tighter">{brandName}</p>
+          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter truncate">{brandName} Architect</p>
         </div>
       </div>
     </aside>

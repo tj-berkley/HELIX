@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import BoardHeader from './BoardHeader';
@@ -7,13 +8,11 @@ import TimelineView from './TimelineView';
 import CalendarView from './CalendarView';
 import Dashboard from './Dashboard';
 import IntegrationsCenter from './IntegrationsCenter';
-import WorkflowBuilder from './WorkflowBuilder';
-import CampaignManager from './CampaignManager';
+import AutomationStudio from './AutomationStudio';
 import ContactManager from './ContactManager';
 import Analytics from './Analytics';
 import Webinars from './Webinars';
 import GlobalTasks from './GlobalTasks';
-// Fix: Corrected import path from './Sidebar' to './SiteBuilder' to fix the error where SiteBuilder was missing required props of Sidebar
 import SiteBuilder from './SiteBuilder';
 import BlogPlatform from './BlogPlatform';
 import BrandVoicePage from './BrandVoice';
@@ -87,7 +86,6 @@ const App: React.FC = () => {
     priority: []
   });
 
-  // Identity States
   const [ownerInfo, setOwnerInfo] = useState<OwnerInfo>({ 
     name: 'Senior Engineer', 
     role: 'Full-stack Architect', 
@@ -104,12 +102,10 @@ const App: React.FC = () => {
     assignedPhone: '+1 (415) 555-0123'
   });
 
-  // Library & Shared states
   const [manuscriptLibrary, setManuscriptLibrary] = useState<Manuscript[]>([]);
   const [clonedVoices, setClonedVoices] = useState<ClonedVoice[]>([]);
   const [pendingMovieContent, setPendingMovieContent] = useState<{title: string, content: string} | undefined>();
   
-  // Cinematic Registry
   const [movieProjects, setMovieProjects] = useState<MovieScript[]>([]);
   const [currentMovieScript, setCurrentMovieScript] = useState<MovieScript | null>(null);
   const [releasedMovies, setReleasedMovies] = useState<ReleasedMovie[]>([]);
@@ -159,52 +155,6 @@ const App: React.FC = () => {
     })));
   }, [activeBoardId]);
 
-  const handleMoveItem = useCallback((sourceGroupId: string, targetGroupId: string, itemId: string) => {
-    setWorkspaces(prev => prev.map(ws => ({
-      ...ws,
-      boards: ws.boards.map(board => {
-        if (board.id !== activeBoardId) return board;
-        let itemToMove: Item | undefined;
-        const updatedGroups = board.groups.map(group => {
-          if (group.id === sourceGroupId) {
-            itemToMove = group.items.find(i => i.id === itemId);
-            return { ...group, items: group.items.filter(i => i.id !== itemId) };
-          }
-          return group;
-        });
-
-        if (itemToMove) {
-          return {
-            ...board,
-            groups: updatedGroups.map(group => {
-              if (group.id === targetGroupId) {
-                return { ...group, items: [...group.items, itemToMove!] };
-              }
-              return group;
-            })
-          };
-        }
-        return board;
-      })
-    })));
-  }, [activeBoardId]);
-
-  const handleDeleteItem = useCallback((groupId: string, itemId: string) => {
-    setWorkspaces(prev => prev.map(ws => ({
-      ...ws,
-      boards: ws.boards.map(board => {
-        if (board.id !== activeBoardId) return board;
-        return {
-          ...board,
-          groups: board.groups.map(group => {
-            if (group.id !== groupId) return group;
-            return { ...group, items: group.items.filter(i => i.id !== itemId) };
-          })
-        };
-      })
-    })));
-  }, [activeBoardId]);
-
   const handleAddItem = useCallback((groupId: string) => {
     const newItem: Item = {
       id: `i-${Date.now()}`,
@@ -234,19 +184,6 @@ const App: React.FC = () => {
           })
         };
       })
-    })));
-  }, [activeBoardId]);
-
-  const handleDeleteGroup = useCallback((groupId: string) => {
-    setWorkspaces(prev => prev.map(ws => ({
-        ...ws,
-        boards: ws.boards.map(board => {
-            if (board.id !== activeBoardId) return board;
-            return {
-                ...board,
-                groups: board.groups.filter(g => g.id !== groupId)
-            };
-        })
     })));
   }, [activeBoardId]);
 
@@ -297,19 +234,6 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveMovieProject = (script: MovieScript) => {
-    setMovieProjects(prev => {
-      const exists = prev.find(p => p.id === script.id);
-      if (exists) return prev.map(p => p.id === script.id ? script : p);
-      return [script, ...prev];
-    });
-  };
-
-  const handleReleaseMovie = (movie: ReleasedMovie) => {
-    setReleasedMovies(prev => [movie, ...prev]);
-    setActivePage('box-office');
-  };
-
   const renderActiveModule = () => {
     switch (activePage) {
       case 'dashboard': return (
@@ -329,7 +253,6 @@ const App: React.FC = () => {
       case 'usage-dashboard': return <UsageDashboard />;
       case 'vault': return <ConnectionVault />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
-      // Fix: Passed missing props businessInfo, onUpdateBusiness, and onUpdateOwner to ConnectionsHub to resolve TS error.
       case 'connections': return (
         <ConnectionsHub 
           clonedVoices={clonedVoices} 
@@ -339,8 +262,7 @@ const App: React.FC = () => {
         />
       );
       case 'integrations': return <IntegrationsCenter onNavigate={setActivePage} />;
-      case 'workflows': return <WorkflowBuilder />;
-      case 'campaigns': return <CampaignManager />;
+      case 'automation': return <AutomationStudio />;
       case 'contacts': return <ContactManager />;
       case 'tasks': return <GlobalTasks activeViewInitial="List" />;
       case 'calendar': return <GlobalTasks activeViewInitial="Calendar" />;
@@ -372,7 +294,7 @@ const App: React.FC = () => {
           script={currentMovieScript}
           onUpdateScript={(s) => {
             setCurrentMovieScript(s);
-            handleSaveMovieProject(s);
+            setMovieProjects(prev => prev.find(p => p.id === s.id) ? prev.map(p => p.id === s.id ? s : p) : [s, ...prev]);
           }}
           onMoveToProduction={() => setActivePage('movie-maker')}
         />
@@ -380,7 +302,7 @@ const App: React.FC = () => {
       case 'movie-maker': return (
         <MovieMaker 
           savedProjects={movieProjects}
-          onRelease={handleReleaseMovie}
+          onRelease={(m) => { setReleasedMovies(prev => [m, ...prev]); setActivePage('box-office'); }}
         />
       );
       case 'box-office': return <BoxOffice movies={releasedMovies} />;
@@ -399,9 +321,7 @@ const App: React.FC = () => {
                 groups={filteredGroups} 
                 onUpdateItem={handleUpdateItem} 
                 onAddItem={handleAddItem} 
-                onDeleteGroup={handleDeleteGroup}
-                onDeleteItem={handleDeleteItem}
-                onMoveItem={handleMoveItem}
+                onDeleteGroup={(id) => setWorkspaces(prev => prev.map(ws => ({...ws, boards: ws.boards.map(b => b.id === activeBoardId ? {...b, groups: b.groups.filter(g => g.id !== id)} : b)})))}
               />
             )}
             {activeView === 'Kanban' && <KanbanView groups={filteredGroups} />}
@@ -425,7 +345,6 @@ const App: React.FC = () => {
         businessInfo={businessInfo} 
       />
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Global Modern Top Bar */}
         <header className="h-14 border-b border-white/5 bg-[#0c0e12]/80 backdrop-blur-md flex items-center justify-between px-8 shrink-0 z-40">
            <div className="flex items-center space-x-6 flex-1">
               <div className="flex items-center space-x-2 text-slate-400">
