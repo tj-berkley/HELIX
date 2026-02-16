@@ -12,6 +12,17 @@ const RESEARCH_CATEGORIES = [
   { id: 'technical', label: 'Technical Map', icon: '⚙️', prompt: 'Map out technical requirements and stack architecture.' },
 ];
 
+const CREATIVE_ASSETS = [
+  { id: 'audio', label: 'Audio Brief', icon: '🔊', color: 'from-blue-500 to-indigo-600' },
+  { id: 'video', label: 'Video Overview', icon: '🎬', color: 'from-rose-500 to-pink-600' },
+  { id: 'mindmap', label: 'Mind Map', icon: '🧠', color: 'from-purple-500 to-violet-600' },
+  { id: 'reports', label: 'Reports', icon: '📊', color: 'from-emerald-500 to-teal-600' },
+  { id: 'flashcards', label: 'Flashcards', icon: '🃏', color: 'from-amber-500 to-orange-600' },
+  { id: 'infographic', label: 'Infographic', icon: '🎨', color: 'from-sky-500 to-cyan-600' },
+  { id: 'slidedeck', label: 'Slide Deck', icon: '🎞️', color: 'from-slate-700 to-slate-900' },
+  { id: 'datatable', label: 'Data Table', icon: '🔢', color: 'from-indigo-800 to-blue-900' },
+];
+
 interface NotebookLMProps {
   manuscriptLibrary: Manuscript[];
   notebookProjects: NotebookProject[];
@@ -35,6 +46,17 @@ const NotebookLM: React.FC<NotebookLMProps> = ({ manuscriptLibrary, notebookProj
 
   const [isGeneratingOverview, setIsGeneratingOverview] = useState<'audio' | 'video' | null>(null);
   
+  // Synthesis Modal State
+  const [isSynthesisOpen, setIsSynthesisOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<typeof CREATIVE_ASSETS[0] | null>(null);
+  const [synthesisForm, setSynthesisForm] = useState({
+    title: '',
+    description: '',
+    tone: 'Professional',
+    style: 'Corporate'
+  });
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -123,10 +145,16 @@ const NotebookLM: React.FC<NotebookLMProps> = ({ manuscriptLibrary, notebookProj
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const context = activeProject.sources.map(s => `[Source: ${s.name}]\n${s.content}`).join('\n\n');
+      
+      const config = activeProject.studioConfig || { model: 'gemini-3-pro-preview', temperature: 0.7 };
+
       const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: config.model,
         contents: `Research Assistant Persona. Use only the following context: \n${context}\n\nUser: ${finalMsg}`,
-        config: { thinkingConfig: { thinkingBudget: 4000 } }
+        config: { 
+          thinkingConfig: config.model.includes('pro') ? { thinkingBudget: 4000 } : undefined,
+          temperature: config.temperature
+        }
       });
       const reply = response.text || '';
       setChat(prev => [...prev, { role: 'model', text: reply, id: (Date.now()+1).toString() }]);
@@ -184,6 +212,34 @@ const NotebookLM: React.FC<NotebookLMProps> = ({ manuscriptLibrary, notebookProj
     finally { setIsThinking(false); }
   };
 
+  const handleExecuteSynthesis = async () => {
+    if (!activeProject || !selectedAsset) return;
+    setIsSynthesizing(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const context = activeProject.sources.map(s => `[Source: ${s.name}]\n${s.content}`).join('\n\n');
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-pro-preview',
+        contents: `Synthesize a comprehensive ${selectedAsset.label} based on the project sources.
+        Title: ${synthesisForm.title}
+        Description: ${synthesisForm.description}
+        Tone: ${synthesisForm.tone}
+        Style: ${synthesisForm.style}
+        Context: \n${context}`,
+        config: { thinkingConfig: { thinkingBudget: 4000 } }
+      });
+
+      pinNote(`${selectedAsset.label}: ${synthesisForm.title}`, response.text || '');
+      setIsSynthesisOpen(false);
+      alert(`${selectedAsset.label} synchronized to your notes.`);
+    } catch (e) {
+      console.error(e);
+      alert("Synthesis framework failure.");
+    } finally {
+      setIsSynthesizing(false);
+    }
+  };
+
   const pinNote = (title: string, content: string) => {
     if (!activeProject) return;
     const newNote: NotebookNote = {
@@ -194,7 +250,6 @@ const NotebookLM: React.FC<NotebookLMProps> = ({ manuscriptLibrary, notebookProj
     };
     const updated = notebookProjects.map(p => p.id === activeProjectId ? { ...p, notes: [newNote, ...p.notes] } : p);
     onUpdateProjects(updated);
-    alert("Insight pinned to project notes.");
   };
 
   const createNewProject = () => {
@@ -206,11 +261,21 @@ const NotebookLM: React.FC<NotebookLMProps> = ({ manuscriptLibrary, notebookProj
       updatedAt: new Date().toISOString(),
       sources: [],
       notes: [],
-      color: 'bg-indigo-600'
+      color: 'bg-indigo-600',
+      studioConfig: {
+        model: 'gemini-3-pro-preview',
+        temperature: 0.7
+      }
     };
     onUpdateProjects([newP, ...notebookProjects]);
     setActiveProjectId(id);
     setActiveTab('sources');
+  };
+
+  const updateProjectConfig = (updates: any) => {
+    if (!activeProject) return;
+    const updated = notebookProjects.map(p => p.id === activeProjectId ? { ...p, studioConfig: { ...(p.studioConfig || { model: 'gemini-3-pro-preview', temperature: 0.7 }), ...updates } } : p);
+    onUpdateProjects(updated);
   };
 
   return (
@@ -232,6 +297,7 @@ const NotebookLM: React.FC<NotebookLMProps> = ({ manuscriptLibrary, notebookProj
                   <button onClick={() => setActiveTab('sources')} className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'sources' ? 'bg-white shadow-lg text-indigo-600' : 'text-slate-400 hover:text-slate-700'}`}>Sources</button>
                   <button onClick={() => setActiveTab('research')} className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'research' ? 'bg-white shadow-lg text-indigo-600' : 'text-slate-400 hover:text-slate-700'}`}>Research</button>
                   <button onClick={() => setActiveTab('notes')} className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'notes' ? 'bg-white shadow-lg text-indigo-600' : 'text-slate-400 hover:text-slate-700'}`}>Notes</button>
+                  <button onClick={() => setActiveTab('studio')} className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'studio' ? 'bg-white shadow-lg text-indigo-600' : 'text-slate-400 hover:text-slate-700'}`}>Studio</button>
                 </>
               )}
            </div>
@@ -406,6 +472,142 @@ const NotebookLM: React.FC<NotebookLMProps> = ({ manuscriptLibrary, notebookProj
                         <p className="text-[9px] font-black uppercase text-slate-400 text-right italic">{note.timestamp}</p>
                      </div>
                    ))}
+                </div>
+             </div>
+          </div>
+        )}
+
+        {activeTab === 'studio' && activeProject && (
+          <div className="p-12 h-full overflow-y-auto animate-in zoom-in-95 scrollbar-hide bg-slate-50/50">
+             <div className="max-w-6xl mx-auto space-y-12 pb-40">
+                {/* Existing Neural Laboratory */}
+                <div className="bg-white border border-slate-200 rounded-[5rem] p-16 space-y-12 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
+                       <span className="text-[120px]">🔬</span>
+                    </div>
+                    <div className="space-y-3">
+                       <h3 className="text-4xl font-black tracking-tighter uppercase text-slate-900">Neural Laboratory</h3>
+                       <p className="text-slate-500 font-medium italic text-xl">Refine research logic pathways and model parameters.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                       <div className="space-y-10">
+                          <div className="space-y-4">
+                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] px-4">Research Model Selection</label>
+                             <select 
+                                value={activeProject.studioConfig?.model || 'gemini-3-pro-preview'} 
+                                onChange={e => updateProjectConfig({ model: e.target.value })}
+                                className="w-full bg-slate-50 p-6 rounded-[2rem] outline-none font-black text-sm uppercase border-2 border-transparent focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-inner"
+                             >
+                                <option value="gemini-3-pro-preview">Gemini 3 Pro (Deep Research)</option>
+                                <option value="gemini-3-flash-preview">Gemini 3 Flash (High Velocity)</option>
+                             </select>
+                          </div>
+                          <div className="space-y-4">
+                             <div className="flex justify-between items-center px-4">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Inference Temp</label>
+                                <span className="text-lg font-black text-indigo-600 font-mono">{activeProject.studioConfig?.temperature || 0.7}</span>
+                             </div>
+                             <input 
+                                type="range" 
+                                min="0" 
+                                max="1" 
+                                step="0.1" 
+                                value={activeProject.studioConfig?.temperature || 0.7} 
+                                onChange={e => updateProjectConfig({ temperature: parseFloat(e.target.value) })}
+                                className="w-full h-2.5 bg-slate-100 rounded-full appearance-none cursor-pointer accent-indigo-600" 
+                             />
+                          </div>
+                       </div>
+                       <div className="p-8 bg-indigo-50 rounded-[3rem] border border-indigo-100 flex flex-col space-y-6 relative overflow-hidden shadow-inner">
+                          <div className="flex items-center space-x-4 relative">
+                             <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                             <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Project Grounding Active</span>
+                          </div>
+                          <p className="text-sm text-indigo-600 font-bold leading-relaxed italic">"The selected parameters define how the AI synthesizes your gathered research sources. Pro models are recommended for complex document analysis."</p>
+                       </div>
+                    </div>
+                </div>
+
+                {/* NEW Creative Synthesis Hub */}
+                <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 delay-150">
+                    <div className="flex items-center space-x-4 px-4">
+                       <div className="w-2 h-10 bg-indigo-600 rounded-full"></div>
+                       <h3 className="text-4xl font-black tracking-tighter uppercase text-slate-900">Creative Synthesis Hub</h3>
+                    </div>
+                    <p className="text-slate-500 font-medium px-4 text-lg">Generate high-fidelity creative assets grounded in your project knowledge base.</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                       {CREATIVE_ASSETS.map(asset => (
+                         <button 
+                            key={asset.id} 
+                            onClick={() => { setSelectedAsset(asset); setSynthesisForm({ ...synthesisForm, title: `${asset.label} Draft` }); setIsSynthesisOpen(true); }}
+                            className="bg-white rounded-[3.5rem] p-10 border border-slate-200 shadow-sm hover:shadow-2xl hover:border-indigo-300 transition-all group flex flex-col items-center text-center space-y-6"
+                         >
+                            <div className={`w-20 h-20 bg-gradient-to-tr ${asset.color} rounded-[2rem] flex items-center justify-center text-4xl shadow-xl group-hover:scale-110 transition-transform duration-500`}>
+                               {asset.icon}
+                            </div>
+                            <div>
+                               <h4 className="text-xl font-black text-slate-900 tracking-tight uppercase group-hover:text-indigo-600 transition-colors">{asset.label}</h4>
+                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Neural Synthesis</p>
+                            </div>
+                         </button>
+                       ))}
+                    </div>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {/* Synthesis Config Modal */}
+        {isSynthesisOpen && selectedAsset && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/70 backdrop-blur-md animate-in fade-in">
+             <div className="bg-white w-full max-w-2xl rounded-[4rem] shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                <div className="p-12 border-b border-slate-50 bg-indigo-50/30 flex justify-between items-center">
+                   <div className="flex items-center space-x-6">
+                      <div className={`w-16 h-16 bg-gradient-to-tr ${selectedAsset.color} rounded-[1.5rem] flex items-center justify-center text-3xl text-white shadow-2xl`}>
+                         {selectedAsset.icon}
+                      </div>
+                      <div>
+                         <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">{selectedAsset.label} Architect</h3>
+                         <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mt-2">Neural Asset Configuration</p>
+                      </div>
+                   </div>
+                   <button onClick={() => setIsSynthesisOpen(false)} className="p-4 hover:bg-white rounded-full text-slate-400">✕</button>
+                </div>
+                <div className="p-12 space-y-8">
+                   <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] px-2">Asset Title</label>
+                         <input className="w-full bg-slate-50 p-6 rounded-3xl font-black text-sm border-2 border-transparent focus:bg-white focus:border-indigo-500 outline-none transition-all shadow-inner" value={synthesisForm.title} onChange={e => setSynthesisForm({...synthesisForm, title: e.target.value})} placeholder="Title..." />
+                      </div>
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] px-2">Asset Type</label>
+                         <div className="w-full bg-slate-100 p-6 rounded-3xl font-black text-xs text-slate-400 uppercase tracking-widest cursor-not-allowed">
+                            {selectedAsset.id} (read-only)
+                         </div>
+                      </div>
+                   </div>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] px-2">Synthesizer Directive (Description)</label>
+                      <textarea className="w-full bg-slate-50 p-6 rounded-[2rem] font-medium text-sm border-2 border-transparent focus:bg-white focus:border-indigo-500 outline-none transition-all h-28 resize-none shadow-inner" value={synthesisForm.description} onChange={e => setSynthesisForm({...synthesisForm, description: e.target.value})} placeholder="Describe specific outcome requirements..." />
+                   </div>
+                   <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] px-2">Tonal Mapping</label>
+                         <select className="w-full bg-slate-50 p-6 rounded-3xl text-xs font-black uppercase outline-none shadow-inner border-2 border-transparent focus:bg-white focus:border-indigo-500" value={synthesisForm.tone} onChange={e => setSynthesisForm({...synthesisForm, tone: e.target.value})}>
+                            <option>Professional</option><option>Visionary</option><option>Academic</option><option>Energetic</option><option>Witty</option>
+                         </select>
+                      </div>
+                      <div className="space-y-3">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] px-2">Visual/Delivery Style</label>
+                         <select className="w-full bg-slate-50 p-6 rounded-3xl text-xs font-black uppercase outline-none shadow-inner border-2 border-transparent focus:bg-white focus:border-indigo-500" value={synthesisForm.style} onChange={e => setSynthesisForm({...synthesisForm, style: e.target.value})}>
+                            <option>Corporate</option><option>Minimalist</option><option>Cinematic</option><option>Narrative</option><option>Abstract</option>
+                         </select>
+                      </div>
+                   </div>
+                   <button onClick={handleExecuteSynthesis} disabled={isSynthesizing} className={`w-full py-8 bg-slate-900 text-white rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-xs shadow-2xl transition-all active:scale-95 transform mt-4 ${isSynthesizing ? 'bg-indigo-600 animate-pulse' : 'hover:bg-indigo-600'}`}>
+                      {isSynthesizing ? 'Synthesizing Neural Data...' : 'Execute Neural Synthesis'}
+                   </button>
                 </div>
              </div>
           </div>

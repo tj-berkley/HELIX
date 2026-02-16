@@ -26,6 +26,10 @@ export interface NotebookProject {
   sources: NotebookSource[];
   notes: NotebookNote[];
   color: string;
+  studioConfig?: {
+    model: string;
+    temperature: number;
+  };
 }
 
 export interface NotebookNote {
