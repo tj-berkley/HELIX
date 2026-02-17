@@ -64,12 +64,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
     <aside className="w-[240px] h-screen bg-slate-50 text-slate-600 flex flex-col border-r border-slate-200 dark:bg-[#0c0e12] dark:text-slate-400 dark:border-white/5 select-none overflow-hidden shrink-0 transition-colors duration-300">
       <div className="h-20 flex items-center px-6 border-b border-slate-200 dark:border-white/5 shrink-0 bg-white dark:bg-black/20">
         <div className="flex items-center space-x-4 group cursor-pointer overflow-hidden" onClick={() => onSelectPage('dashboard')}>
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-[0_8px_20px_rgba(79,70,229,0.4)] group-hover:rotate-6 transition-transform overflow-hidden shrink-0 border border-white/10">
-            {businessInfo.logoUrl ? (
-              <img src={businessInfo.logoUrl} className="w-full h-full object-cover" alt="L" />
-            ) : (
-              <span>✨</span>
-            )}
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden shrink-0">
+            <img
+              src={businessInfo.logoUrl || "/1._Helix_logo_A1.00.jpg"}
+              className="w-full h-full object-contain"
+              alt="Logo"
+            />
           </div>
           <div className="flex flex-col min-w-0">
              <span className="font-black text-slate-900 dark:text-white text-xs tracking-tighter truncate uppercase leading-none transition-colors">{brandName}</span>

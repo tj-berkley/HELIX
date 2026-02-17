@@ -126,10 +126,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg">
-              ✨
-            </div>
+          <div className="flex items-center space-x-3">
+            <img
+              src="/1._Helix_logo_A1.00.jpg"
+              alt="Helix Logo"
+              className="h-12 w-12 object-contain rounded-xl"
+            />
             <div>
               <span className="font-black text-slate-900 dark:text-white text-lg tracking-tight">GoogleHubs</span>
               <p className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">HELIX AI Powered</p>
