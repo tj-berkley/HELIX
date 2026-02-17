@@ -32,7 +32,7 @@ import ProjectPortfolio from './components/ProjectPortfolio';
 import UsageDashboard from './components/UsageDashboard';
 import ConnectionVault from './components/ApiManagement';
 import EmailManager from './components/EmailManager';
-import AIChatbot from './components/AIChatbot';
+import HelixChatbot from './components/HelixChatbot';
 import NotebookLM from './components/NotebookLM';
 import MedicalHub from './components/MedicalHub';
 import Prospecting from './components/Prospecting';
@@ -427,7 +427,12 @@ const App: React.FC = () => {
           {renderActiveModule()}
         </main>
       </div>
-      <AIChatbot />
+      <HelixChatbot
+        theme={theme}
+        onNavigate={(page) => setActivePage(page as Page)}
+        currentPage={activePage}
+        userName={currentUser?.name || ownerInfo.name}
+      />
     </div>
   );
 };
