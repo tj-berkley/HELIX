@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Icons } from '../constants';
 import { Workspace, Page, OwnerInfo, BusinessInfo } from '../types';
+import HelixLogo from './HelixLogo';
 
 interface SidebarProps {
   workspaces: Workspace[];
@@ -65,11 +66,15 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
       <div className="h-20 flex items-center px-6 border-b border-slate-200 dark:border-white/5 shrink-0 bg-white dark:bg-black/20">
         <div className="flex items-center space-x-4 group cursor-pointer overflow-hidden" onClick={() => onSelectPage('dashboard')}>
           <div className="w-10 h-10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden shrink-0">
-            <img
-              src={businessInfo.logoUrl || "/Helix_logo_Abbb.jpg"}
-              className="w-full h-full object-contain rounded-2xl"
-              alt="Logo"
-            />
+            {businessInfo.logoUrl ? (
+              <img
+                src={businessInfo.logoUrl}
+                className="w-full h-full object-contain rounded-2xl"
+                alt="Logo"
+              />
+            ) : (
+              <HelixLogo size={40} animated />
+            )}
           </div>
           <div className="flex flex-col min-w-0">
              <span className="font-black text-slate-900 dark:text-white text-xs tracking-tighter truncate uppercase leading-none transition-colors">{brandName}</span>

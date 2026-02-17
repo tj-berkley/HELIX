@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
+import HelixLogo from './HelixLogo';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -303,11 +304,7 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
           aria-label="Open HELIX Chat"
         >
           <div className="relative">
-            <img
-              src="/Helix_logo_Abbb.jpg"
-              alt="HELIX"
-              className="w-10 h-10 object-contain rounded-2xl"
-            />
+            <HelixLogo size={40} animated />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-white"></span>
           </div>
           <div className="absolute right-20 bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -323,11 +320,7 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <img
-                  src="/Helix_logo_Abbb.jpg"
-                  alt="HELIX"
-                  className="w-10 h-10 object-contain rounded-2xl"
-                />
+                <HelixLogo size={40} />
                 <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
               </div>
               <div>

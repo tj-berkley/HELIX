@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Icons } from '../constants';
 import HelixChatbot from './HelixChatbot';
+import HelixLogo from './HelixLogo';
 
 interface LandingPageProps {
   onNavigateToAuth: (mode: 'signup' | 'login') => void;
@@ -128,11 +129,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <img
-              src="/Helix_logo_Abbb.jpg"
-              alt="Helix Logo"
-              className="h-12 w-12 object-contain rounded-2xl"
-            />
+            <HelixLogo size={48} animated />
             <div>
               <span className="font-black text-slate-900 dark:text-white text-lg tracking-tight">GoogleHubs</span>
               <p className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">HELIX AI Powered</p>
