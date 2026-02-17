@@ -58,6 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
     { id: 'business-identity', label: 'Legal Entity', icon: <span>🏢</span> },
     { id: 'subscriptions', label: 'Subscriptions', icon: <span>💳</span> },
     { id: 'usage-dashboard', label: 'Usage', icon: <span>🏦</span> },
+    { id: 'credits', label: 'Buy Credits', icon: <span>💰</span> },
   ];
 
   const brandName = businessInfo.name || 'GoogleHubs';

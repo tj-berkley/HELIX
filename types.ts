@@ -157,7 +157,8 @@ export type Page =
   | 'notebook-lm'
   | 'medical-hub'
   | 'email'
-  | 'prospecting';
+  | 'prospecting'
+  | 'credits';
 
 export interface Manuscript {
   id: string;

@@ -36,6 +36,7 @@ import HelixChatbot from './components/HelixChatbot';
 import NotebookLM from './components/NotebookLM';
 import MedicalHub from './components/MedicalHub';
 import Prospecting from './components/Prospecting';
+import CreditsManager from './components/CreditsManager';
 import { Icons } from './constants';
 import { Workspace, Board, Group, Item, BoardView, Page, Status, Priority, ReleasedMovie, MovieScript, Manuscript, OwnerInfo, BusinessInfo, ClonedVoice, NotebookNote, NotebookProject } from './types';
 import { generateBoardFromPrompt, BoardGenerationOptions } from './services/geminiService';
@@ -306,6 +307,7 @@ const App: React.FC = () => {
       case 'business-identity': return <BusinessIdentity info={businessInfo} onUpdate={setBusinessInfo} />;
       case 'brand-voice': return <BrandVoicePage />;
       case 'usage-dashboard': return <UsageDashboard />;
+      case 'credits': return <CreditsManager />;
       case 'vault': return <ConnectionVault />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={(b) => setWorkspaces(prev => prev.map(ws => ws.id === 'ws-1' ? {...ws, boards: [b, ...ws.boards]} : ws))} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;
       case 'connections': return <ConnectionsHub clonedVoices={clonedVoices} businessInfo={businessInfo} onUpdateBusiness={setBusinessInfo} onUpdateOwner={setOwnerInfo} />;

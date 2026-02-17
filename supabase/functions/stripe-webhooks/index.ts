@@ -84,6 +84,12 @@ Deno.serve(async (req: Request) => {
         break;
       }
 
+      case "payment_intent.succeeded": {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        await handlePaymentIntentSucceeded(supabase, paymentIntent);
+        break;
+      }
+
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
@@ -299,5 +305,36 @@ async function handleInvoicePaymentFailed(supabase: any, invoice: Stripe.Invoice
     console.error("Error updating subscription status:", error);
   } else {
     console.log("Subscription status updated to past_due");
+  }
+}
+
+async function handlePaymentIntentSucceeded(supabase: any, paymentIntent: Stripe.PaymentIntent) {
+  console.log("Processing payment_intent.succeeded for credit purchase");
+
+  const metadata = paymentIntent.metadata;
+  const userId = metadata?.userId;
+  const credits = metadata?.credits;
+  const packageId = metadata?.packageId;
+
+  // Check if this is a credit purchase
+  if (metadata?.type !== "credit_purchase" || !userId || !credits) {
+    console.log("Not a credit purchase, skipping");
+    return;
+  }
+
+  console.log(`Adding ${credits} credits to user ${userId}`);
+
+  // Call the database function to add credits
+  const { data, error } = await supabase.rpc("add_credits_to_balance", {
+    p_user_id: userId,
+    p_amount: parseFloat(credits),
+    p_description: `Purchased ${credits} credits`,
+    p_stripe_payment_intent_id: paymentIntent.id,
+  });
+
+  if (error) {
+    console.error("Error adding credits to balance:", error);
+  } else {
+    console.log("Credits added successfully:", data);
   }
 }
