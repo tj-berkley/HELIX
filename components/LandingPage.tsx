@@ -11,6 +11,63 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onToggleTheme }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [processingCheckout, setProcessingCheckout] = useState(false);
+
+  const handleStartTrial = async (planName: string) => {
+    if (planName === 'Enterprise') {
+      window.open('mailto:sales@googlehubs.com?subject=Enterprise Plan Inquiry', '_blank');
+      return;
+    }
+
+    setProcessingCheckout(true);
+
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        alert('Configuration error. Please contact support.');
+        setProcessingCheckout(false);
+        return;
+      }
+
+      const tempEmail = prompt('Enter your email to start your 7-day free trial:');
+      if (!tempEmail) {
+        setProcessingCheckout(false);
+        return;
+      }
+
+      const tempUserId = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          planName: planName.toLowerCase(),
+          billingCycle,
+          userEmail: tempEmail,
+          userId: tempUserId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        alert(data.error || 'Failed to create checkout session. Please try again.');
+        setProcessingCheckout(false);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Something went wrong. Please try again or contact support.');
+      setProcessingCheckout(false);
+    }
+  };
 
   const pricingPlans = [
     {
@@ -249,7 +306,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
           <div className="text-center mb-12">
             <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">Simple, Transparent Pricing</h2>
             <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">
-              Choose the perfect plan for your business. All plans include 14-day free trial.
+              Choose the perfect plan for your business. All plans include 7-day free trial.
             </p>
 
             <div className="inline-flex items-center p-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-white/10">
@@ -305,14 +362,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
                 </div>
 
                 <button
-                  onClick={() => onNavigateToAuth('signup')}
-                  className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest mb-8 transition-all ${
+                  onClick={() => handleStartTrial(plan.name)}
+                  disabled={processingCheckout}
+                  className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest mb-8 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                     plan.popular
                       ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl'
                       : 'bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-white/10'
                   }`}
                 >
-                  {plan.cta}
+                  {processingCheckout ? 'Processing...' : plan.cta}
                 </button>
 
                 <div className="space-y-4">
@@ -342,7 +400,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
           >
             Start Your Free Trial Today
           </button>
-          <p className="text-sm mt-6 opacity-75">No credit card required • Cancel anytime • 14-day free trial</p>
+          <p className="text-sm mt-6 opacity-75">No credit card required • Cancel anytime • 7-day free trial</p>
         </div>
       </section>
 
