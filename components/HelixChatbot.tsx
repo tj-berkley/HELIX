@@ -304,8 +304,8 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
           aria-label="Open HELIX Chat"
         >
           <div className="relative">
-            <HelixLogo size={40} animated />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-white"></span>
+            <HelixLogo size={40} animated variant="light" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse border-2 border-white"></span>
           </div>
           <div className="absolute right-20 bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             Chat with HELIX AI
@@ -320,8 +320,8 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <HelixLogo size={40} />
-                <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                <HelixLogo size={40} variant="light" />
+                <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></span>
               </div>
               <div>
                 <h3 className="font-black text-white text-lg">HELIX AI</h3>
