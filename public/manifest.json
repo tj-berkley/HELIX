@@ -1,0 +1,55 @@
+{
+  "name": "GoogleHubs - HELIX AI Business Hub",
+  "short_name": "GoogleHubs",
+  "description": "Your All-in-One AI-Powered Business Command Center. Replace 15+ tools with one platform powered by HELIX AI.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0e12",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/2._Helix_logo_A1.01_NB.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/2._Helix_logo_A1.01_NB.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "/2._Helix_logo_A1.01_NB.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/2._Helix_logo_A1.01_NB.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chat with HELIX",
+      "short_name": "Chat",
+      "description": "Open HELIX AI Assistant",
+      "url": "/?chat=true",
+      "icons": [{ "src": "/2._Helix_logo_A1.01_NB.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Content Studio",
+      "short_name": "Content",
+      "description": "Create AI-powered content",
+      "url": "/?tab=content",
+      "icons": [{ "src": "/2._Helix_logo_A1.01_NB.png", "sizes": "96x96" }]
+    }
+  ]
+}

@@ -145,12 +145,12 @@ Deep integration with 20+ Google services:
    - 24/7 phone support
 
 All plans include:
-- 3-day free trial (no credit card required)
+- 3-day free trial (credit card required to activate, but cancel anytime risk-free)
 - Emergency Services Platform
 - HELIX AI Assistant
 - HELIX Content Studio (write books, create movies, sell tickets)
 - 99.9% uptime guarantee
-- Cancel anytime
+- Full refund if you cancel within 3 days
 
 ## Key Differentiators vs Competitors:
 
@@ -213,29 +213,39 @@ HELIX isn't just a business tool—it's a complete content creation and monetiza
 - Marketers & Agencies: Create marketing materials, promotional videos, branded content at scale
 
 ## Response Guidelines:
-- Be enthusiastic and knowledgeable about all platform features
-- Provide specific examples of how features save time and money
-- Mention industry-specific use cases when relevant
-- Highlight the 3-day free trial and no credit card requirement
-- Emphasize the all-in-one nature (replaces 15+ tools)
-- Be conversational and helpful
-- If asked about pricing, explain all three tiers and recommend Professional for most businesses
-- If asked about industries, mention that we support 20+ industries with pre-configured templates
-- Always sign off as "HELIX AI" or just "HELIX"`;
+- **Be Fun & Conversational**: Use humor, personality, and emojis occasionally to make interactions enjoyable
+- **Be Enthusiastic**: Show genuine excitement about features that can transform businesses
+- **Be Specific**: Provide concrete examples with numbers (e.g., "save 10 hours per week", "reduce no-shows by 60%")
+- **Be Helpful**: Offer actionable advice and next steps
+- **Be Brief**: Keep responses concise but informative (2-4 paragraphs max unless user asks for details)
+- **Use Analogies**: Explain complex features with relatable comparisons
+- **Highlight Value**: Always connect features to time/money savings or business growth
+- **Industry Context**: When relevant, tailor examples to user's industry
+- **Action-Oriented**: Encourage users to try the 3-day trial (credit card required but risk-free)
+- **Voice-Friendly**: Since responses are spoken aloud, avoid overly long lists - summarize key points
+- **Personality Traits**: Professional yet approachable, smart but not condescending, helpful with a sense of humor
+- **Platform Actions**: When asked to perform tasks (create content, search prospects, etc.), explain that once they sign up, you can execute these commands directly in their dashboard
+- Always sign off as "HELIX" or "HELIX AI"
+
+Example tone: "Hey! Great question! Think of GoogleHubs like having Iron Man's JARVIS, but for your business. Instead of juggling 15 different apps (and 15 different bills!), everything's in one place. Need to find new leads? Done. Want to automate follow-ups? Easy. Create a video for social media? I got you covered. It's basically like having a super-powered assistant who never sleeps, never takes breaks, and costs less than your coffee budget. Want to see it in action? 🚀"`;
 
 const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi! I'm HELIX, your AI assistant. I can answer any questions about GoogleHubs and show you how our platform can save you time and money. What would you like to know?",
+      content: "Hi! I'm HELIX, your AI assistant. I can answer any questions about GoogleHubs and show you how our platform can save you time and money. You can type or click the microphone to speak! What would you like to know?",
       timestamp: new Date()
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -250,6 +260,88 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      synthRef.current = window.speechSynthesis;
+
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.lang = 'en-US';
+
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          setInputValue(transcript);
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+        };
+      }
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      if (synthRef.current) {
+        synthRef.current.cancel();
+      }
+    };
+  }, []);
+
+  const startListening = () => {
+    if (recognitionRef.current && !isListening) {
+      setIsListening(true);
+      recognitionRef.current.start();
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  };
+
+  const speakText = (text: string) => {
+    if (synthRef.current) {
+      synthRef.current.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.1;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      const voices = synthRef.current.getVoices();
+      const preferredVoice = voices.find(v => v.name.includes('Samantha') || v.name.includes('Google US English') || v.name.includes('Female'));
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      synthRef.current.speak(utterance);
+    }
+  };
+
+  const stopSpeaking = () => {
+    if (synthRef.current) {
+      synthRef.current.cancel();
+      setIsSpeaking(false);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -294,6 +386,8 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      speakText(text);
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage: Message = {
@@ -347,7 +441,7 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-[420px] h-[600px] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 flex flex-col overflow-hidden">
+        <div className="fixed inset-x-4 bottom-4 sm:bottom-6 sm:right-6 sm:left-auto z-50 w-auto sm:w-[420px] h-[calc(100vh-2rem)] sm:h-[600px] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-white/10 flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -426,16 +520,48 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
 
           {/* Input */}
           <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-white/10">
+            {isSpeaking && (
+              <div className="mb-2 flex items-center justify-center space-x-2 text-xs text-indigo-600 dark:text-indigo-400 font-bold">
+                <div className="flex space-x-1">
+                  <div className="w-1 h-4 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-1 h-4 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-1 h-4 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+                </div>
+                <span>HELIX is speaking...</span>
+                <button
+                  onClick={stopSpeaking}
+                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 underline"
+                >
+                  Stop
+                </button>
+              </div>
+            )}
             <div className="flex space-x-2">
+              <button
+                onClick={isListening ? stopListening : startListening}
+                disabled={isLoading}
+                className={`px-4 py-3 rounded-2xl font-bold transition-all ${
+                  isListening
+                    ? 'bg-red-600 text-white hover:bg-red-700 animate-pulse'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400'
+                }`}
+                aria-label={isListening ? 'Stop listening' : 'Start voice input'}
+                title={isListening ? 'Stop listening' : 'Click to speak'}
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                  <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+              </button>
               <input
                 ref={inputRef}
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me anything..."
+                placeholder={isListening ? 'Listening...' : 'Type or speak your message...'}
                 className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white placeholder-slate-400"
-                disabled={isLoading}
+                disabled={isLoading || isListening}
               />
               <button
                 onClick={handleSendMessage}
@@ -448,6 +574,9 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
                 </svg>
               </button>
             </div>
+            <p className="text-[10px] text-slate-400 mt-2 text-center">
+              Powered by Google Gemini AI • Voice-enabled • Works in Chrome, Safari & Edge
+            </p>
           </div>
         </div>
       )}

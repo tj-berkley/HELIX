@@ -89,7 +89,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode, onAuthSuccess, onBack, theme,
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">✓</div>
               <div>
                 <p className="font-bold">3-Day Free Trial</p>
-                <p className="text-sm text-white/60">No credit card required</p>
+                <p className="text-sm text-white/60">Payment required to activate</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -226,7 +226,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode, onAuthSuccess, onBack, theme,
                   ))}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                  Start with 3-day free trial, no credit card required
+                  Credit card required • Try risk-free for 3 days • Cancel anytime
                 </p>
               </div>
             )}

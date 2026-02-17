@@ -248,7 +248,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
           <div className="flex items-center justify-center space-x-12 text-sm text-slate-500 dark:text-slate-400">
             <div className="flex items-center space-x-2">
               <span className="text-green-500">✓</span>
-              <span className="font-bold">No credit card required</span>
+              <span className="font-bold">Credit card required</span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-green-500">✓</span>
@@ -464,7 +464,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
               >
                 Start Creating with HELIX Now
               </button>
-              <p className="text-sm text-slate-400 mt-4">3-day free trial • Create unlimited content • No credit card required</p>
+              <p className="text-sm text-slate-400 mt-4">3-day free trial • Create unlimited content • Credit card required</p>
             </div>
           </div>
 
@@ -588,7 +588,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
           >
             Start Your Free Trial Today
           </button>
-          <p className="text-sm mt-6 opacity-75">No credit card required • Cancel anytime • 3-day free trial</p>
+          <p className="text-sm mt-6 opacity-75">Credit card required • Cancel anytime • 3-day free trial</p>
         </div>
       </section>
 
