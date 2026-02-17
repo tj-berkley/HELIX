@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import App from './App';
 import ProspectDetail from './components/ProspectDetail';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -16,6 +18,8 @@ root.render(
     <BrowserRouter>
       <Routes>
         <Route path="/prospects/:prospectId" element={<ProspectDetail />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
         <Route path="/*" element={<App />} />
       </Routes>
     </BrowserRouter>

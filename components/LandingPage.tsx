@@ -603,9 +603,45 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
 
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-slate-200 dark:border-white/5">
-        <div className="max-w-7xl mx-auto text-center text-sm text-slate-600 dark:text-slate-400">
-          <p className="font-bold mb-4">© 2025 GoogleHubs. All rights reserved.</p>
-          <p className="text-xs">Built with HELIX AI • Your AI-Powered Business Command Center</p>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between mb-8">
+            {/* Logo and Tagline */}
+            <div className="flex items-center space-x-3 mb-6 md:mb-0">
+              <HelixLogo size={40} animated />
+              <div>
+                <span className="font-black text-slate-900 dark:text-white text-base tracking-tight block">GoogleHubs</span>
+                <p className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">HELIX AI Powered</p>
+              </div>
+            </div>
+
+            {/* Links */}
+            <div className="flex items-center space-x-8">
+              <button
+                onClick={() => window.location.href = '/privacy'}
+                className="text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                Privacy Policy
+              </button>
+              <button
+                onClick={() => window.location.href = '/terms'}
+                className="text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                Terms of Service
+              </button>
+              <button
+                onClick={() => window.open('mailto:support@googlehubs.com', '_blank')}
+                className="text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                Contact
+              </button>
+            </div>
+          </div>
+
+          {/* Copyright and Tagline */}
+          <div className="text-center border-t border-slate-200 dark:border-white/5 pt-8">
+            <p className="text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">© 2025 GoogleHubs, Inc. All rights reserved.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500">Built with HELIX AI • Your AI-Powered Business Command Center</p>
+          </div>
         </div>
       </footer>
 
