@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import HelixLogo from './HelixLogo';
 
 interface AuthPageProps {
   mode: 'signup' | 'login';
@@ -65,11 +66,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode, onAuthSuccess, onBack, theme,
             </button>
 
             <div className="flex items-center space-x-4 mb-8">
-              <img
-                src="/2._Helix_logo_A1.01_NB.png"
-                alt="Helix Logo"
-                className="w-14 h-14 object-contain"
-              />
+              <HelixLogo size={56} animated variant="light" />
               <div>
                 <h1 className="text-2xl font-black">GoogleHubs</h1>
                 <p className="text-sm text-white/60 font-bold">Powered by HELIX AI</p>
@@ -114,11 +111,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode, onAuthSuccess, onBack, theme,
           {/* Mobile Logo Header */}
           <div className="lg:hidden flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
-              <img
-                src="/2._Helix_logo_A1.01_NB.png"
-                alt="Helix Logo"
-                className="w-10 h-10 object-contain"
-              />
+              <HelixLogo size={40} animated />
               <div>
                 <h1 className="text-lg font-black text-slate-900 dark:text-white">GoogleHubs</h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">Powered by HELIX AI</p>
