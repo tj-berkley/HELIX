@@ -111,14 +111,41 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode, onAuthSuccess, onBack, theme,
 
         {/* Right Side - Form */}
         <div className="w-full lg:w-1/2 p-12 lg:p-16">
-          <div className="flex items-center justify-between mb-8 lg:mb-0">
-            <button onClick={onBack} className="lg:hidden flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          {/* Mobile Logo Header */}
+          <div className="lg:hidden flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-3">
+              <img
+                src="/2._Helix_logo_A1.01_NB.png"
+                alt="Helix Logo"
+                className="w-10 h-10 object-contain"
+              />
+              <div>
+                <h1 className="text-lg font-black text-slate-900 dark:text-white">GoogleHubs</h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">Powered by HELIX AI</p>
+              </div>
+            </div>
+            <button
+              onClick={onToggleTheme}
+              className="p-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+            >
+              {theme === 'light' ? <span className="text-xl">🌙</span> : <span className="text-xl">☀️</span>}
+            </button>
+          </div>
+
+          {/* Mobile Back Button */}
+          <div className="lg:hidden mb-6">
+            <button onClick={onBack} className="flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               <span>←</span>
               <span className="font-bold">Back</span>
             </button>
+          </div>
+
+          {/* Desktop Theme Toggle */}
+          <div className="hidden lg:flex items-center justify-end mb-8">
             <button
               onClick={onToggleTheme}
-              className="p-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ml-auto"
+              className="p-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
               title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
             >
               {theme === 'light' ? <span className="text-xl">🌙</span> : <span className="text-xl">☀️</span>}
