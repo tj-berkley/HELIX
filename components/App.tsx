@@ -108,13 +108,13 @@ const App: React.FC = () => {
     bio: 'Lead architect at Hobbs Studio. Specialized in autonomous agent orchestration and high-fidelity portal development.' 
   });
   
-  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({ 
-    name: 'Hobbs Studio', 
-    industry: 'Creative Technology', 
-    mission: 'Empowering the next generation of creators with autonomous AI production environments.',
-    website: 'https://hobbs.studio',
-    size: 'Medium (11-50)',
-    assignedPhone: '+1 (415) 555-0123'
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
+    name: 'GoogleHubs',
+    industry: 'Business Technology',
+    mission: 'All-in-one CRM and AI-powered platform to replace 15-18 different software tools.',
+    website: 'https://googlehubs.com',
+    size: 'Enterprise',
+    assignedPhone: '+1 (800) GHUB-HELP'
   });
 
   const [manuscriptLibrary, setManuscriptLibrary] = useState<Manuscript[]>([]);
