@@ -29,6 +29,7 @@ interface SearchParams {
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const FACEBOOK_ACCESS_TOKEN = import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN || '';
+const LINKEDIN_ACCESS_TOKEN = import.meta.env.VITE_LINKEDIN_ACCESS_TOKEN || '';
 
 export const searchGooglePlaces = async (query: string, location: string): Promise<ProspectResult[]> => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -191,6 +192,62 @@ export const searchFacebookPlaces = async (query: string, location: string): Pro
   }
 };
 
+export const searchLinkedInCompanies = async (query: string, location: string): Promise<ProspectResult[]> => {
+  if (!LINKEDIN_ACCESS_TOKEN) {
+    throw new Error('LinkedIn access token not configured');
+  }
+
+  try {
+    const keywords = location ? `${query} ${location}` : query;
+    const params = new URLSearchParams({
+      keywords: keywords,
+      start: '0',
+      count: '20'
+    });
+
+    const response = await fetch(
+      `https://api.linkedin.com/v2/organizationSearchResults?${params.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${LINKEDIN_ACCESS_TOKEN}`,
+          'Accept': 'application/json',
+          'X-Restli-Protocol-Version': '2.0.0'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`LinkedIn API error: ${errorData.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    return (data.elements || []).map((org: any) => {
+      const company = org.company || {};
+      const location = company.locations?.[0];
+
+      return {
+        id: company.id?.toString() || org.id?.toString(),
+        name: company.name || company.localizedName || 'Unknown Company',
+        platform: 'LinkedIn' as SearchPlatform,
+        address: location ?
+          `${location.line1 || ''} ${location.city || ''}, ${location.geographicArea || ''} ${location.postalCode || ''}`.trim()
+          : undefined,
+        phone: company.phone,
+        email: company.email,
+        website: company.websiteUrl,
+        category: company.industries?.[0],
+        description: company.description || company.localizedDescription,
+      };
+    });
+  } catch (error) {
+    console.error('Error searching LinkedIn Companies:', error);
+    throw error;
+  }
+};
+
 export const searchProspects = async (params: SearchParams): Promise<ProspectResult[]> => {
   const results: ProspectResult[] = [];
 
@@ -226,7 +283,12 @@ export const searchProspects = async (params: SearchParams): Promise<ProspectRes
         break;
 
       case 'LinkedIn':
-        console.warn('LinkedIn API integration requires OAuth setup');
+        if (LINKEDIN_ACCESS_TOKEN) {
+          const linkedinResults = await searchLinkedInCompanies(params.query, params.location || '');
+          results.push(...linkedinResults);
+        } else {
+          console.warn('LinkedIn access token not configured');
+        }
         break;
 
       case 'Yellow Pages':
@@ -243,7 +305,7 @@ export const checkApiStatus = () => {
     googlePlaces: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
     googleMaps: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
     facebook: !!FACEBOOK_ACCESS_TOKEN,
-    linkedin: false,
+    linkedin: !!LINKEDIN_ACCESS_TOKEN,
     yellowPages: false,
   };
 };
