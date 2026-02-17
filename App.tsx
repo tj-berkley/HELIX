@@ -1,5 +1,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import LandingPage from './components/LandingPage';
+import AuthPage from './components/AuthPage';
 import Sidebar from './components/Sidebar';
 import BoardHeader from './components/BoardHeader';
 import BoardTable from './components/BoardTable';
@@ -79,6 +81,11 @@ const MOCK_WORKSPACE: Workspace = {
 };
 
 const App: React.FC = () => {
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authView, setAuthView] = useState<'landing' | 'signup' | 'login'>('landing');
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
   const [workspaces, setWorkspaces] = useState<Workspace[]>([MOCK_WORKSPACE]);
   const [activeBoardId, setActiveBoardId] = useState(MOCK_WORKSPACE.boards[0].id);
   const [activeView, setActiveView] = useState<BoardView>('Table');
@@ -104,20 +111,49 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
-  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo>({ 
-    name: 'Senior Engineer', 
-    role: 'Full-stack Architect', 
-    email: 'engineer@hobbs.studio',
-    bio: 'Lead architect at Hobbs Studio.' 
+  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo>({
+    name: 'User',
+    role: 'Business Owner',
+    email: 'user@example.com',
+    bio: 'Building something amazing.'
   });
-  
-  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({ 
-    name: 'Hobbs Studio', 
-    industry: 'Creative Technology', 
-    mission: 'Empowering creators.',
-    website: 'https://hobbs.studio',
-    size: 'Medium (11-50)'
+
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
+    name: 'GoogleHubs',
+    industry: 'Technology',
+    mission: 'Powering businesses with AI',
+    website: 'https://googlehubs.com',
+    size: 'Startup (1-10)'
   });
+
+  const handleAuthSuccess = (userData: any) => {
+    setCurrentUser(userData);
+    setIsAuthenticated(true);
+    setAuthView('landing');
+
+    // Update owner info from user data
+    setOwnerInfo({
+      name: userData.name || 'User',
+      role: userData.role || 'Business Owner',
+      email: userData.email,
+      bio: userData.bio || 'Building something amazing.'
+    });
+
+    // Update business info from user data
+    setBusinessInfo({
+      name: userData.company || 'My Company',
+      industry: userData.industry || 'Technology',
+      mission: userData.mission || 'Powering growth with AI',
+      website: userData.website || '',
+      size: userData.size || 'Startup (1-10)'
+    });
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setAuthView('landing');
+  };
 
   const [manuscriptLibrary, setManuscriptLibrary] = useState<Manuscript[]>([]);
   const [clonedVoices, setClonedVoices] = useState<ClonedVoice[]>([]);
@@ -322,6 +358,15 @@ const App: React.FC = () => {
     }
   };
 
+  // Show landing page or auth page if not authenticated
+  if (!isAuthenticated) {
+    if (authView === 'landing') {
+      return <LandingPage onNavigateToAuth={(mode) => setAuthView(mode)} />;
+    }
+    return <AuthPage mode={authView} onAuthSuccess={handleAuthSuccess} onBack={() => setAuthView('landing')} />;
+  }
+
+  // Main authenticated app
   return (
     <div className={`flex h-screen w-screen overflow-hidden font-sans bg-gray-50 text-slate-900 transition-colors duration-300 dark:bg-[#0c0e12] dark:text-slate-100 ${theme === 'dark' ? 'dark' : ''}`}>
       <Sidebar workspaces={workspaces} activeBoardId={activeBoardId} onSelectBoard={setActiveBoardId} activePage={activePage} onSelectPage={setActivePage} ownerInfo={ownerInfo} businessInfo={businessInfo} />
@@ -337,15 +382,15 @@ const App: React.FC = () => {
                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                     <Icons.Search />
                  </div>
-                 <input 
-                   type="text" 
-                   placeholder="Search Universe..." 
+                 <input
+                   type="text"
+                   placeholder="Search with HELIX..."
                    className="w-full bg-slate-100 border border-transparent dark:bg-white/5 dark:border-white/10 rounded-full py-1.5 pl-10 pr-4 text-xs text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
                  />
               </div>
            </div>
            <div className="flex items-center space-x-4">
-              <button 
+              <button
                 onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                 className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors"
                 title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
@@ -365,6 +410,12 @@ const App: React.FC = () => {
                    {ownerInfo.name[0]}
                  </div>
               </div>
+              <button
+                onClick={handleLogout}
+                className="ml-2 px-4 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                Logout
+              </button>
            </div>
         </header>
 
