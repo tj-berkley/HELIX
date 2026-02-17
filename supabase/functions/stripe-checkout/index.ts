@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2024-12-18.acacia",
+      apiVersion: "2025-06-30.basil",
     });
 
     const pricing = {
@@ -99,6 +99,8 @@ Deno.serve(async (req: Request) => {
       },
       subscription_data: {
         trial_period_days: 3,
+        billing_cycle_anchor: "now",
+        billing_behavior: "prorate_on_price_change",
         metadata: {
           userId,
           planName,

@@ -28,6 +28,7 @@ import OwnerProfile from './OwnerProfile';
 import BusinessIdentity from './BusinessIdentity';
 import ProjectPortfolio from './ProjectPortfolio';
 import UsageDashboard from './UsageDashboard';
+import SubscriptionManager from './SubscriptionManager';
 import ConnectionVault from './ApiManagement';
 import AIChatbot from './AIChatbot';
 import { Icons } from '../constants';
@@ -264,6 +265,7 @@ const App: React.FC = () => {
       case 'owner-profile': return <OwnerProfile info={ownerInfo} onUpdate={setOwnerInfo} />;
       case 'business-identity': return <BusinessIdentity info={businessInfo} onUpdate={setBusinessInfo} />;
       case 'brand-voice': return <BrandVoicePage />;
+      case 'subscriptions': return <SubscriptionManager />;
       case 'usage-dashboard': return <UsageDashboard />;
       case 'vault': return <ConnectionVault />;
       case 'portfolio': return <ProjectPortfolio boards={allBoards} onAddBoard={handleAddBoard} onSelectProject={(id) => { setActiveBoardId(id); setActivePage('board'); }} />;

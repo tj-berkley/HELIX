@@ -152,6 +152,7 @@ export type Page =
   | 'audio-lab'
   | 'owner-profile'
   | 'business-identity'
+  | 'subscriptions'
   | 'usage-dashboard'
   | 'notebook-lm'
   | 'medical-hub'

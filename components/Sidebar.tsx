@@ -56,6 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
     { id: 'vault', label: 'Neural Vault', icon: <span>🔐</span> },
     { id: 'owner-profile', label: 'My Profile', icon: <span>👤</span> },
     { id: 'business-identity', label: 'Legal Entity', icon: <span>🏢</span> },
+    { id: 'subscriptions', label: 'Subscriptions', icon: <span>💳</span> },
     { id: 'usage-dashboard', label: 'Usage', icon: <span>🏦</span> },
   ];
 
