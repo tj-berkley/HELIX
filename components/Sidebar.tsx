@@ -58,7 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
     { id: 'usage-dashboard', label: 'Usage', icon: <span>🏦</span> },
   ];
 
-  const brandName = businessInfo.name || 'OmniPortal';
+  const brandName = businessInfo.name || 'GoogleHubs';
 
   return (
     <aside className="w-[240px] h-screen bg-slate-50 text-slate-600 flex flex-col border-r border-slate-200 dark:bg-[#0c0e12] dark:text-slate-400 dark:border-white/5 select-none overflow-hidden shrink-0 transition-colors duration-300">
@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
           </div>
           <div className="flex flex-col min-w-0">
              <span className="font-black text-slate-900 dark:text-white text-xs tracking-tighter truncate uppercase leading-none transition-colors">{brandName}</span>
-             <span className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mt-1 opacity-60">Architect v4.5</span>
+             <span className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mt-1 opacity-60">HELIX AI v4.5</span>
           </div>
         </div>
       </div>
@@ -162,7 +162,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
         )}
         <div className="flex-1 min-w-0">
           <p className="text-[11px] font-black text-slate-900 dark:text-white truncate leading-none mb-1 transition-colors">{ownerInfo.name}</p>
-          <p className="text-[9px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-tighter truncate">{brandName} Architect</p>
+          <p className="text-[9px] text-slate-500 dark:text-slate-500 font-bold uppercase tracking-tighter truncate">{brandName} User</p>
         </div>
       </div>
     </aside>

@@ -23,13 +23,13 @@ const Dashboard: React.FC<DashboardProps> = ({ ownerInfo, businessInfo, boards, 
           <div className="space-y-6 relative z-10 max-w-2xl">
             <div className="inline-flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-full border border-indigo-100 dark:border-indigo-500/20 mb-2">
               <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse mr-2"></span>
-              <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Neural Link v4.5 Ready</span>
+              <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">HELIX AI v4.5 Ready</span>
             </div>
             <h1 className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight">
               Welcome back, <span className="text-indigo-600 dark:text-indigo-400">{ownerInfo.name.split(' ')[0]}</span>.
             </h1>
             <p className="text-xl text-slate-500 dark:text-slate-400 font-medium leading-relaxed italic">
-              "Your autonomous workspace is synchronized and operating at peak performance."
+              "HELIX is ready to help you achieve more with AI-powered automation."
             </p>
             <div className="flex space-x-4 pt-4">
               <button 

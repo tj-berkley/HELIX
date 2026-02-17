@@ -97,11 +97,11 @@ const AIChatbot: React.FC = () => {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
-        contents: `OmniPortal Architect Persona. User Request: "${textToSend}"`,
+        contents: `You are HELIX, the AI assistant for GoogleHubs platform. User Request: "${textToSend}"`,
         config: { thinkingConfig: { thinkingBudget: 2000 } }
       });
 
-      const reply = response.text || "Neural protocols synchronized! How can I assist?";
+      const reply = response.text || "Hello! I'm HELIX, your GoogleHubs AI assistant. How can I help you today?";
       setMessages(prev => [...prev, { role: 'model', text: reply }]);
       speakText(reply);
     } catch (error) {
@@ -119,8 +119,8 @@ const AIChatbot: React.FC = () => {
             <div className="flex items-center space-x-4">
                <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">⚡</div>
                <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">Architect AI</h3>
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Active Neural Link</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white">HELIX</h3>
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Your AI Assistant</p>
                </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -158,9 +158,9 @@ const AIChatbot: React.FC = () => {
               <button onClick={toggleListening} className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-rose-600 text-white shadow-lg animate-pulse' : 'bg-white dark:bg-white/5 text-slate-400'}`}>
                 {isListening ? '⏺️' : '🎙️'}
               </button>
-              <input 
-                className="flex-1 bg-transparent border-none outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400 px-2" 
-                placeholder="Talk to Architect..." 
+              <input
+                className="flex-1 bg-transparent border-none outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400 px-2"
+                placeholder="Ask HELIX anything..."
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
