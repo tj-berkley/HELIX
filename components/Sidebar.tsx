@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onSelectPage, ownerInfo, 
           <div className="w-10 h-10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform overflow-hidden shrink-0">
             <img
               src={businessInfo.logoUrl || "/Helix_logo_Abbb.jpg"}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain rounded-2xl"
               alt="Logo"
             />
           </div>

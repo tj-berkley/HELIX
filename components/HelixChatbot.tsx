@@ -306,7 +306,7 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
             <img
               src="/Helix_logo_Abbb.jpg"
               alt="HELIX"
-              className="w-10 h-10 object-contain"
+              className="w-10 h-10 object-contain rounded-2xl"
             />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-white"></span>
           </div>
@@ -326,7 +326,7 @@ const HelixChatbot: React.FC<HelixChatbotProps> = ({ theme }) => {
                 <img
                   src="/Helix_logo_Abbb.jpg"
                   alt="HELIX"
-                  className="w-10 h-10 object-contain rounded-xl"
+                  className="w-10 h-10 object-contain rounded-2xl"
                 />
                 <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
               </div>
