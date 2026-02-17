@@ -31,7 +31,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
         return;
       }
 
-      const tempEmail = prompt('Enter your email to start your 7-day free trial:');
+      const tempEmail = prompt('Enter your email to start your 3-day free trial:');
       if (!tempEmail) {
         setProcessingCheckout(false);
         return;
@@ -238,7 +238,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
               onClick={() => onNavigateToAuth('signup')}
               className="px-10 py-5 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-indigo-700 transition-all transform hover:scale-105"
             >
-              Start Free 14-Day Trial
+              Start Free 3-Day Trial
             </button>
             <button className="px-10 py-5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:border-indigo-400 dark:hover:border-indigo-500 transition-all">
               Watch Demo
@@ -300,13 +300,201 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
         </div>
       </section>
 
+      {/* HELIX Content Creation - Ultimate Marketing Tool */}
+      <section className="py-24 px-6 bg-gradient-to-br from-slate-900 to-indigo-900 dark:from-black dark:to-indigo-950">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center px-6 py-3 bg-indigo-500/20 rounded-full border border-indigo-400/30 mb-6">
+              <span className="text-2xl mr-3">🎬</span>
+              <span className="text-sm font-black text-indigo-300 uppercase tracking-widest">HELIX Content Studio</span>
+            </div>
+            <h2 className="text-6xl font-black text-white mb-6 tracking-tight">
+              The Ultimate<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Marketing & Content Creation Tool</span>
+            </h2>
+            <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+              HELIX isn't just a business tool—it's your complete content creation studio. Generate AI-powered articles, books, manuscripts, children's books, and more. Convert your book or script into a full movie and sell tickets to the premiere!
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            {/* Content Creation */}
+            <div className="p-8 bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 hover:border-indigo-400/50 transition-all group">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+                📝
+              </div>
+              <h3 className="text-2xl font-black text-white mb-4">AI-Powered Writing</h3>
+              <p className="text-slate-300 leading-relaxed mb-4">
+                Generate professional articles, blog posts, manuscripts, and full-length books with HELIX AI. From children's books to business guides, create publication-ready content in minutes.
+              </p>
+              <ul className="space-y-2 text-sm text-slate-400">
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2">✓</span>
+                  Articles & Blog Posts
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2">✓</span>
+                  Books & Manuscripts
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2">✓</span>
+                  Children's Books with Illustrations
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2">✓</span>
+                  Marketing Copy & Sales Letters
+                </li>
+              </ul>
+            </div>
+
+            {/* Movie Maker */}
+            <div className="p-8 bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 hover:border-purple-400/50 transition-all group">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+                🎬
+              </div>
+              <h3 className="text-2xl font-black text-white mb-4">Book to Movie Studio</h3>
+              <p className="text-slate-300 leading-relaxed mb-4">
+                Transform your written content into full cinematic experiences. HELIX converts your book or script into a professional movie with AI-generated scenes, voiceovers, and music.
+              </p>
+              <ul className="space-y-2 text-sm text-slate-400">
+                <li className="flex items-start">
+                  <span className="text-purple-400 mr-2">✓</span>
+                  Script to Movie Conversion
+                </li>
+                <li className="flex items-start">
+                  <span className="text-purple-400 mr-2">✓</span>
+                  AI Video Generation
+                </li>
+                <li className="flex items-start">
+                  <span className="text-purple-400 mr-2">✓</span>
+                  Voice Acting & Narration
+                </li>
+                <li className="flex items-start">
+                  <span className="text-purple-400 mr-2">✓</span>
+                  Background Music & Sound Effects
+                </li>
+              </ul>
+            </div>
+
+            {/* Box Office */}
+            <div className="p-8 bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 hover:border-pink-400/50 transition-all group">
+              <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform">
+                🎟️
+              </div>
+              <h3 className="text-2xl font-black text-white mb-4">Box Office & Monetization</h3>
+              <p className="text-slate-300 leading-relaxed mb-4">
+                Host movie premieres, sell tickets, and monetize your content. Built-in box office system with payment processing, ticket sales, and premiere event management.
+              </p>
+              <ul className="space-y-2 text-sm text-slate-400">
+                <li className="flex items-start">
+                  <span className="text-pink-400 mr-2">✓</span>
+                  Sell Movie Tickets
+                </li>
+                <li className="flex items-start">
+                  <span className="text-pink-400 mr-2">✓</span>
+                  Host Virtual Premieres
+                </li>
+                <li className="flex items-start">
+                  <span className="text-pink-400 mr-2">✓</span>
+                  Revenue Tracking & Analytics
+                </li>
+                <li className="flex items-start">
+                  <span className="text-pink-400 mr-2">✓</span>
+                  Marketing & Promotion Tools
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Full Content Creation Workflow */}
+          <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 backdrop-blur-sm rounded-3xl border border-indigo-400/30 p-12">
+            <div className="text-center mb-12">
+              <h3 className="text-4xl font-black text-white mb-4">Complete Content Workflow</h3>
+              <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+                From idea to profit in one platform—write, produce, market, and sell all in HELIX
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto bg-indigo-500 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                  💡
+                </div>
+                <h4 className="text-white font-black mb-2">Brainstorm</h4>
+                <p className="text-xs text-slate-400">AI generates ideas and outlines</p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                  ✍️
+                </div>
+                <h4 className="text-white font-black mb-2">Write</h4>
+                <p className="text-xs text-slate-400">Create your book or script with AI</p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto bg-purple-600 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                  🎬
+                </div>
+                <h4 className="text-white font-black mb-2">Produce</h4>
+                <p className="text-xs text-slate-400">Convert to movie with AI video</p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto bg-pink-600 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                  📢
+                </div>
+                <h4 className="text-white font-black mb-2">Market</h4>
+                <p className="text-xs text-slate-400">Promote premiere to your audience</p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto bg-rose-600 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                  💰
+                </div>
+                <h4 className="text-white font-black mb-2">Profit</h4>
+                <p className="text-xs text-slate-400">Sell tickets and earn revenue</p>
+              </div>
+            </div>
+
+            <div className="mt-12 text-center">
+              <button
+                onClick={() => onNavigateToAuth('signup')}
+                className="px-12 py-5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:shadow-indigo-500/50 transition-all transform hover:scale-105"
+              >
+                Start Creating with HELIX Now
+              </button>
+              <p className="text-sm text-slate-400 mt-4">3-day free trial • Create unlimited content • No credit card required</p>
+            </div>
+          </div>
+
+          {/* Use Cases */}
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
+              <h4 className="text-white font-black mb-3">📚 Authors & Publishers</h4>
+              <p className="text-sm text-slate-300">Write your book with AI, convert it to an audiobook or movie, and sell directly to your audience. No traditional publisher needed.</p>
+            </div>
+
+            <div className="p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
+              <h4 className="text-white font-black mb-3">🎥 Content Creators</h4>
+              <p className="text-sm text-slate-300">Generate video content from scripts, create movie trailers, host premieres, and monetize your creative work with ticket sales.</p>
+            </div>
+
+            <div className="p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
+              <h4 className="text-white font-black mb-3">📈 Marketers & Agencies</h4>
+              <p className="text-sm text-slate-300">Create marketing materials, promotional videos, client presentations, and branded content at scale—all powered by HELIX AI.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section className="py-20 px-6 bg-slate-50 dark:bg-slate-900/30">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">Simple, Transparent Pricing</h2>
             <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">
-              Choose the perfect plan for your business. All plans include 7-day free trial.
+              Choose the perfect plan for your business. All plans include 3-day free trial.
             </p>
 
             <div className="inline-flex items-center p-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-white/10">
@@ -400,7 +588,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
           >
             Start Your Free Trial Today
           </button>
-          <p className="text-sm mt-6 opacity-75">No credit card required • Cancel anytime • 7-day free trial</p>
+          <p className="text-sm mt-6 opacity-75">No credit card required • Cancel anytime • 3-day free trial</p>
         </div>
       </section>
 

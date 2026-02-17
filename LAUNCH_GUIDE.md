@@ -15,7 +15,7 @@ GoogleHubs has been transformed from an internal tool into a **complete SaaS por
 ### ✅ Authentication System
 - Beautiful signup/login pages with split-screen design
 - Plan selection during signup
-- 14-day free trial (no credit card required)
+- 3-day free trial (no credit card required)
 - User profile management
 - Secure logout functionality
 
@@ -47,13 +47,13 @@ GoogleHubs has been transformed from an internal tool into a **complete SaaS por
 - Edge function ready for Stripe checkout
 - Pricing configuration for all plans
 - Webhook handler foundation
-- 14-day trial period support
+- 3-day trial period support
 
 ### ✅ Complete User Journey
 1. Visitor lands on homepage
 2. Clicks "Start Free Trial"
 3. Fills out signup form & selects plan
-4. Gets 14-day trial access (no payment)
+4. Gets 3-day trial access (no payment)
 5. Explores full platform features
 6. After trial, payment collected via Stripe
 7. Becomes paying subscriber

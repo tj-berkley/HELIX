@@ -98,7 +98,7 @@ Deno.serve(async (req: Request) => {
         billingCycle,
       },
       subscription_data: {
-        trial_period_days: 7,
+        trial_period_days: 3,
         metadata: {
           userId,
           planName,
@@ -116,7 +116,7 @@ Deno.serve(async (req: Request) => {
         price: selectedCycle.price,
         planName,
         billingCycle,
-        trialDays: 7,
+        trialDays: 3,
       }),
       {
         headers: {

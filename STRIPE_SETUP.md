@@ -229,7 +229,7 @@ Check these regularly:
 
 ### Trial Period Details
 
-- **7-day free trial** on all plans
+- **3-day free trial** on all plans
 - No credit card charge until trial ends
 - Customer can cancel anytime during trial
 - Automatic conversion to paid after 7 days
@@ -319,4 +319,4 @@ Enterprise Annual: price_________________
 
 **🎉 Once completed, your platform is PRODUCTION READY and can accept real payments!**
 
-**💰 You're now set to achieve 80%+ profit margins with 7-day free trials!**
+**💰 You're now set to achieve 80%+ profit margins with 3-day free trials!**
