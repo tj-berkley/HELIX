@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Icons } from '../constants';
+import HelixChatbot from './HelixChatbot';
 
 interface LandingPageProps {
   onNavigateToAuth: (mode: 'signup' | 'login') => void;
@@ -128,7 +129,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img
-              src="/2._Helix_logo_A1.01_NB.png"
+              src="/Helix_logo_Abbb.jpg"
               alt="Helix Logo"
               className="h-12 w-12 object-contain"
             />
@@ -355,6 +356,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
           <p className="text-xs">Built with HELIX AI • Your AI-Powered Business Command Center</p>
         </div>
       </footer>
+
+      {/* HELIX Chatbot */}
+      <HelixChatbot theme={theme} />
     </div>
   );
 };
