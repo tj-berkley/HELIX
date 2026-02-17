@@ -28,8 +28,6 @@ interface SearchParams {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const FACEBOOK_ACCESS_TOKEN = import.meta.env.VITE_FACEBOOK_ACCESS_TOKEN || '';
-const LINKEDIN_ACCESS_TOKEN = import.meta.env.VITE_LINKEDIN_ACCESS_TOKEN || '';
 
 export const searchGooglePlaces = async (query: string, location: string): Promise<ProspectResult[]> => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -136,25 +134,25 @@ export const getPlaceDetails = async (placeId: string): Promise<Partial<Prospect
 };
 
 export const searchFacebookPlaces = async (query: string, location: string): Promise<ProspectResult[]> => {
-  if (!FACEBOOK_ACCESS_TOKEN) {
-    throw new Error('Facebook access token not configured');
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Supabase configuration missing');
   }
 
   try {
-    const searchQuery = location ? `${query} ${location}` : query;
     const params = new URLSearchParams({
-      q: searchQuery,
-      type: 'page',
-      fields: 'id,name,location,phone,website,emails,rating_count,overall_star_rating,category,about',
-      access_token: FACEBOOK_ACCESS_TOKEN,
-      limit: '20'
+      query: query,
     });
 
+    if (location) {
+      params.append('location', location);
+    }
+
     const response = await fetch(
-      `https://graph.facebook.com/v19.0/search?${params.toString()}`,
+      `${SUPABASE_URL}/functions/v1/facebook-business-search?${params.toString()}`,
       {
         method: 'GET',
         headers: {
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Accept': 'application/json',
         }
       }
@@ -162,7 +160,7 @@ export const searchFacebookPlaces = async (query: string, location: string): Pro
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(`Facebook API error: ${errorData.error?.message || response.statusText}`);
+      throw new Error(`Facebook API error: ${errorData.error || response.statusText}`);
     }
 
     const data = await response.json();
@@ -193,33 +191,33 @@ export const searchFacebookPlaces = async (query: string, location: string): Pro
 };
 
 export const searchLinkedInCompanies = async (query: string, location: string): Promise<ProspectResult[]> => {
-  if (!LINKEDIN_ACCESS_TOKEN) {
-    throw new Error('LinkedIn access token not configured');
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Supabase configuration missing');
   }
 
   try {
-    const keywords = location ? `${query} ${location}` : query;
     const params = new URLSearchParams({
-      keywords: keywords,
-      start: '0',
-      count: '20'
+      query: query,
     });
 
+    if (location) {
+      params.append('location', location);
+    }
+
     const response = await fetch(
-      `https://api.linkedin.com/v2/organizationSearchResults?${params.toString()}`,
+      `${SUPABASE_URL}/functions/v1/linkedin-company-search?${params.toString()}`,
       {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${LINKEDIN_ACCESS_TOKEN}`,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Accept': 'application/json',
-          'X-Restli-Protocol-Version': '2.0.0'
         }
       }
     );
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(`LinkedIn API error: ${errorData.message || response.statusText}`);
+      throw new Error(`LinkedIn API error: ${errorData.error || response.statusText}`);
     }
 
     const data = await response.json();
@@ -274,20 +272,20 @@ export const searchProspects = async (params: SearchParams): Promise<ProspectRes
         break;
 
       case 'Facebook':
-        if (FACEBOOK_ACCESS_TOKEN) {
+        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
           const facebookResults = await searchFacebookPlaces(params.query, params.location || '');
           results.push(...facebookResults);
         } else {
-          console.warn('Facebook access token not configured');
+          console.warn('Supabase configuration not available for Facebook');
         }
         break;
 
       case 'LinkedIn':
-        if (LINKEDIN_ACCESS_TOKEN) {
+        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
           const linkedinResults = await searchLinkedInCompanies(params.query, params.location || '');
           results.push(...linkedinResults);
         } else {
-          console.warn('LinkedIn access token not configured');
+          console.warn('Supabase configuration not available for LinkedIn');
         }
         break;
 
@@ -304,8 +302,8 @@ export const checkApiStatus = () => {
   return {
     googlePlaces: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
     googleMaps: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
-    facebook: !!FACEBOOK_ACCESS_TOKEN,
-    linkedin: !!LINKEDIN_ACCESS_TOKEN,
+    facebook: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
+    linkedin: !!(SUPABASE_URL && SUPABASE_ANON_KEY),
     yellowPages: false,
   };
 };
