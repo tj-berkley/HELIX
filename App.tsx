@@ -98,18 +98,22 @@ const App: React.FC = () => {
   });
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('OMNI_THEME');
+    const saved = localStorage.getItem('GOOGLEHUBS_THEME');
     return (saved as 'light' | 'dark') || 'light';
   });
 
   useEffect(() => {
-    localStorage.setItem('OMNI_THEME', theme);
+    localStorage.setItem('GOOGLEHUBS_THEME', theme);
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const [ownerInfo, setOwnerInfo] = useState<OwnerInfo>({
     name: 'User',
@@ -361,9 +365,9 @@ const App: React.FC = () => {
   // Show landing page or auth page if not authenticated
   if (!isAuthenticated) {
     if (authView === 'landing') {
-      return <LandingPage onNavigateToAuth={(mode) => setAuthView(mode)} />;
+      return <LandingPage onNavigateToAuth={(mode) => setAuthView(mode)} theme={theme} onToggleTheme={toggleTheme} />;
     }
-    return <AuthPage mode={authView} onAuthSuccess={handleAuthSuccess} onBack={() => setAuthView('landing')} />;
+    return <AuthPage mode={authView} onAuthSuccess={handleAuthSuccess} onBack={() => setAuthView('landing')} theme={theme} onToggleTheme={toggleTheme} />;
   }
 
   // Main authenticated app
@@ -391,7 +395,7 @@ const App: React.FC = () => {
            </div>
            <div className="flex items-center space-x-4">
               <button
-                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                onClick={toggleTheme}
                 className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors"
                 title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
               >

@@ -4,9 +4,11 @@ interface AuthPageProps {
   mode: 'signup' | 'login';
   onAuthSuccess: (userData: any) => void;
   onBack: () => void;
+  theme: 'light' | 'dark';
+  onToggleTheme: () => void;
 }
 
-const AuthPage: React.FC<AuthPageProps> = ({ mode, onAuthSuccess, onBack }) => {
+const AuthPage: React.FC<AuthPageProps> = ({ mode, onAuthSuccess, onBack, theme, onToggleTheme }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -107,10 +109,19 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode, onAuthSuccess, onBack }) => {
 
         {/* Right Side - Form */}
         <div className="w-full lg:w-1/2 p-12 lg:p-16">
-          <button onClick={onBack} className="lg:hidden mb-8 flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <span>←</span>
-            <span className="font-bold">Back</span>
-          </button>
+          <div className="flex items-center justify-between mb-8 lg:mb-0">
+            <button onClick={onBack} className="lg:hidden flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              <span>←</span>
+              <span className="font-bold">Back</span>
+            </button>
+            <button
+              onClick={onToggleTheme}
+              className="p-2 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ml-auto"
+              title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+            >
+              {theme === 'light' ? <span className="text-xl">🌙</span> : <span className="text-xl">☀️</span>}
+            </button>
+          </div>
 
           <div className="mb-10">
             <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2">
