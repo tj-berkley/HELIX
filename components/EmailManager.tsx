@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { generateEmailReply } from '../services/geminiService';
+import { gmailService } from '../services/gmailService';
 import { Icons } from '../constants';
 
 interface Email {
@@ -72,8 +73,68 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
   const [isDrafting, setIsDrafting] = useState(false);
   const [draftContent, setDraftContent] = useState('');
   const [replyIntent, setReplyIntent] = useState('');
+  const [isGmailConnected, setIsGmailConnected] = useState(false);
+  const [gmailEmail, setGmailEmail] = useState<string>('');
+  const [isLoadingEmails, setIsLoadingEmails] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const selectedEmail = emails.find(e => e.id === selectedEmailId);
+
+  // Check Gmail connection on mount
+  useEffect(() => {
+    const checkGmailConnection = async () => {
+      if (gmailService.isAuthenticated()) {
+        try {
+          const profile = await gmailService.getProfile();
+          setIsGmailConnected(true);
+          setGmailEmail(profile.emailAddress);
+          await loadGmailEmails();
+        } catch (error) {
+          console.error('Gmail connection check failed:', error);
+          setIsGmailConnected(false);
+        }
+      }
+    };
+
+    checkGmailConnection();
+  }, []);
+
+  const connectGmail = async () => {
+    try {
+      await gmailService.authenticate();
+      const profile = await gmailService.getProfile();
+      setIsGmailConnected(true);
+      setGmailEmail(profile.emailAddress);
+      await loadGmailEmails();
+    } catch (error) {
+      console.error('Gmail connection failed:', error);
+      alert('Failed to connect to Gmail. Please try again.');
+    }
+  };
+
+  const disconnectGmail = () => {
+    gmailService.disconnect();
+    setIsGmailConnected(false);
+    setGmailEmail('');
+    setEmails(MOCK_EMAILS);
+    setSelectedEmailId(MOCK_EMAILS[0]?.id || null);
+  };
+
+  const loadGmailEmails = async () => {
+    setIsLoadingEmails(true);
+    try {
+      const gmailEmails = await gmailService.fetchEmails(50);
+      if (gmailEmails.length > 0) {
+        setEmails(gmailEmails as any);
+        setSelectedEmailId(gmailEmails[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load Gmail emails:', error);
+      alert('Failed to load emails. Please check your connection.');
+    } finally {
+      setIsLoadingEmails(false);
+    }
+  };
 
   const handleAiDraft = async () => {
     if (!selectedEmail) return;
@@ -91,16 +152,52 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
     }
   };
 
-  const markAsRead = (id: string) => {
+  const markAsRead = async (id: string) => {
     setEmails(prev => prev.map(e => e.id === id ? { ...e, unread: false } : e));
     setSelectedEmailId(id);
+
+    // Mark as read in Gmail if connected
+    if (isGmailConnected) {
+      try {
+        await gmailService.markAsRead(id);
+      } catch (error) {
+        console.error('Failed to mark as read in Gmail:', error);
+      }
+    }
   };
 
-  const handleSend = () => {
-    alert("Message transmitted via Neural SMTP. Identity verified.");
-    setIsComposing(false);
-    setDraftContent('');
-    setReplyIntent('');
+  const handleSend = async () => {
+    if (!selectedEmail || !draftContent.trim()) {
+      alert('Please enter email content');
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      if (isGmailConnected) {
+        // Send via Gmail
+        const subject = selectedEmail ? `Re: ${selectedEmail.subject}` : 'New Message';
+        await gmailService.sendEmail(
+          selectedEmail.senderEmail,
+          subject,
+          draftContent,
+          selectedEmail.id
+        );
+        alert('Email sent successfully via Gmail!');
+      } else {
+        // Mock send
+        alert("Message transmitted via Neural SMTP. Identity verified.");
+      }
+
+      setIsComposing(false);
+      setDraftContent('');
+      setReplyIntent('');
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      alert('Failed to send email. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -133,12 +230,53 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
           ))}
         </nav>
 
-        <div className="mt-auto p-6 bg-slate-900 dark:bg-slate-800 rounded-[2rem] text-white space-y-4 shadow-xl">
-           <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-[9px] font-black uppercase tracking-widest">Neural Filtering: ON</span>
-           </div>
-           <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed italic">AI is automatically classifying incoming signals by high-intent priority scores.</p>
+        <div className="mt-auto space-y-4">
+          {/* Gmail Connection Status */}
+          <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-white/10 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">📧</span>
+                <span className="text-xs font-black text-slate-700 dark:text-slate-300">Gmail</span>
+              </div>
+              <div className={`w-2 h-2 rounded-full ${isGmailConnected ? 'bg-emerald-400 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'}`}></div>
+            </div>
+            {isGmailConnected ? (
+              <div className="space-y-2">
+                <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium truncate">{gmailEmail}</p>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={loadGmailEmails}
+                    disabled={isLoadingEmails}
+                    className="flex-1 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-[10px] font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-all disabled:opacity-50"
+                  >
+                    {isLoadingEmails ? '⟳' : '↻'} Refresh
+                  </button>
+                  <button
+                    onClick={disconnectGmail}
+                    className="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-[10px] font-bold hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={connectGmail}
+                className="w-full px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-lg"
+              >
+                Connect Gmail
+              </button>
+            )}
+          </div>
+
+          {/* Neural Filtering */}
+          <div className="p-6 bg-slate-900 dark:bg-slate-800 rounded-[2rem] text-white space-y-4 shadow-xl">
+             <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-[9px] font-black uppercase tracking-widest">Neural Filtering: ON</span>
+             </div>
+             <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed italic">AI is automatically classifying incoming signals by high-intent priority scores.</p>
+          </div>
         </div>
       </div>
 
@@ -308,12 +446,22 @@ const EmailManager: React.FC<EmailManagerProps> = ({ theme }) => {
                   placeholder="Drafting signal..."
                 />
                 <div className="flex items-center justify-between pt-4">
-                   <button 
-                     onClick={handleSend} 
-                     className="px-12 py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl shadow-indigo-900/20 hover:bg-indigo-700 active:scale-95 transition-all group"
+                   <button
+                     onClick={handleSend}
+                     disabled={isSending || !draftContent.trim()}
+                     className="px-12 py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] shadow-2xl shadow-indigo-900/20 hover:bg-indigo-700 active:scale-95 transition-all group disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                    >
-                      <span>Dispatch Signal</span>
-                      <span className="ml-3 group-hover:translate-x-2 transition-transform inline-block">→</span>
+                      {isSending ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Dispatch Signal</span>
+                          <span className="ml-3 group-hover:translate-x-2 transition-transform inline-block">→</span>
+                        </>
+                      )}
                    </button>
                    <div className="flex space-x-2">
                       <button className="p-3 bg-slate-50 dark:bg-white/5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 transition-all" title="Attach Asset">📎</button>
