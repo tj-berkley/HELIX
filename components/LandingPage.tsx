@@ -143,42 +143,42 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
 
   const features = [
     {
+      icon: '🎬',
+      title: 'Movie Studio & Box Office',
+      description: 'Convert your book or script into a full cinematic movie with AI. Host premieres, sell tickets, and monetize your creativity.'
+    },
+    {
+      icon: '📝',
+      title: 'AI Writing Suite',
+      description: 'Create articles, books, manuscripts, children\'s books, and marketing content with HELIX AI. Publication-ready in minutes.'
+    },
+    {
+      icon: '🎨',
+      title: 'Content Creation Tools',
+      description: 'Generate videos, audio, podcasts, social media posts, and visual content with AI assistance.'
+    },
+    {
       icon: '🤖',
       title: 'HELIX AI Assistant',
       description: 'Your intelligent AI companion that automates tasks, creates content, and provides insights 24/7.'
     },
     {
       icon: '🔍',
-      title: 'Smart Prospecting',
-      description: 'Find and enrich leads from Google Business, LinkedIn, and Facebook with AI-powered intelligence.'
+      title: 'Smart Prospecting & CRM',
+      description: 'Find and enrich leads from Google Business, LinkedIn, and Facebook. Full CRM for business growth.'
     },
     {
       icon: '⚡',
-      title: 'Automation Studio',
-      description: 'Build custom workflows to automate repetitive tasks and connect all your business tools.'
-    },
-    {
-      icon: '🎨',
-      title: 'Content Creation Suite',
-      description: 'Create blog posts, videos, audio content, and social media posts with AI assistance.'
-    },
-    {
-      icon: '📊',
-      title: 'Analytics & Insights',
-      description: 'Track performance, measure ROI, and make data-driven decisions with real-time analytics.'
-    },
-    {
-      icon: '🏥',
-      title: 'Medical Hub',
-      description: 'Healthcare-specific features for patient management, appointments, and health records.'
+      title: 'Automation & Workflows',
+      description: 'Build custom workflows to automate marketing, sales, and content distribution across all channels.'
     }
   ];
 
   const stats = [
-    { value: '50+', label: 'Integrations' },
+    { value: '1000s', label: 'Books Created' },
+    { value: '500+', label: 'Movies Produced' },
     { value: '10hrs', label: 'Saved per Week' },
-    { value: '99.9%', label: 'Uptime' },
-    { value: '24/7', label: 'AI Support' }
+    { value: '24/7', label: 'AI Creation' }
   ];
 
   return (
@@ -222,16 +222,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
         <div className="max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center px-4 py-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-full border border-indigo-100 dark:border-indigo-500/20 mb-8">
             <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse mr-2"></span>
-            <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Meet HELIX - Your AI Business Assistant</span>
+            <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">The Ultimate Content Creation & Movie Studio</span>
           </div>
 
           <h1 className="text-7xl font-black text-slate-900 dark:text-white tracking-tighter leading-tight mb-6">
-            Your All-in-One<br />
-            <span className="text-indigo-600 dark:text-indigo-400">AI-Powered</span> Business Hub
+            Write Your Book.<br />
+            <span className="text-indigo-600 dark:text-indigo-400">Create Your Movie.</span><br />
+            Sell Tickets to the Premiere.
           </h1>
 
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed">
-            Replace 15+ tools with GoogleHubs. CRM, automation, content creation, prospecting, and AI assistance—all in one powerful platform. Save time, increase productivity, and grow faster with HELIX AI.
+            Think you can write a book? HELIX AI helps you create articles, manuscripts, children's books, and full-length movies. Convert your script into a cinematic experience, host premieres, and monetize your creativity—all in one platform. Plus CRM, automation, and prospecting tools to grow your business.
           </p>
 
           <div className="flex items-center justify-center space-x-4 mb-16">
@@ -257,15 +258,34 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
           <div className="flex items-center justify-center space-x-12 text-sm text-slate-500 dark:text-slate-400">
             <div className="flex items-center space-x-2">
               <span className="text-green-500">✓</span>
-              <span className="font-bold">Credit card required</span>
+              <span className="font-bold">No creative experience needed</span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-green-500">✓</span>
-              <span className="font-bold">Cancel anytime</span>
+              <span className="font-bold">AI does the heavy lifting</span>
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-green-500">✓</span>
-              <span className="font-bold">Setup in 5 minutes</span>
+              <span className="font-bold">Monetize your content</span>
+            </div>
+          </div>
+
+          {/* Quick Examples */}
+          <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-2xl p-6 border border-indigo-100 dark:border-indigo-500/20">
+              <div className="text-4xl mb-3">📚</div>
+              <h3 className="font-black text-slate-900 dark:text-white text-lg mb-2">Write a Book</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">From blog post to bestseller. HELIX helps you write articles, manuscripts, and children's books in any genre.</p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-2xl p-6 border border-purple-100 dark:border-purple-500/20">
+              <div className="text-4xl mb-3">🎬</div>
+              <h3 className="font-black text-slate-900 dark:text-white text-lg mb-2">Produce a Movie</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Turn your book into a full cinematic movie with AI-generated scenes, voiceovers, and soundtracks.</p>
+            </div>
+            <div className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/30 dark:to-rose-950/30 rounded-2xl p-6 border border-pink-100 dark:border-pink-500/20">
+              <div className="text-4xl mb-3">🎟️</div>
+              <h3 className="font-black text-slate-900 dark:text-white text-lg mb-2">Sell Tickets</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Host virtual premieres, sell tickets, and earn revenue from your creative work through our Box Office.</p>
             </div>
           </div>
         </div>
@@ -289,9 +309,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">Everything You Need to Grow</h2>
+            <h2 className="text-5xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">From Idea to Premiere in One Platform</h2>
             <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Powerful features that work together seamlessly, powered by HELIX AI
+              Create, produce, market, and monetize your content with HELIX AI—plus all the business tools you need
             </p>
           </div>
 
@@ -587,17 +607,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-indigo-600 to-purple-600 rounded-[4rem] p-16 text-white">
-          <h2 className="text-5xl font-black mb-6 tracking-tight">Ready to Transform Your Business?</h2>
+          <h2 className="text-5xl font-black mb-6 tracking-tight">Ready to Create Your First Movie?</h2>
           <p className="text-xl mb-10 opacity-90">
-            Join thousands of businesses using GoogleHubs and HELIX AI to save time and grow faster.
+            Join thousands of creators, authors, and businesses using HELIX AI to bring their stories to life and monetize their content.
           </p>
           <button
             onClick={() => onNavigateToAuth('signup')}
             className="px-12 py-5 bg-white text-indigo-600 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:bg-slate-100 transition-all transform hover:scale-105"
           >
-            Start Your Free Trial Today
+            Start Creating Today - 3 Days Free
           </button>
-          <p className="text-sm mt-6 opacity-75">Credit card required • Cancel anytime • 3-day free trial</p>
+          <p className="text-sm mt-6 opacity-75">Credit card required • Cancel anytime • Create unlimited content</p>
         </div>
       </section>
 
