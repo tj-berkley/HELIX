@@ -17,7 +17,11 @@ const HelixLogo: React.FC<HelixLogoProps> = ({ size = 40, className = '', animat
       viewBox="0 0 120 80"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={`${className} ${animated ? 'animate-spin-slow' : ''}`}
+      style={{
+        animationDuration: animated ? '6s' : undefined,
+        transformOrigin: 'center'
+      }}
     >
       <defs>
         <linearGradient id={`helixGradient1-${variant}`} x1="0%" y1="0%" x2="100%" y2="100%">
