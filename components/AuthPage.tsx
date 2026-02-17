@@ -66,9 +66,9 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode, onAuthSuccess, onBack, theme,
 
             <div className="flex items-center space-x-4 mb-8">
               <img
-                src="/1._Helix_logo_A1.00.jpg"
+                src="/2._Helix_logo_A1.01_NB.png"
                 alt="Helix Logo"
-                className="w-14 h-14 object-contain rounded-xl"
+                className="w-14 h-14 object-contain"
               />
               <div>
                 <h1 className="text-2xl font-black">GoogleHubs</h1>

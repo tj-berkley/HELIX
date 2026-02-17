@@ -128,9 +128,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img
-              src="/1._Helix_logo_A1.00.jpg"
+              src="/2._Helix_logo_A1.01_NB.png"
               alt="Helix Logo"
-              className="h-12 w-12 object-contain rounded-xl"
+              className="h-12 w-12 object-contain"
             />
             <div>
               <span className="font-black text-slate-900 dark:text-white text-lg tracking-tight">GoogleHubs</span>
