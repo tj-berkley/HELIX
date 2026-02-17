@@ -12,6 +12,7 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onToggleTheme }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [processingCheckout, setProcessingCheckout] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   const handleStartTrial = async (planName: string) => {
     if (planName === 'Enterprise') {
@@ -240,8 +241,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
             >
               Start Free 3-Day Trial
             </button>
-            <button className="px-10 py-5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:border-indigo-400 dark:hover:border-indigo-500 transition-all">
-              Watch Demo
+            <button
+              onClick={() => setShowDemoModal(true)}
+              className="px-10 py-5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:border-indigo-400 dark:hover:border-indigo-500 transition-all transform hover:scale-105"
+            >
+              <span className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+                <span>Watch Demo</span>
+              </span>
             </button>
           </div>
 
@@ -602,6 +611,100 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth, theme, onTo
 
       {/* HELIX Chatbot */}
       <HelixChatbot theme={theme} />
+
+      {/* Demo Video Modal */}
+      {showDemoModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowDemoModal(false)}>
+          <div className="relative w-full max-w-5xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-white/10 bg-gradient-to-r from-indigo-600 to-purple-600">
+              <div>
+                <h3 className="text-2xl font-black text-white">GoogleHubs Platform Demo</h3>
+                <p className="text-sm text-white/80 mt-1 font-bold">See how HELIX transforms your business in 5 minutes</p>
+              </div>
+              <button
+                onClick={() => setShowDemoModal(false)}
+                className="p-2 text-white/80 hover:text-white transition-colors"
+                aria-label="Close demo"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Video Content */}
+            <div className="relative aspect-video bg-slate-950">
+              {/* Replace this with your actual demo video URL */}
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                title="GoogleHubs Demo Video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 bg-slate-50 dark:bg-slate-950">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">AI-Powered Automation</h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Save 10-30 hours per week</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">Replace 15+ Tools</h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Save $2,500-12K/month</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">Setup in 5 Minutes</h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">No IT staff required</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between space-x-4">
+                <button
+                  onClick={() => setShowDemoModal(false)}
+                  className="px-6 py-3 bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl font-bold text-sm hover:bg-slate-300 dark:hover:bg-slate-700 transition-all"
+                >
+                  Close Demo
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDemoModal(false);
+                    onNavigateToAuth('signup');
+                  }}
+                  className="flex-1 px-8 py-3 bg-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-wider shadow-lg hover:bg-indigo-700 transition-all transform hover:scale-105"
+                >
+                  Start Your Free Trial →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
