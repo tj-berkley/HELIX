@@ -1,25 +1,114 @@
+###############################
+# Node / Vite / React / TS
+###############################
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Vite cache
+.vite/
+
+# TypeScript build cache
+*.tsbuildinfo
+
 # Logs
-logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Local environment variables
 .env
+.env.*
+!.env.example
+
+###############################
+# Supabase
+###############################
+
+# Local Supabase config & generated artifacts
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+supabase/.env.*
+supabase/migrations/.snapshots/
+
+###############################
+# Stripe
+###############################
+
+# Stripe CLI credentials
+.stripe/
+stripe.log
+
+###############################
+# Gmail OAuth / Google APIs
+###############################
+
+# OAuth credentials
+credentials.json
+token.json
+gmail_token.json
+
+###############################
+# Deployment Platforms
+###############################
+
+# Netlify
+.netlify/
+
+# Vercel
+.vercel/
+
+###############################
+# Bolt.new
+###############################
+
+.bolt/
+
+###############################
+# OS / Editor Files
+###############################
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# VS Code
+.vscode/
+.history/
+
+# JetBrains
+.idea/
+*.iml
+
+###############################
+# Archives / Temporary Files
+###############################
+
+*.zip
+*.tar.gz
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+###############################
+# Misc
+###############################
+
+# Local dev artifacts
+*.local
+*.cache
