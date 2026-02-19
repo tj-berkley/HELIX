@@ -1,0 +1,155 @@
+
+import React, { useRef } from 'react';
+import { BusinessInfo } from '../types';
+
+interface BusinessIdentityProps {
+  info: BusinessInfo;
+  onUpdate: (info: BusinessInfo) => void;
+}
+
+const BusinessIdentity: React.FC<BusinessIdentityProps> = ({ info, onUpdate }) => {
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onUpdate({ ...info, logoUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const currentName = info.name || 'Business Identity';
+
+  return (
+    <div className="flex-1 overflow-y-auto bg-slate-50 p-12 animate-in fade-in">
+      <div className="max-w-4xl mx-auto space-y-12 pb-32">
+        <div className="flex items-center space-x-8 pb-12 border-b border-slate-200">
+           <div className="w-32 h-32 rounded-[2.5rem] bg-emerald-600 flex items-center justify-center text-4xl font-black text-white shadow-2xl overflow-hidden relative group">
+              {info.logoUrl ? (
+                <img src={info.logoUrl} className="w-full h-full object-cover" alt="Logo" />
+              ) : (
+                <span>🏢</span>
+              )}
+              <div 
+                onClick={() => logoInputRef.current?.click()}
+                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity"
+              >
+                <span className="text-[10px] font-black text-white uppercase">Change</span>
+              </div>
+           </div>
+           <div>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tight">Legal Entity Identity</h2>
+              <p className="text-lg text-slate-500 font-medium">{currentName === 'Business Identity' ? 'Establish your neural enterprise identity.' : `Managing core data for ${currentName}.`}</p>
+           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+           <div className="space-y-6">
+              <div className="space-y-2">
+                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Legal Entity Name</label>
+                 <input 
+                    type="text" 
+                    value={info.name}
+                    placeholder="Business Identity"
+                    onChange={(e) => onUpdate({ ...info, name: e.target.value })}
+                    className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
+                 />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Primary Industry</label>
+                 <input 
+                    type="text" 
+                    value={info.industry}
+                    onChange={(e) => onUpdate({ ...info, industry: e.target.value })}
+                    className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
+                 />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Organization Size</label>
+                 <select 
+                    value={info.size}
+                    onChange={(e) => onUpdate({ ...info, size: (e.target.value as any) })}
+                    className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm appearance-none"
+                 >
+                    <option>Solopreneur</option>
+                    <option>Small Team (2-10)</option>
+                    <option>Medium (11-50)</option>
+                    <option>Large Enterprise (51-200)</option>
+                    <option>Global Scale (200+)</option>
+                 </select>
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Company Website</label>
+                 <input 
+                    type="url" 
+                    placeholder="https://yourcompany.com"
+                    value={info.website}
+                    onChange={(e) => onUpdate({ ...info, website: e.target.value })}
+                    className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl text-slate-900 font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
+                 />
+              </div>
+              <div className="space-y-2">
+                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Contact Phone Number</label>
+                 <input 
+                    type="tel" 
+                    placeholder="+1 (555) 000-0000"
+                    value={info.assignedPhone || ''}
+                    onChange={(e) => onUpdate({ ...info, assignedPhone: e.target.value })}
+                    className={`w-full px-6 py-4 border-2 rounded-2xl font-bold outline-none transition-all shadow-sm ${info.assignedPhone ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-white border-slate-200 text-slate-900 focus:border-emerald-500'}`}
+                 />
+                 {info.assignedPhone && <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest px-1">✓ Verified Provisioned Line</p>}
+              </div>
+           </div>
+
+           <div className="space-y-6">
+              <div className="space-y-2">
+                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Mission Statement</label>
+                 <textarea 
+                    value={info.mission}
+                    onChange={(e) => onUpdate({ ...info, mission: e.target.value })}
+                    className="w-full h-[452px] px-6 py-4 bg-white border border-slate-200 rounded-[2rem] text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm resize-none leading-relaxed"
+                    placeholder="Describe your company's core purpose..."
+                 />
+              </div>
+           </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-[3rem] p-10 space-y-6 shadow-sm">
+           <h3 className="text-xl font-black text-slate-900">Brand Assets</h3>
+           <div className="grid grid-cols-4 gap-4">
+              <div 
+                onClick={() => logoInputRef.current?.click()}
+                className="aspect-square border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center space-y-2 text-slate-400 hover:border-emerald-500 hover:text-emerald-500 transition-all cursor-pointer relative overflow-hidden"
+              >
+                 {info.logoUrl ? (
+                   <img src={info.logoUrl} className="w-full h-full object-cover" alt="Logo" />
+                 ) : (
+                   <>
+                     <span className="text-2xl">🖼️</span>
+                     <span className="text-[10px] font-black uppercase tracking-tighter">Primary Logo</span>
+                   </>
+                 )}
+              </div>
+              <div className="aspect-square border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center space-y-2 text-slate-400 hover:border-emerald-500 hover:text-emerald-500 transition-all cursor-pointer">
+                 <span className="text-2xl">🎨</span>
+                 <span className="text-[10px] font-black uppercase tracking-tighter">Brand Guide</span>
+              </div>
+           </div>
+        </div>
+
+        <input 
+          type="file" 
+          ref={logoInputRef} 
+          className="hidden" 
+          accept="image/*" 
+          onChange={handleLogoUpload} 
+        />
+      </div>
+    </div>
+  );
+};
+
+export default BusinessIdentity;
