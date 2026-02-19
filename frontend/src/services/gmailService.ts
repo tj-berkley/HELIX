@@ -57,7 +57,7 @@ export class GmailService {
     return new Promise((resolve, reject) => {
       // Use Google Identity Services (GIS) for OAuth
       const client = (window as any).google?.accounts?.oauth2?.initTokenClient({
-        client_id: GMAIL_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        client_id: GMAIL_CLIENT_ID || process.env.REACT_APP_GOOGLE_CLIENT_ID,
         scope: GMAIL_SCOPES,
         callback: (response: any) => {
           if (response.error) {
