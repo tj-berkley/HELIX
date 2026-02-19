@@ -299,7 +299,7 @@ HELIX: "Absolutely! I'll help you schedule that. What time works best for you, a
 
 Always sign responses as "- HELIX" or end with a HELIX signature phrase.`;
 
-const AVAILABLE_FUNCTIONS = [
+const AVAILABLE_FUNCTIONS: any[] = [
   {
     name: 'navigate_to_module',
     description: 'Navigate the user to a specific module or page in the platform',
