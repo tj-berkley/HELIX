@@ -1,0 +1,9 @@
+{
+  "name": "OmniPortal Work OS",
+  "description": "A high-fidelity, AI-powered work management platform inspired by Monday.com, featuring customizable boards, automated workflows, and intelligent project generation.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
